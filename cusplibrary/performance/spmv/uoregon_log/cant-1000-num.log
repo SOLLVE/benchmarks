@@ -1,0 +1,95 @@
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMalloc          : 1848.0792 ms
+	warmup              :   0.0000 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMalloc          : 1855.1683 ms
+	warmup              :   0.0000 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMalloc          : 1851.3132 ms
+	warmup              :   0.0000 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMalloc          : 1856.2179 ms
+	warmup              :   0.0000 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMalloc          : 1863.6169 ms
+	warmup              :   0.0000 ms

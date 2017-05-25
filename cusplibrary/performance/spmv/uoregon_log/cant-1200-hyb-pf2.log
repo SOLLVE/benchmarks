@@ -1,0 +1,160 @@
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocHybrid    : 26659.6191 ms
+	initData            : 21075.6250 ms
+	warmup              : 4175.2782 ms
+	runtime             : 16244.9780 ms
+	csr_block(2)        : 6001.4348 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 65825.8125 ms
+	data size           : 19488.33 MB
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocHybrid    : 26656.5312 ms
+	initData            : 21075.3320 ms
+	warmup              : 4001.0405 ms
+	runtime             : 15638.5384 ms
+	csr_block(2)        : 5785.3813 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 65206.3594 ms
+	data size           : 19488.33 MB
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocHybrid    : 26656.8320 ms
+	initData            : 21081.0215 ms
+	warmup              : 4327.6844 ms
+	runtime             : 16686.7657 ms
+	csr_block(2)        : 6146.1267 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 66267.9609 ms
+	data size           : 19488.33 MB
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocHybrid    : 26652.7070 ms
+	initData            : 21082.1094 ms
+	warmup              : 4111.9695 ms
+	runtime             : 16111.9041 ms
+	csr_block(2)        : 5966.5303 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 65681.7891 ms
+	data size           : 19488.33 MB
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocHybrid    : 26649.5078 ms
+	initData            : 21082.8184 ms
+	warmup              : 4164.3877 ms
+	runtime             : 16276.1784 ms
+	csr_block(2)        : 6022.4981 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 65842.2422 ms
+	data size           : 19488.33 MB

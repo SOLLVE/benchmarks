@@ -1,0 +1,4 @@
+Cuda error in file 'utility.h' in line 35 : CUDA driver version is insufficient for CUDA runtime version.
+
+Computing SpMV with 'float' values.
+

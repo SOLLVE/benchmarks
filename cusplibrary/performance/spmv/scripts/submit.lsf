@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#BSUB -P GEN010SOLLVE
+#BSUB -J gputest
+#BSUB -o lsf.o
+#BSUB -W 120
+#BSUB -n 1
+#BSUB -q batch
+
+nvidia-smi
+cd /ccs/home/lld/benchmarks/cusplibrary/performance/spmv
+
+./scripts/run.sh

@@ -1,0 +1,103 @@
+make[1]: Entering directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+
+make[2]: Entering directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+./spmv_num /home/users/lld/data/matrices/cant.mtx
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMalloc          : 1682.9462 ms
+	runtime             : 176.6495 ms
+	csr_block(2)        :  37.8983 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 9527.3389 ms
+	data size           :  3248.45 MB
+make[2]: Leaving directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+make[2]: Entering directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+./spmv_um /home/users/lld/data/matrices/cant.mtx
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   :   0.2459 ms
+	runtime             : 1672.9029 ms
+	csr_block(2)        :  37.8753 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 10019.0732 ms
+	data size           :  3248.45 MB
+make[2]: Leaving directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+make[2]: Entering directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+./spmv_umpf /home/users/lld/data/matrices/cant.mtx
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   :   0.2930 ms
+	runtime             : 142.3999 ms
+	csr_block(2)        :  37.9435 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 8832.6611 ms
+	data size           :  3248.45 MB
+make[2]: Leaving directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+make[2]: Entering directory `/storage/users/lld/benchmarks/cusplibrary/performance/spmv'
+./spmv_h /home/users/lld/data/matrices/cant.mtx

@@ -1,0 +1,66 @@
+==6711== NVPROF is profiling process 6711, command: ./spmv_um /home/users/lld/data/matrices/cant.mtx
+
+Computing SpMV with 'float' values.
+
+There are 3 devices supporting CUDA
+
+Device 0: "Tesla P100-PCIE-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17071669248 bytes
+
+Device 1: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+Device 2: "Tesla K80"
+  Major revision number:                         3
+  Minor revision number:                         7
+  Total amount of global memory:                 11996954624 bytes
+
+==6711== Profiling application: ./spmv_um /home/users/lld/data/matrices/cant.mtx
+Running on Device 0
+
+Read matrix (/home/users/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   :  21.0384 ms
+	runtime             : 6307.0111 ms
+	csr_block(2)        : 158.2083 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 41671.6719 ms
+	data size           : 12992.38 MB
+==6711== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+100.00%  6.30258s         3  2.10086s  156.41ms  5.98964s  void cusp::system::cuda::detail::BlockSpmvKernel<int, float, cusp::constant_functor<float>, thrust::multiplies<float>, thrust::plus<float>, unsigned int=128, unsigned int=2>(unsigned int, int*, int, float*, float, float, float, cusp::constant_functor<float>, float)
+
+==6711== Unified Memory profiling result:
+Device "Tesla P100-PCIE-16GB (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+  448758  28.775KB  4.0000KB  0.9766MB  12.31517GB   2.328730s  Host To Device
+   16586         -         -         -           -   4.445826s  GPU Page fault groups
+Total CPU Page faults: 107207
+
+==6711== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 94.12%  6.72027s         6  1.12005s  7.2640us  5.98966s  cudaThreadSynchronize
+  5.45%  388.95ms         3  129.65ms  5.9035ms  192.74ms  cudaFree
+  0.30%  21.283ms         5  4.2567ms  63.021us  20.539ms  cudaMallocManaged
+  0.05%  3.5340ms         3  1.1780ms  20.617us  3.4468ms  cudaLaunch
+  0.04%  2.5486ms         4  637.16us  453.83us  735.37us  cudaGetDeviceProperties
+  0.02%  1.5135ms       273  5.5430us     178ns  202.27us  cuDeviceGetAttribute
+  0.02%  1.3904ms         3  463.48us  395.51us  562.01us  cuDeviceTotalMem
+  0.00%  123.06us         3  41.019us  40.385us  42.028us  cuDeviceGetName
+  0.00%  89.865us        10  8.9860us  2.0180us  19.543us  cudaEventRecord
+  0.00%  63.458us        10  6.3450us     715ns  26.574us  cudaEventCreate
+  0.00%  39.392us         5  7.8780us  3.5710us  16.300us  cudaEventSynchronize
+  0.00%  20.912us         5  4.1820us  2.7410us  7.1470us  cudaEventElapsedTime
+  0.00%  20.693us         3  6.8970us  4.9550us  8.3330us  cudaFuncGetAttributes
+  0.00%  15.718us         1  15.718us  15.718us  15.718us  cudaSetDevice
+  0.00%  12.224us        10  1.2220us     471ns  4.3690us  cudaEventDestroy
+  0.00%  10.185us        27     377ns     157ns     870ns  cudaSetupArgument
+  0.00%  4.4490us         3  1.4830us  1.2990us  1.5770us  cudaGetDevice
+  0.00%  3.8230us         3  1.2740us     485ns  2.8080us  cuDeviceGetCount
+  0.00%  3.5730us         3  1.1910us     883ns  1.6800us  cudaConfigureCall
+  0.00%  3.2420us         9     360ns     175ns     837ns  cuDeviceGet
+  0.00%  1.5230us         1  1.5230us  1.5230us  1.5230us  cudaGetDeviceCount

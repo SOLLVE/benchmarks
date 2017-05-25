@@ -1,0 +1,90 @@
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla K40m"
+  Major revision number:                         3
+  Minor revision number:                         5
+  Total amount of global memory:                 11995578368 bytes
+
+Running on Device 0
+
+Read matrix (/home/lli/data/matrices/circuit5M.mtx) with shape (5558326,5558326) and 59524291 entries
+
+	cudaMalloc          : 143.8915 ms
+	runtime             : 84281.6925 ms
+	csr_block(2)        : 834.4555 ms (  0.29 GFLOP/s   1.3 GB/s) [L2 error 0.000000]
+	total csr           : 85768.1094 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla K40m"
+  Major revision number:                         3
+  Minor revision number:                         5
+  Total amount of global memory:                 11995578368 bytes
+
+Running on Device 0
+
+Read matrix (/home/lli/data/matrices/circuit5M.mtx) with shape (5558326,5558326) and 59524291 entries
+
+	cudaMalloc          : 143.6186 ms
+	runtime             : 84301.7883 ms
+	csr_block(2)        : 834.6671 ms (  0.29 GFLOP/s   1.3 GB/s) [L2 error 0.000000]
+	total csr           : 85758.6953 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla K40m"
+  Major revision number:                         3
+  Minor revision number:                         5
+  Total amount of global memory:                 11995578368 bytes
+
+Running on Device 0
+
+Read matrix (/home/lli/data/matrices/circuit5M.mtx) with shape (5558326,5558326) and 59524291 entries
+
+	cudaMalloc          : 143.8767 ms
+	runtime             : 84241.8213 ms
+	csr_block(2)        : 834.0694 ms (  0.29 GFLOP/s   1.3 GB/s) [L2 error 0.000000]
+	total csr           : 85702.3359 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla K40m"
+  Major revision number:                         3
+  Minor revision number:                         5
+  Total amount of global memory:                 11995578368 bytes
+
+Running on Device 0
+
+Read matrix (/home/lli/data/matrices/circuit5M.mtx) with shape (5558326,5558326) and 59524291 entries
+
+	cudaMalloc          : 144.8478 ms
+	runtime             : 84232.0633 ms
+	csr_block(2)        : 834.0633 ms (  0.29 GFLOP/s   1.3 GB/s) [L2 error 0.000000]
+	total csr           : 85712.4375 ms
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla K40m"
+  Major revision number:                         3
+  Minor revision number:                         5
+  Total amount of global memory:                 11995578368 bytes
+
+Running on Device 0
+
+Read matrix (/home/lli/data/matrices/circuit5M.mtx) with shape (5558326,5558326) and 59524291 entries
+
+	cudaMalloc          : 143.5984 ms
+	runtime             : 84268.7683 ms
+	csr_block(2)        : 834.3342 ms (  0.29 GFLOP/s   1.3 GB/s) [L2 error 0.000000]
+	total csr           : 85750.6484 ms

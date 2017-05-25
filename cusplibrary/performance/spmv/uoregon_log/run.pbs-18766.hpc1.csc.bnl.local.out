@@ -1,0 +1,32 @@
+Mon Apr 24 11:21:10 2017       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 367.48                 Driver Version: 367.48                    |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|===============================+======================+======================|
+|   0  Tesla K40c          Off  | 0000:08:00.0     Off |                    0 |
+| 23%   30C    P8    21W / 235W |      0MiB / 11439MiB |      0%      Default |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                       GPU Memory |
+|  GPU       PID  Type  Process name                               Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+
+Computing SpMV with 'float' values.
+
+There is 1 device supporting CUDA
+
+Device 0: "Tesla K40c"
+  Major revision number:                         3
+  Minor revision number:                         5
+  Total amount of global memory:                 11995054080 bytes
+
+terminate called after throwing an instance of 'std::bad_alloc'
+  what():  std::bad_alloc
+Running on Device 0
+
+/var/spool/torque/mom_priv/jobs/18766.hpc1.csc.bnl.local.SC: line 8: 55294 Aborted                 ./spmv ~/data/graphs/com-friendster.ungraph.txt.mtx

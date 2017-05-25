@@ -1,0 +1,181 @@
+scripts/run_one.sh: line 11: 48545 Aborted                 (core dumped) ./spmv_${testv} ${inputpath}${input}.mtx &>/dev/null
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	initHostData        : 10064.9180 ms
+	cudaMalloc          : 731.6337 ms
+	warmup              :   0.0000 ms
+scripts/run_one.sh: line 12: 48564 Aborted                 (core dumped) ./spmv_${testv} ${inputpath}${input}.mtx
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	initHostData        : 10074.5684 ms
+	cudaMalloc          : 736.1028 ms
+	warmup              :   0.0000 ms
+scripts/run_one.sh: line 13: 48567 Aborted                 (core dumped) ./spmv_${testv} ${inputpath}${input}.mtx
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	initHostData        : 10068.6973 ms
+	cudaMalloc          : 730.7126 ms
+	warmup              :   0.0000 ms
+scripts/run_one.sh: line 14: 48571 Aborted                 (core dumped) ./spmv_${testv} ${inputpath}${input}.mtx
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	initHostData        : 10080.0752 ms
+	cudaMalloc          : 734.3464 ms
+	warmup              :   0.0000 ms
+scripts/run_one.sh: line 15: 48574 Aborted                 (core dumped) ./spmv_${testv} ${inputpath}${input}.mtx
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+terminate called after throwing an instance of 'thrust::system::system_error'
+  what():  cudaFuncGetAttributes in function_attributes: an illegal memory access was encountered
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	initHostData        : 10074.0996 ms
+	cudaMalloc          : 741.0593 ms
+	warmup              :   0.0000 ms
+scripts/run_one.sh: line 16: 48577 Aborted                 (core dumped) ./spmv_${testv} ${inputpath}${input}.mtx

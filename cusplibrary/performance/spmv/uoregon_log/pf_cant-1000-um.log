@@ -1,0 +1,36 @@
+==8797== Profiling application: ./spmv_um /home/users/lld/data/matrices/cant.mtx
+==8797== Profiling result:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+100.00%  26.4275s         3  8.80918s  7.06508s  10.0472s  void cusp::system::cuda::detail::BlockSpmvKernel<int, float, cusp::constant_functor<float>, thrust::multiplies<float>, thrust::plus<float>, unsigned int=128, unsigned int=2>(unsigned int, int*, int, float*, float, float, float, cusp::constant_functor<float>, float)
+
+==8797== Unified Memory profiling result:
+Device "Tesla P100-PCIE-16GB (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+ 1709241  28.416KB  4.0000KB  0.9766MB  46.32009GB   6.376048s  Host To Device
+   16042  1.9988MB  240.00KB  2.0000MB  31.31246GB   2.593124s  Device To Host
+   60282         -         -         -           -  19.499321s  GPU Page fault groups
+Total CPU Page faults: 134004
+
+==8797== API calls:
+Time(%)      Time     Calls       Avg       Min       Max  Name
+ 98.03%  26.7523s         6  4.45871s  6.0220us  19.3625s  cudaThreadSynchronize
+  1.86%  506.99ms         3  169.00ms  7.9436ms  249.63ms  cudaFree
+  0.08%  21.074ms         5  4.2147ms  63.361us  20.512ms  cudaMallocManaged
+  0.01%  3.0519ms         3  1.0173ms  9.1750us  2.9857ms  cudaLaunch
+  0.01%  2.1950ms         4  548.75us  478.79us  578.69us  cudaGetDeviceProperties
+  0.01%  1.4618ms       273  5.3540us     182ns  190.17us  cuDeviceGetAttribute
+  0.01%  1.4380ms         3  479.33us  428.06us  581.60us  cuDeviceTotalMem
+  0.00%  129.18us         3  43.061us  39.886us  49.208us  cuDeviceGetName
+  0.00%  104.30us        10  10.429us  2.1000us  19.597us  cudaEventRecord
+  0.00%  53.223us        10  5.3220us     963ns  25.844us  cudaEventCreate
+  0.00%  37.227us         5  7.4450us  4.1100us  12.395us  cudaEventSynchronize
+  0.00%  17.284us         5  3.4560us  2.8980us  3.7930us  cudaEventElapsedTime
+  0.00%  15.763us         1  15.763us  15.763us  15.763us  cudaSetDevice
+  0.00%  15.419us         3  5.1390us  3.1490us  7.5030us  cudaFuncGetAttributes
+  0.00%  13.572us        10  1.3570us     483ns  4.9210us  cudaEventDestroy
+  0.00%  6.3780us        27     236ns     154ns     742ns  cudaSetupArgument
+  0.00%  4.0140us         3  1.3380us     359ns  2.9730us  cuDeviceGetCount
+  0.00%  3.4280us         3  1.1420us     467ns  1.6830us  cudaConfigureCall
+  0.00%  3.3290us         3  1.1090us     719ns  1.4370us  cudaGetDevice
+  0.00%  3.1580us         9     350ns     184ns     746ns  cuDeviceGet
+  0.00%  1.6820us         1  1.6820us  1.6820us  1.6820us  cudaGetDeviceCount
