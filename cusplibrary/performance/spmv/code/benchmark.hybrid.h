@@ -35,7 +35,11 @@
 #if defined(CUDA_UM_ALLOC) || defined(CUDA_HOST_ALLOC)
 #error "This is only for hybrid allocation."
 #endif
-#define CUDA_HYBRID_ALLOC
+//#define CUDA_HYBRID_ALLOC
+//#define CUDA_TRUE_HYBRID_ALLOC
+#ifndef CUDA_DEVICE_ALLOC_SIZE
+  #define CUDA_DEVICE_ALLOC_SIZE ( (size_t) (14 * 1024 * 1024) / (sizeof(IndexType) + sizeof(ValueType)) * 1024 )
+#endif
 
 const char * BENCHMARK_OUTPUT_FILE_NAME = "benchmark_output.log";
 int global_device_id;
@@ -189,14 +193,12 @@ float time_spmv_block(TestMatrix& test_matrix, size_t num_cols, TestKernel test_
     test_y.num_cols = num_cols;
     test_x.num_rows = N;
     test_y.num_rows = M;
-#if defined (CUDA_HYBRID_ALLOC)
     CUDA_SAFE_CALL_NO_SYNC(cudaMalloc((void **)&test_x.values.my_begin, N*num_cols*sizeof(ValueType)));
     //CUDA_SAFE_CALL_NO_SYNC(cudaMallocManaged((void **)&test_x.values.my_begin, N*num_cols*sizeof(ValueType)));
     //CUDA_SAFE_CALL_NO_SYNC(cudaMallocHost((void **)&test_x.values.my_begin, N*num_cols*sizeof(ValueType)));
+    CUDA_SAFE_CALL_NO_SYNC(cudaMalloc((void **)&test_y.values.my_begin, M*num_cols*sizeof(ValueType)));
     //CUDA_SAFE_CALL_NO_SYNC(cudaMallocManaged((void **)&test_y.values.my_begin, M*num_cols*sizeof(ValueType)));
     //CUDA_SAFE_CALL_NO_SYNC(cudaMallocHost((void **)&test_y.values.my_begin, M*num_cols*sizeof(ValueType)));
-    CUDA_SAFE_CALL_NO_SYNC(cudaMalloc((void **)&test_y.values.my_begin, M*num_cols*sizeof(ValueType)));
-#endif
 
     // warmup
     timer time_one_iteration;
@@ -338,7 +340,6 @@ void test_csr(HostMatrix& host_matrix)
     cudaEventCreate(&total_start);
     cudaEventCreate(&total_end);
     float elapsed_time;
-    printf("\tHere we go.\n");
     DeviceMatrix test_matrix_on_device;
 #ifdef ENLARGE_INPUT
     test_matrix_on_device.num_rows = test_matrix_on_host.num_rows * INPUT_TIME;
@@ -349,6 +350,13 @@ void test_csr(HostMatrix& host_matrix)
     test_matrix_on_device.num_cols = test_matrix_on_host.num_cols;
     test_matrix_on_device.num_entries = test_matrix_on_host.num_entries;
 #endif
+#ifdef CUDA_TRUE_HYBRID_ALLOC
+    if(test_matrix_on_device.num_entries <= CUDA_DEVICE_ALLOC_SIZE) {
+        printf("\tMatrix is too small for truly hybrid allocation. (%lu <= %lu)\n", test_matrix_on_device.num_entries, CUDA_DEVICE_ALLOC_SIZE);
+        exit(0);
+    }
+#endif
+    printf("\tHere we go.\n");
     cudaEventRecord(total_start,0);
 
 #if defined (CUDA_HYBRID_ALLOC)
@@ -435,6 +443,84 @@ void test_csr(HostMatrix& host_matrix)
     //cudaMemPrefetchAsync(test_matrix_on_device.row_offsets.my_begin, (test_matrix_on_device.num_rows+1)*sizeof(IndexType), global_device_id);
     cudaMemPrefetchAsync(test_matrix_on_device.column_indices.my_begin, test_matrix_on_device.num_entries*sizeof(IndexType), global_device_id);
     //cudaMemPrefetchAsync(test_matrix_on_device.values.my_begin, test_matrix_on_device.num_entries*sizeof(ValueType), global_device_id);
+#endif
+#elif defined (CUDA_TRUE_HYBRID_ALLOC)
+    cudaEventRecord(start,0);
+    size_t device_alloc_size = CUDA_DEVICE_ALLOC_SIZE;
+    size_t managed_alloc_size = test_matrix_on_device.num_entries - CUDA_DEVICE_ALLOC_SIZE;
+    test_matrix_on_device.column_indices.my_device_size = device_alloc_size;
+    test_matrix_on_device.values.my_device_size = device_alloc_size;
+    CUDA_SAFE_CALL_NO_SYNC(cudaMalloc((void **)&test_matrix_on_device.row_offsets.my_begin, (test_matrix_on_device.num_rows+1)*sizeof(IndexType)));
+    CUDA_SAFE_CALL_NO_SYNC(cudaMalloc((void **)&test_matrix_on_device.column_indices.my_begin, device_alloc_size*sizeof(IndexType)));
+    CUDA_SAFE_CALL_NO_SYNC(cudaMallocManaged((void **)&test_matrix_on_device.column_indices.my_second_begin, managed_alloc_size*sizeof(IndexType)));
+    CUDA_SAFE_CALL_NO_SYNC(cudaMalloc((void **)&test_matrix_on_device.values.my_begin, device_alloc_size*sizeof(ValueType)));
+    CUDA_SAFE_CALL_NO_SYNC(cudaMallocManaged((void **)&test_matrix_on_device.values.my_second_begin, managed_alloc_size*sizeof(ValueType)));
+#if defined (CUDA_UM_HOST_PREFETCH)
+    cudaMemPrefetchAsync(test_matrix_on_device.column_indices.my_second_begin, managed_alloc_size*sizeof(IndexType), cudaCpuDeviceId);
+    cudaMemPrefetchAsync(test_matrix_on_device.values.my_second_begin, managed_alloc_size*sizeof(ValueType), cudaCpuDeviceId);
+#endif
+    // lld: reorganize host matrix to be linear
+    IndexType * host_row_offsets = new IndexType[test_matrix_on_device.num_rows+1];
+    IndexType * host_column_indices = new IndexType[device_alloc_size];
+    ValueType * host_values = new ValueType[device_alloc_size];
+#ifdef ENLARGE_INPUT
+    size_t originalsize = test_matrix_on_host.row_offsets.begin()[test_matrix_on_host.num_rows];
+    for(unsigned long long i = 0; i < test_matrix_on_device.num_rows+1; i++)
+        host_row_offsets[i] = test_matrix_on_host.row_offsets.begin()[i % test_matrix_on_host.num_rows] + originalsize * (i / test_matrix_on_host.num_rows);
+    for(unsigned long long i = 0; i < device_alloc_size; i++)
+        host_column_indices[i] = test_matrix_on_host.column_indices.begin()[i % test_matrix_on_host.num_entries];
+    for(unsigned long long i = 0; i < device_alloc_size; i++)
+        host_values[i] = test_matrix_on_host.values.begin()[i % test_matrix_on_host.num_entries];
+#else
+    for(unsigned long long i = 0; i < test_matrix_on_device.num_rows+1; i++)
+        host_row_offsets[i] = test_matrix_on_host.row_offsets.begin()[i];
+    for(unsigned long long i = 0; i < device_alloc_size; i++)
+        host_column_indices[i] = test_matrix_on_host.column_indices.begin()[i];
+    for(unsigned long long i = 0; i < device_alloc_size; i++)
+        host_values[i] = test_matrix_on_host.values.begin()[i];
+#endif
+    CUDA_SAFE_CALL_NO_SYNC(cudaMemcpy(test_matrix_on_device.row_offsets.my_begin, (void *)host_row_offsets, (test_matrix_on_device.num_rows+1)*sizeof(IndexType), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL_NO_SYNC(cudaMemcpy(test_matrix_on_device.column_indices.my_begin, (void *)host_column_indices, device_alloc_size*sizeof(IndexType), cudaMemcpyHostToDevice));
+    CUDA_SAFE_CALL_NO_SYNC(cudaMemcpy(test_matrix_on_device.values.my_begin, (void *)host_values, device_alloc_size*sizeof(ValueType), cudaMemcpyHostToDevice));
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    cudaEventElapsedTime(&elapsed_time, start, end);
+    printf("\t%-20s: %8.4f ms\n", "cudaMallocTrueHybrid", elapsed_time);
+
+    cudaEventRecord(start,0);
+#ifdef ENLARGE_INPUT
+    assert(test_matrix_on_host.row_offsets.begin()[0] == 0);
+    for(unsigned long long i = device_alloc_size; i < test_matrix_on_device.num_entries; i++)
+        test_matrix_on_device.column_indices.my_second_begin[i - device_alloc_size] = test_matrix_on_host.column_indices.begin()[i % test_matrix_on_host.num_entries];
+    for(unsigned long long i = device_alloc_size; i < test_matrix_on_device.num_entries; i++)
+        test_matrix_on_device.values.my_second_begin[i - device_alloc_size] = test_matrix_on_host.values.begin()[i % test_matrix_on_host.num_entries];
+#else
+    for(unsigned long long i = device_alloc_size; i < test_matrix_on_host.num_entries; i++)
+        test_matrix_on_device.column_indices.my_second_begin[i - device_alloc_size] = test_matrix_on_host.column_indices.begin()[i];
+    for(unsigned long long i = device_alloc_size; i < test_matrix_on_host.num_entries; i++)
+        test_matrix_on_device.values.my_second_begin[i - device_alloc_size] = test_matrix_on_host.values.begin()[i];
+#endif
+    cudaEventRecord(end, 0);
+    cudaEventSynchronize(end);
+    cudaEventElapsedTime(&elapsed_time, start, end);
+    printf("\t%-20s: %8.4f ms\n", "initData", elapsed_time);
+
+#if defined (CUDA_UM_DUPLICATE)
+    cudaMemAdvise(test_matrix_on_device.column_indices.my_second_begin, managed_alloc_size*sizeof(IndexType), cudaMemAdviseSetReadMostly, global_device_id);
+    cudaMemAdvise(test_matrix_on_device.values.my_second_begin, managed_alloc_size*sizeof(ValueType), cudaMemAdviseSetReadMostly, global_device_id);
+#elif defined (CUDA_UM_PREFERRED_GPU)
+    cudaMemAdvise(test_matrix_on_device.column_indices.my_second_begin, managed_alloc_size*sizeof(IndexType), cudaMemAdviseSetPreferredLocation, global_device_id);
+    cudaMemAdvise(test_matrix_on_device.values.my_second_begin, managed_alloc_size*sizeof(ValueType), cudaMemAdviseSetPreferredLocation, global_device_id);
+#elif defined (CUDA_UM_PREFERRED_CPU)
+    cudaMemAdvise(test_matrix_on_device.column_indices.my_second_begin, managed_alloc_size*sizeof(IndexType), cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);
+    cudaMemAdvise(test_matrix_on_device.values.my_second_begin, managed_alloc_size*sizeof(ValueType), cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);
+    cudaMemAdvise(test_matrix_on_device.column_indices.my_second_begin, managed_alloc_size*sizeof(IndexType), cudaMemAdviseSetAccessedBy, global_device_id);
+    cudaMemAdvise(test_matrix_on_device.values.my_second_begin, managed_alloc_size*sizeof(ValueType), cudaMemAdviseSetAccessedBy, global_device_id);
+#endif
+
+#ifdef CUDA_UM_PREFETCH
+    cudaMemPrefetchAsync(test_matrix_on_device.column_indices.my_second_begin, managed_alloc_size*sizeof(IndexType), global_device_id);
+    cudaMemPrefetchAsync(test_matrix_on_device.values.my_second_begin, managed_alloc_size*sizeof(ValueType), global_device_id);
 #endif
 #elif defined (CUDA_HOST_ALLOC)
     cudaEventRecord(start,0);

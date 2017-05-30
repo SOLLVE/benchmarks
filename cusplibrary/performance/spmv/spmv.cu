@@ -114,9 +114,12 @@ int main(int argc, char** argv)
 
     if (value_type == "float")
     {
-        //test_all_formats<int,float>(filename);
+#ifndef TEST_MODE
+        test_all_formats<int,float>(filename);
+#else
         //test_all_formats<long long int,float>(filename); // lld
         test_all_formats<unsigned,float>(filename); // lld
+#endif
     }
     else if (value_type == "double")
     {
@@ -127,9 +130,12 @@ int main(int argc, char** argv)
         if (properties.major == 1 && properties.minor < 3)
             std::cerr << "ERROR: Support for \'double\' requires Compute Capability 1.3 or greater\n\n";
         else
-            //test_all_formats<int,double>(filename);
+#ifndef TEST_MODE
+            test_all_formats<int,double>(filename);
+#else
             //test_all_formats<long long int,double>(filename); // lld
             test_all_formats<unsigned,double>(filename); // lld
+#endif
     }
     else
     {

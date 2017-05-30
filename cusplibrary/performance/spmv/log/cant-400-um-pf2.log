@@ -1,0 +1,186 @@
+Test version is um
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   : 321.8376 ms
+	initHostData        : 3304.2476 ms
+	warmup              :  80.3791 ms
+	runtime             : 233.7840 ms
+	csr_block(2)        :  76.6858 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 4130.8989 ms
+	data size           :  6496.43 MB
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   : 325.8606 ms
+	initHostData        : 3302.4536 ms
+	warmup              :  79.8183 ms
+	runtime             : 233.9473 ms
+	csr_block(2)        :  76.8081 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 4133.6348 ms
+	data size           :  6496.43 MB
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   : 320.9885 ms
+	initHostData        : 3306.6587 ms
+	warmup              :  80.8719 ms
+	runtime             : 234.1446 ms
+	csr_block(2)        :  76.6206 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 4132.7490 ms
+	data size           :  6496.43 MB
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   : 325.5590 ms
+	initHostData        : 3303.6785 ms
+	warmup              :  80.7709 ms
+	runtime             : 234.0477 ms
+	csr_block(2)        :  76.6229 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 4133.9507 ms
+	data size           :  6496.43 MB
+
+Computing SpMV with 'float' values.
+
+There are 4 devices supporting CUDA
+
+Device 0: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 1: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 2: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Device 3: "Tesla P100-SXM2-16GB"
+  Major revision number:                         6
+  Minor revision number:                         0
+  Total amount of global memory:                 17066885120 bytes
+
+Running on Device 0
+
+Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
+
+	Here we go.
+	cudaMallocManaged   : 321.3778 ms
+	initHostData        : 3312.8547 ms
+	warmup              :  80.7047 ms
+	runtime             : 234.6943 ms
+	csr_block(2)        :  76.8388 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 4140.5620 ms
+	data size           :  6496.43 MB

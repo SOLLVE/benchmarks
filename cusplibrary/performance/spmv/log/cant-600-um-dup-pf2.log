@@ -29,12 +29,12 @@ Running on Device 0
 Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
 
 	Here we go.
-	cudaMallocManaged   : 480.0975 ms
-	initHostData        : 4952.3931 ms
-	warmup              : 123.2907 ms
-	runtime             : 355.4501 ms
-	csr_block(2)        : 116.0613 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
-	total csr           : 6361.0005 ms
+	cudaMallocManaged   : 487.8216 ms
+	initHostData        : 4951.2700 ms
+	warmup              : 124.9877 ms
+	runtime             : 357.1485 ms
+	csr_block(2)        : 116.0618 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 6337.8491 ms
 	data size           :  9744.40 MB
 
 Computing SpMV with 'float' values.
@@ -66,12 +66,12 @@ Running on Device 0
 Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
 
 	Here we go.
-	cudaMallocManaged   : 487.2509 ms
-	initHostData        : 4951.2329 ms
-	warmup              : 123.4829 ms
-	runtime             : 355.7632 ms
-	csr_block(2)        : 116.1215 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
-	total csr           : 6368.8394 ms
+	cudaMallocManaged   : 489.2047 ms
+	initHostData        : 4952.3696 ms
+	warmup              : 123.3479 ms
+	runtime             : 355.4823 ms
+	csr_block(2)        : 116.0485 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 6339.1035 ms
 	data size           :  9744.40 MB
 
 Computing SpMV with 'float' values.
@@ -103,12 +103,12 @@ Running on Device 0
 Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
 
 	Here we go.
-	cudaMallocManaged   : 481.0035 ms
-	initHostData        : 4951.2344 ms
-	warmup              : 121.9819 ms
-	runtime             : 354.2700 ms
-	csr_block(2)        : 116.1257 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
-	total csr           : 6359.7378 ms
+	cudaMallocManaged   : 481.3444 ms
+	initHostData        : 4950.7886 ms
+	warmup              : 123.5926 ms
+	runtime             : 355.6536 ms
+	csr_block(2)        : 116.0126 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 6329.8037 ms
 	data size           :  9744.40 MB
 
 Computing SpMV with 'float' values.
@@ -140,12 +140,12 @@ Running on Device 0
 Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
 
 	Here we go.
-	cudaMallocManaged   : 480.2527 ms
-	initHostData        : 4952.3501 ms
-	warmup              : 122.7539 ms
-	runtime             : 354.9207 ms
-	csr_block(2)        : 116.0649 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
-	total csr           : 6361.6450 ms
+	cudaMallocManaged   : 489.1245 ms
+	initHostData        : 4952.3945 ms
+	warmup              : 123.3738 ms
+	runtime             : 355.4435 ms
+	csr_block(2)        : 116.0164 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 6339.0303 ms
 	data size           :  9744.40 MB
 
 Computing SpMV with 'float' values.
@@ -177,10 +177,10 @@ Running on Device 0
 Read matrix (/ccs/home/lld/data/matrices/cant.mtx) with shape (62451,62451) and 2034917 entries
 
 	Here we go.
-	cudaMallocManaged   : 480.9448 ms
-	initHostData        : 4953.3633 ms
-	warmup              : 124.4213 ms
-	runtime             : 356.4700 ms
-	csr_block(2)        : 116.0064 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
-	total csr           : 6364.5312 ms
+	cudaMallocManaged   : 488.9842 ms
+	initHostData        : 4951.5571 ms
+	warmup              : 123.8276 ms
+	runtime             : 356.1923 ms
+	csr_block(2)        : 116.0242 ms (  0.00 GFLOP/s   0.0 GB/s) [L2 error 0.000000]
+	total csr           : 6338.8926 ms
 	data size           :  9744.40 MB

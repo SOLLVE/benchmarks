@@ -228,9 +228,9 @@ float time_spmv_block(TestMatrix& test_matrix, size_t num_cols, TestKernel test_
     //cudaMemAdvise(test_matrix.values.my_begin, test_matrix.num_entries*sizeof(ValueType), cudaMemAdviseSetAccessedBy, global_device_id);
 
     // determine # of seconds dynamically
-    cudaMemAdvise(test_matrix.row_offsets.my_begin, (test_matrix.num_rows+1)*sizeof(IndexType), cudaMemAdviseSetReadMostly, global_device_id);
-    cudaMemAdvise(test_matrix.column_indices.my_begin, test_matrix.num_entries*sizeof(IndexType), cudaMemAdviseSetReadMostly, global_device_id);
-    cudaMemAdvise(test_matrix.values.my_begin, test_matrix.num_entries*sizeof(ValueType), cudaMemAdviseSetReadMostly, global_device_id);
+    //cudaMemAdvise(test_matrix.row_offsets.my_begin, (test_matrix.num_rows+1)*sizeof(IndexType), cudaMemAdviseSetReadMostly, global_device_id);
+    //cudaMemAdvise(test_matrix.column_indices.my_begin, test_matrix.num_entries*sizeof(IndexType), cudaMemAdviseSetReadMostly, global_device_id);
+    //cudaMemAdvise(test_matrix.values.my_begin, test_matrix.num_entries*sizeof(ValueType), cudaMemAdviseSetReadMostly, global_device_id);
     size_t num_iterations;
     // lld: iteration number
 #ifdef TEST_MODE_SINGLE_ITER
@@ -246,7 +246,7 @@ float time_spmv_block(TestMatrix& test_matrix, size_t num_cols, TestKernel test_
     timer t;
     for(size_t i = 0; i < num_iterations; i++)
     {
-//#ifdef CUDA_UM_PREFETCH
+//#ifdef TMP_EXP
 //        cudaMemPrefetchAsync(test_matrix.row_offsets.my_begin, (test_matrix.num_rows+1)*sizeof(IndexType), global_device_id);
 //        cudaMemPrefetchAsync(test_matrix.column_indices.my_begin, test_matrix.num_entries*sizeof(IndexType), global_device_id);
 //        cudaMemPrefetchAsync(test_matrix.values.my_begin, test_matrix.num_entries*sizeof(ValueType), global_device_id);
@@ -388,6 +388,9 @@ void test_csr(HostMatrix& host_matrix)
     cudaMallocManaged((void **)&test_matrix_on_device.row_offsets.my_begin, (test_matrix_on_device.num_rows+1)*sizeof(IndexType));
     cudaMallocManaged((void **)&test_matrix_on_device.column_indices.my_begin, test_matrix_on_device.num_entries*sizeof(IndexType));
     cudaMallocManaged((void **)&test_matrix_on_device.values.my_begin, test_matrix_on_device.num_entries*sizeof(ValueType));
+    //test_matrix_on_device.row_offsets.my_begin = (IndexType*) malloc((test_matrix_on_device.num_rows+1)*sizeof(IndexType));
+    //test_matrix_on_device.column_indices.my_begin = (IndexType*) malloc(test_matrix_on_device.num_entries*sizeof(IndexType));
+    //test_matrix_on_device.values.my_begin = (ValueType*) malloc(test_matrix_on_device.num_entries*sizeof(ValueType));
 #ifdef CUDA_UM_HOST_PREFETCH
     cudaMemPrefetchAsync(test_matrix_on_device.row_offsets.my_begin, (test_matrix_on_device.num_rows+1)*sizeof(IndexType), cudaCpuDeviceId);
     cudaMemPrefetchAsync(test_matrix_on_device.column_indices.my_begin, test_matrix_on_device.num_entries*sizeof(IndexType), cudaCpuDeviceId);

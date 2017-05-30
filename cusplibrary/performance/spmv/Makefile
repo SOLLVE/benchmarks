@@ -28,6 +28,7 @@ NVCCCOMMONFLAGS = $(NVCCEXTRAFLAGS) $(NVCCINTRAFLAGS) -c -arch=sm_60 -Xcompiler 
 NVCCFLAGS = $(NVCCCOMMONFLAGS) -Xcompiler -O3
 GCCFLAGS = -L/sw/summitdev/cuda/8.0.61-1/lib64 -lcudart -lstdc++ -lm
 DATE = `date +'%m.%d.%y'`
+CURPATH = `pwd`
 
 all: num um umpf host
 
@@ -48,8 +49,12 @@ h:
 	gcc -o spmv_h spmv.o $(GCCFLAGS)
 
 hyb:
-	nvcc -o spmv.o $(NVCCFLAGS) spmv.cu
+	nvcc -o spmv.o -Xcompiler -DCUDA_HYBRID_ALLOC $(NVCCFLAGS) spmv.cu
 	gcc -o spmv_hyb spmv.o $(GCCFLAGS)
+
+thyb:
+	nvcc -o spmv.o -Xcompiler -DCUDA_TRUE_HYBRID_ALLOC $(NVCCFLAGS) spmv.cu
+	gcc -o spmv_thyb spmv.o $(GCCFLAGS)
 
 dbg:
 	nvcc -o spmv.o -Xcompiler -g $(NVCCCOMMONFLAGS) spmv.cu
@@ -62,11 +67,21 @@ clean:
 # code version
 codehyb:
 	-rm benchmark.h
-	ln -s code/benchmark.hybrid.h benchmark.h
+	ln -s $(CURPATH)/code/benchmark.hybrid.h benchmark.h
+	-rm ../../cusp/system/cuda/detail/multiply/csr_block_spmv.h
+	ln -s $(CURPATH)/code/csr_block_spmv.my.h ../../cusp/system/cuda/detail/multiply/csr_block_spmv.h
 
 codeori:
 	-rm benchmark.h
-	ln -s code/benchmark.ori.h benchmark.h
+	ln -s $(CURPATH)/code/benchmark.ori.h benchmark.h
+	-rm ../../cusp/system/cuda/detail/multiply/csr_block_spmv.h
+	ln -s $(CURPATH)/code/csr_block_spmv.my.h ../../cusp/system/cuda/detail/multiply/csr_block_spmv.h
+
+codetruehyb:
+	-rm benchmark.h
+	ln -s $(CURPATH)/code/benchmark.hybrid.h benchmark.h
+	-rm ../../cusp/system/cuda/detail/multiply/csr_block_spmv.h
+	ln -s $(CURPATH)/code/csr_block_spmv.hyb.h ../../cusp/system/cuda/detail/multiply/csr_block_spmv.h
 
 
 # test

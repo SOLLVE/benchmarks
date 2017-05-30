@@ -104,6 +104,8 @@ private:
 public:
     // lld: point for real storage
     T* my_begin;
+    size_t my_device_size;
+    T* my_second_begin;
     /*! \cond */
     typedef MemorySpace                                 memory_space;
     typedef cusp::array1d_format                        format;
