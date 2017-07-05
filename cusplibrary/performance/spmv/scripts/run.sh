@@ -1,80 +1,93 @@
-make thyb INPUTTIME=1000 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1000-thyb.log
-make thyb INPUTTIME=1100 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1100-thyb.log
-make thyb INPUTTIME=1200 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1200-thyb.log
-make thyb INPUTTIME=1300 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1300-thyb.log
-make thyb INPUTTIME=1400 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1400-thyb.log
-make thyb INPUTTIME=1500 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1500-thyb.log
+make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_GREEDY_ALLOC' 2> /dev/null
+./scripts/run_one.sh thyb &> log/cant-1000-thyb-gdy.log
+make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_GREEDY_ALLOC' 2> /dev/null
+./scripts/run_one.sh thyb &> log/cant-1100-thyb-gdy.log
+make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_GREEDY_ALLOC' 2> /dev/null
+./scripts/run_one.sh thyb &> log/cant-1200-thyb-gdy.log
+make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_GREEDY_ALLOC' 2> /dev/null
+./scripts/run_one.sh thyb &> log/cant-1300-thyb-gdy.log
+make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_GREEDY_ALLOC' 2> /dev/null
+./scripts/run_one.sh thyb &> log/cant-1400-thyb-gdy.log
+make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_GREEDY_ALLOC' 2> /dev/null
+./scripts/run_one.sh thyb &> log/cant-1500-thyb-gdy.log
 
-make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1000-thyb-dup.log
-make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1100-thyb-dup.log
-make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1200-thyb-dup.log
-make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1300-thyb-dup.log
-make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1400-thyb-dup.log
-make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1500-thyb-dup.log
-
-make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1000-thyb-hpf.log
-make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1100-thyb-hpf.log
-make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1200-thyb-hpf.log
-make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1300-thyb-hpf.log
-make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1400-thyb-hpf.log
-make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1500-thyb-hpf.log
-
-make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1000-thyb-pf2.log
-make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1100-thyb-pf2.log
-make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1200-thyb-pf2.log
-make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1300-thyb-pf2.log
-make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1400-thyb-pf2.log
-make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1500-thyb-pf2.log
-
-make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1000-thyb-dup-pf2.log
-make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1100-thyb-dup-pf2.log
-make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1200-thyb-dup-pf2.log
-make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1300-thyb-dup-pf2.log
-make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1400-thyb-dup-pf2.log
-make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1500-thyb-dup-pf2.log
-
-make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1000-thyb-dup-hpf.log
-make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1100-thyb-dup-hpf.log
-make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1200-thyb-dup-hpf.log
-make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1300-thyb-dup-hpf.log
-make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1400-thyb-dup-hpf.log
-make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
-./scripts/run_one.sh thyb &> log/cant-1500-thyb-dup-hpf.log
+#make thyb INPUTTIME=1000 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1000-thyb.log
+#make thyb INPUTTIME=1100 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1100-thyb.log
+#make thyb INPUTTIME=1200 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1200-thyb.log
+#make thyb INPUTTIME=1300 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1300-thyb.log
+#make thyb INPUTTIME=1400 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1400-thyb.log
+#make thyb INPUTTIME=1500 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1500-thyb.log
+#
+#make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1000-thyb-dup.log
+#make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1100-thyb-dup.log
+#make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1200-thyb-dup.log
+#make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1300-thyb-dup.log
+#make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1400-thyb-dup.log
+#make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1500-thyb-dup.log
+#
+#make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1000-thyb-hpf.log
+#make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1100-thyb-hpf.log
+#make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1200-thyb-hpf.log
+#make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1300-thyb-hpf.log
+#make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1400-thyb-hpf.log
+#make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1500-thyb-hpf.log
+#
+#make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1000-thyb-pf2.log
+#make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1100-thyb-pf2.log
+#make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1200-thyb-pf2.log
+#make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1300-thyb-pf2.log
+#make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1400-thyb-pf2.log
+#make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1500-thyb-pf2.log
+#
+#make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1000-thyb-dup-pf2.log
+#make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1100-thyb-dup-pf2.log
+#make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1200-thyb-dup-pf2.log
+#make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1300-thyb-dup-pf2.log
+#make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1400-thyb-dup-pf2.log
+#make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1500-thyb-dup-pf2.log
+#
+#make thyb INPUTTIME=1000 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1000-thyb-dup-hpf.log
+#make thyb INPUTTIME=1100 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1100-thyb-dup-hpf.log
+#make thyb INPUTTIME=1200 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1200-thyb-dup-hpf.log
+#make thyb INPUTTIME=1300 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1300-thyb-dup-hpf.log
+#make thyb INPUTTIME=1400 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1400-thyb-dup-hpf.log
+#make thyb INPUTTIME=1500 NVCCEXTRAFLAGS='-Xcompiler -DCUDA_UM_HOST_PREFETCH -Xcompiler -DCUDA_UM_DUPLICATE' 2> /dev/null
+#./scripts/run_one.sh thyb &> log/cant-1500-thyb-dup-hpf.log
 
 #make um NVCCEXTRAFLAGS='-Xcompiler -DINPUT_TIME=100 -Xcompiler -DCUDA_UM_PREFETCH -Xcompiler -DCUDA_UM_HOST_PREFETCH' 2> /dev/null
 #./scripts/run_one.sh um &> log/cant-100-um-pf2.log
