@@ -1,0 +1,6 @@
+*.o
+spmv_*
+
+cusplibrary/performance/spmv/log
+cusplibrary/performance/spmv/pflog
+cusplibrary/performance/spmv/stats

@@ -61,7 +61,7 @@ dbg:
 	gcc -g -o spmv_dbg spmv.o $(GCCFLAGS)
 
 clean:
-	-rm spmv.o spmv_*
+	-rm spmv.o spmv_* core.*
 
 
 # code version
