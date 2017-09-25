@@ -1,9 +1,8 @@
-include ../../common/make.config
+include ../../common/make.config.summitdev
 
 # C compiler
 CC = gcc
-#CC_FLAGS = -g -fopenmp -O2
-CC_FLAGS = -g -fopenmp -O2 -DCUDA_UVM
+CC_FLAGS = -g -fopenmp -O2
 
 # CUDA compiler
 NVCC = $(CUDA_DIR)/bin/nvcc
@@ -29,7 +28,7 @@ NVCC_FLAGS += -arch=sm_35
 kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o rmse.o
 	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o rmse.o -o kmeans -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
 
-%.o: %.[ch]
+%.o: %.[c]
 	$(CC) $(CC_FLAGS) $< -c
 
 kmeans_clustering.o: kmeans_clustering.cu 
