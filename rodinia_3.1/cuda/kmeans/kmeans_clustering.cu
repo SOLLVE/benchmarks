@@ -106,24 +106,15 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 		nclusters = npoints;
 
     /* allocate space for and initialize returning variable clusters[] */
-	printf("1\n");
 #ifndef CUDA_UVM
     clusters    = (float**) malloc(nclusters *             sizeof(float*));
     clusters[0] = (float*)  malloc(nclusters * nfeatures * sizeof(float));
 #else
     cudaMallocManaged((void **)&clusters, nclusters * sizeof(float*));
-	printf("1 %llu %d\n", clusters, nclusters);
-    float* storage;
-    cudaMallocManaged((void **)&storage, nclusters * nfeatures * sizeof(float));
-	printf("1 %llu %d\n", storage, nfeatures);
-    clusters[0] = storage;
+    cudaMallocManaged((void **)&clusters[0], nclusters * nfeatures * sizeof(float));
 #endif
-	printf("1\n");
     for (i=1; i<nclusters; i++)
-    {
         clusters[i] = clusters[i-1] + nfeatures;
-	printf("1\n");
-    }
 
 	/* initialize the random clusters */
 	initial = (int *) malloc (npoints * sizeof(int));
