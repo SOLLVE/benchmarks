@@ -4,7 +4,7 @@ CC := $(CUDA_DIR)/bin/nvcc
 
 INCLUDE := $(CUDA_DIR)/include
 
-SRC = bfs.cu
+SRC = bfs_linput.cu
 
 EXE = bfs
 
