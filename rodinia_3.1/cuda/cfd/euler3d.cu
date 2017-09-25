@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
- 
+#define CUDA_UVM 
  
 /*
  * Options 
@@ -102,7 +102,11 @@ template <typename T>
 T* alloc(int N)
 {
 	T* t;
+#ifndef CUDA_UVM
 	checkCudaErrors(cudaMalloc((void**)&t, sizeof(T)*N));
+#else
+	checkCudaErrors(cudaMallocManaged((void**)&t, sizeof(T)*N));
+#endif
 	return t;
 }
 
@@ -132,8 +136,12 @@ void download(T* dst, T* src, int N)
 
 void dump(float* variables, int nel, int nelr)
 {
+#ifndef CUDA_UVM
 	float* h_variables = new float[nelr*NVAR];
 	download(h_variables, variables, nelr*NVAR);
+#else
+    float* h_variables = variables;
+#endif
 
 	{
 		std::ofstream file("density");
@@ -158,7 +166,9 @@ void dump(float* variables, int nel, int nelr)
 		file << nel << " " << nelr << std::endl;
 		for(int i = 0; i < nel; i++) file << h_variables[i + VAR_DENSITY_ENERGY*nelr] << std::endl;
 	}
+#ifndef CUDA_UVM
 	delete[] h_variables;
+#endif
 }
 
 /*
@@ -489,9 +499,19 @@ int main(int argc, char** argv)
 		file >> nel;
 		nelr = BLOCK_SIZE_0*((nel / BLOCK_SIZE_0 )+ std::min(1, nel % BLOCK_SIZE_0));
 
+	    areas = alloc<float>(nelr);
+	    elements_surrounding_elements = alloc<int>(nelr*NNB);
+	    normals = alloc<float>(nelr*NDIM*NNB);
+
+#ifndef CUDA_UVM
 		float* h_areas = new float[nelr];
 		int* h_elements_surrounding_elements = new int[nelr*NNB];
 		float* h_normals = new float[nelr*NDIM*NNB];
+#else
+		float* h_areas = areas;
+		int* h_elements_surrounding_elements = elements_surrounding_elements;
+		float* h_normals = normals;
+#endif
 
 				
 		// read in data
@@ -525,18 +545,17 @@ int main(int argc, char** argv)
 			}
 		}
 		
-		areas = alloc<float>(nelr);
+#ifndef CUDA_UVM
 		upload<float>(areas, h_areas, nelr);
 
-		elements_surrounding_elements = alloc<int>(nelr*NNB);
 		upload<int>(elements_surrounding_elements, h_elements_surrounding_elements, nelr*NNB);
 
-		normals = alloc<float>(nelr*NDIM*NNB);
 		upload<float>(normals, h_normals, nelr*NDIM*NNB);
 				
 		delete[] h_areas;
 		delete[] h_elements_surrounding_elements;
 		delete[] h_normals;
+#endif
 	}
 
 	// Create arrays and set initial conditions
