@@ -2,7 +2,8 @@ include ../../common/make.config
 
 # C compiler
 CC = gcc
-CC_FLAGS = -g -fopenmp -O2 
+#CC_FLAGS = -g -fopenmp -O2
+CC_FLAGS = -g -fopenmp -O2 -DCUDA_UVM
 
 # CUDA compiler
 NVCC = $(CUDA_DIR)/bin/nvcc
@@ -23,14 +24,19 @@ endif
 NVCC_FLAGS += -arch=sm_35
 
 
-kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o
-	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o -o kmeans -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
+#kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o
+#	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o kmeans_cuda.o rmse.o -o kmeans -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
+kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o rmse.o
+	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o rmse.o -o kmeans -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
 
 %.o: %.[ch]
 	$(CC) $(CC_FLAGS) $< -c
 
-kmeans_cuda.o: kmeans_cuda.cu 
-	$(NVCC) $(NVCC_FLAGS) -c kmeans_cuda.cu
+kmeans_clustering.o: kmeans_clustering.cu 
+	$(NVCC) $(NVCC_FLAGS) -c kmeans_clustering.cu
+
+#kmeans_cuda.o: kmeans_cuda.cu 
+#	$(NVCC) $(NVCC_FLAGS) -c kmeans_cuda.cu
 
 clean:
 	rm -f *.o *~ kmeans kmeans_cuda.linkinfo
