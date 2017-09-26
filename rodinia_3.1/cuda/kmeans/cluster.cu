@@ -74,6 +74,7 @@
 #include <omp.h>
 
 #include "kmeans.h"
+#include "kmeans_clustering.cu"
 
 extern double wtime(void);
 float	min_rmse_ref = FLT_MAX;			/* reference min_rmse value */

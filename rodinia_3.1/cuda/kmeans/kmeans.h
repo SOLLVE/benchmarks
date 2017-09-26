@@ -50,9 +50,15 @@ int     find_nearest_point   (float* , int, float**, int);
 float	rms_err(float**, int, int, float**, int);
 
 /* cluster.c */
-int     cluster(int, int, float**, int, int, float, int*, float***, float*, int, int);
+extern "C" int     cluster(int, int, float**, int, int, float, int*, float***, float*, int, int);
 
 /* kmeans_clustering.c */
-//float **kmeans_clustering(float**, int, int, int, float, int*);
+extern "C" float **kmeans_clustering(float**, int, int, int, float, int*);
+
+extern "C"
+void allocateMemory(int npoints, int nfeatures, int nclusters, float **features);
+
+extern "C"
+void deallocateMemory();
 
 #endif

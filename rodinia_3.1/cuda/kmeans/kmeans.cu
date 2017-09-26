@@ -76,10 +76,16 @@
 #include <limits.h>
 #include <math.h>
 #include <fcntl.h>
-#include <omp.h>
+//#include <omp.h>
 #include "kmeans.h"
+#include "getopt.h"
+#include <unistd.h>
+
+#define CUDA_UVM
 
 extern double wtime(void);
+
+#include "kmeans_clustering.cu"
 
 
 
@@ -100,6 +106,7 @@ void usage(char *argv0) {
 }
 
 /*---< main() >-------------------------------------------------------------*/
+extern "C"
 int setup(int argc, char **argv) {
 		int		opt;
  extern char   *optarg;
@@ -169,8 +176,13 @@ int setup(int argc, char **argv) {
 
         /* allocate space for features[][] and read attributes of all objects */
         buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
+#ifndef CUDA_UVM
         features    = (float**)malloc(npoints*          sizeof(float*));
         features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
+#else
+        cudaMallocManaged((void**)&features, npoints*sizeof(float*));
+        cudaMallocManaged((void**)&features[0], npoints*nfeatures*sizeof(float));
+#endif
         for (i=1; i<npoints; i++)
             features[i] = features[i-1] + nfeatures;
 
@@ -198,8 +210,13 @@ int setup(int argc, char **argv) {
 
         /* allocate space for features[] and read attributes of all objects */
         buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
+#ifndef CUDA_UVM
         features    = (float**)malloc(npoints*          sizeof(float*));
         features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
+#else
+        cudaMallocManaged((void**)&features, npoints*sizeof(float*));
+        cudaMallocManaged((void**)&features[0], npoints*nfeatures*sizeof(float));
+#endif
         for (i=1; i<npoints; i++)
             features[i] = features[i-1] + nfeatures;
         rewind(infile);
@@ -298,8 +315,13 @@ int setup(int argc, char **argv) {
 	
 
 	/* free up memory */
+#ifndef CUDA_UVM
 	free(features[0]);
 	free(features);    
+#else
+	cudaFree(features[0]);
+	cudaFree(features);    
+#endif
     return(0);
 }
 
