@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#BSUB -P GEN010SOLLVE
+#BSUB -J gputest
+#BSUB -o cfd.log
+#BSUB -W 240
+#BSUB -n 1
+#BSUB -q batch
+
+cd /ccs/home/lld/benchmarks/rodinia_3.1/cuda/cfd
+
+for(( j=0; j<3; j++ ))
+do
+  for(( i=100; i<2100; i+=100 ))
+  do
+    nvprof ./euler3d_lin ../../data/cfd/fvcorr.domn.193K $i
+  done
+done
