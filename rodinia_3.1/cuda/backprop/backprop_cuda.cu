@@ -12,7 +12,7 @@
 #include "backprop_cuda_kernel.cu"
 #include "backprop.h"
 
-//#define CUDA_UVM
+#define CUDA_UVM
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,15 +69,15 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
    
 #ifdef GPU  
   int m = 0;
-  float *input_hidden_cuda;
 #ifndef CUDA_UVM
   float *input_cuda;
-#endif
-  float *output_hidden_cuda;
-  float *partial_sum;
+  float *input_hidden_cuda;
   float *hidden_partial_sum;
   float *hidden_delta_cuda;
   float *input_prev_weights_cuda;
+#endif
+  float *output_hidden_cuda;
+  float *partial_sum;
   float sum;
   float *input_weights_one_dim;
   float *input_weights_prev_one_dim;
@@ -85,9 +85,15 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   dim3  grid( 1 , num_blocks);
   dim3  threads(16 , 16);
   
+#ifndef CUDA_UVM
   input_weights_one_dim = (float *) malloc((in + 1)* (hid + 1) * sizeof(float));
-  input_weights_prev_one_dim = (float *) malloc((in + 1)* (hid + 1) * sizeof(float));
   partial_sum = (float *) malloc(num_blocks * WIDTH * sizeof(float));
+  input_weights_prev_one_dim = (float *) malloc((in + 1)* (hid + 1) * sizeof(float));
+#else
+  cudaMallocManaged((void**) &input_weights_one_dim, (in + 1) * (hid + 1) * sizeof(float));
+  cudaMallocManaged((void**) &partial_sum, num_blocks * WIDTH * sizeof(float));
+  cudaMallocManaged((void**) &input_weights_prev_one_dim, (in + 1)* (hid + 1) * sizeof(float));
+#endif
  
   // this preprocessing stage is added to correct the bugs of wrong memcopy using two-dimensional net->inputweights
   for (int k = 0; k <= in; k++) {	
@@ -100,10 +106,10 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   
 #ifndef CUDA_UVM
   cudaMalloc((void**) &input_cuda, (in + 1) * sizeof(float));
-#endif
-  cudaMalloc((void**) &output_hidden_cuda, (hid + 1) * sizeof(float));
+  //cudaMalloc((void**) &output_hidden_cuda, (hid + 1) * sizeof(float));
   cudaMalloc((void**) &input_hidden_cuda, (in + 1) * (hid + 1) * sizeof(float));
   cudaMalloc((void**) &hidden_partial_sum, num_blocks * WIDTH * sizeof(float));
+#endif
   
   
 #endif
@@ -123,9 +129,9 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   
 #ifndef CUDA_UVM
   cudaMemcpy(input_cuda, net->input_units, (in + 1) * sizeof(float), cudaMemcpyHostToDevice);
-#endif
-  cudaMalloc((void**) &output_hidden_cuda, (hid + 1) * sizeof(float));
+  //cudaMalloc((void**) &output_hidden_cuda, (hid + 1) * sizeof(float));
   cudaMemcpy(input_hidden_cuda, input_weights_one_dim, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
+#endif
 
   
   
@@ -135,8 +141,13 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   bpnn_layerforward_CUDA<<< grid, threads >>>(net->input_units,
 #endif
 	                                          output_hidden_cuda,
+#ifndef CUDA_UVM
 											  input_hidden_cuda,
 											  hidden_partial_sum,
+#else
+                                              input_weights_one_dim,
+                                              partial_sum,
+#endif
 											  in,
 											  hid);
  
@@ -148,7 +159,9 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 		exit(EXIT_FAILURE);
 	}
   
+#ifndef CUDA_UVM
   cudaMemcpy(partial_sum, hidden_partial_sum, num_blocks * WIDTH * sizeof(float), cudaMemcpyDeviceToHost);
+#endif
      
   for (int j = 1; j <= hid; j++) {
     sum = 0.0;
@@ -174,43 +187,60 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 
 #ifdef GPU
 
+#ifndef CUDA_UVM
   cudaMalloc((void**) &hidden_delta_cuda, (hid + 1) * sizeof(float));
   cudaMalloc((void**) &input_prev_weights_cuda, (in + 1) * (hid + 1) * sizeof(float));
 
   cudaMemcpy(hidden_delta_cuda, net->hidden_delta, (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
   cudaMemcpy(input_prev_weights_cuda, input_weights_prev_one_dim, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
-  cudaMemcpy(input_hidden_cuda, input_weights_one_dim, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
+  //cudaMemcpy(input_hidden_cuda, input_weights_one_dim, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
+#endif  
 
 
+#ifndef CUDA_UVM
   bpnn_adjust_weights_cuda<<< grid, threads >>>(hidden_delta_cuda,  
 												hid, 
-#ifndef CUDA_UVM
 												input_cuda, 
 #else
+  bpnn_adjust_weights_cuda<<< grid, threads >>>(net->hidden_delta,  
+												hid, 
 												net->input_units, 
 #endif
 												in,
-												input_hidden_cuda, 
+#ifndef CUDA_UVM
+											    input_hidden_cuda,
 												input_prev_weights_cuda
+#else
+                                                input_weights_one_dim,
+                                                input_weights_prev_one_dim
+#endif
 												);
 
 #ifndef CUDA_UVM
   cudaMemcpy(net->input_units, input_cuda, (in + 1) * sizeof(float), cudaMemcpyDeviceToHost);
-#endif
   cudaMemcpy(input_weights_one_dim, input_hidden_cuda, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyDeviceToHost);
+#else
+  cudaThreadSynchronize();
+#endif
     
 #ifndef CUDA_UVM
   cudaFree(input_cuda);
-#endif
-  cudaFree(output_hidden_cuda);
   cudaFree(input_hidden_cuda);
+  //cudaFree(output_hidden_cuda);
   cudaFree(hidden_partial_sum);
-  cudaFree(input_prev_weights_cuda);
   cudaFree(hidden_delta_cuda);
+  cudaFree(input_prev_weights_cuda);
+#endif
   
-  free(partial_sum);
+#ifndef CUDA_UVM
   free(input_weights_one_dim);
+  free(partial_sum);
   free(input_weights_prev_one_dim);
+#else
+  cudaFree(input_weights_one_dim);
+  cudaFree(partial_sum);
+  cudaFree(input_weights_prev_one_dim);
+#endif
 
 #endif   
   
