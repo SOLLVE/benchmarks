@@ -1,8 +1,8 @@
-include ../../common/make.config.summitdev
+include ../../common/make.config.hpc1
 
 # C compiler
 CC = g++
-CC_FLAGS = -g -fopenmp -O2 -DCUDA_UVM
+CC_FLAGS = -g -fopenmp -O2
 
 # CUDA compiler
 NVCC = $(CUDA_DIR)/bin/nvcc
