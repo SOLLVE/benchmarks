@@ -12,6 +12,8 @@
 #include "backprop_cuda_kernel.cu"
 #include "backprop.h"
 
+//#define CUDA_UVM
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C"
@@ -68,7 +70,9 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 #ifdef GPU  
   int m = 0;
   float *input_hidden_cuda;
+#ifndef CUDA_UVM
   float *input_cuda;
+#endif
   float *output_hidden_cuda;
   float *partial_sum;
   float *hidden_partial_sum;
@@ -94,7 +98,9 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
     }
   }
   
+#ifndef CUDA_UVM
   cudaMalloc((void**) &input_cuda, (in + 1) * sizeof(float));
+#endif
   cudaMalloc((void**) &output_hidden_cuda, (hid + 1) * sizeof(float));
   cudaMalloc((void**) &input_hidden_cuda, (in + 1) * (hid + 1) * sizeof(float));
   cudaMalloc((void**) &hidden_partial_sum, num_blocks * WIDTH * sizeof(float));
@@ -115,12 +121,19 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   
   //printf("in= %d, hid = %d, numblocks = %d\n", in, hid, num_blocks);
   
+#ifndef CUDA_UVM
   cudaMemcpy(input_cuda, net->input_units, (in + 1) * sizeof(float), cudaMemcpyHostToDevice);
+#endif
+  cudaMalloc((void**) &output_hidden_cuda, (hid + 1) * sizeof(float));
   cudaMemcpy(input_hidden_cuda, input_weights_one_dim, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
 
   
   
+#ifndef CUDA_UVM
   bpnn_layerforward_CUDA<<< grid, threads >>>(input_cuda,
+#else
+  bpnn_layerforward_CUDA<<< grid, threads >>>(net->input_units,
+#endif
 	                                          output_hidden_cuda,
 											  input_hidden_cuda,
 											  hidden_partial_sum,
@@ -171,16 +184,24 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 
   bpnn_adjust_weights_cuda<<< grid, threads >>>(hidden_delta_cuda,  
 												hid, 
+#ifndef CUDA_UVM
 												input_cuda, 
+#else
+												net->input_units, 
+#endif
 												in,
 												input_hidden_cuda, 
 												input_prev_weights_cuda
 												);
 
+#ifndef CUDA_UVM
   cudaMemcpy(net->input_units, input_cuda, (in + 1) * sizeof(float), cudaMemcpyDeviceToHost);
+#endif
   cudaMemcpy(input_weights_one_dim, input_hidden_cuda, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyDeviceToHost);
     
+#ifndef CUDA_UVM
   cudaFree(input_cuda);
+#endif
   cudaFree(output_hidden_cuda);
   cudaFree(input_hidden_cuda);
   cudaFree(hidden_partial_sum);

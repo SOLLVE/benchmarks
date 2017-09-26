@@ -1,4 +1,4 @@
-include ../../common/make.config
+include ../../common/make.config.summitdev
 
 # C compiler
 CC = gcc
@@ -20,18 +20,23 @@ ifeq ($(emu),1)
 	NVCC_FLAGS += -deviceemu
 endif
 
+NVCC_FLAGS += -arch=sm_60
 
-backprop: backprop.o facetrain.o imagenet.o backprop_cuda.o 
-	$(CC) $(CC_FLAGS) backprop.o facetrain.o imagenet.o backprop_cuda.o -o backprop -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
 
-%.o: %.[ch]
-	$(CC) $(CC_FLAGS) $< -c
+backprop: backprop.o facetrain.o imagenet.o backprop_cuda.o backprop_malloc.o
+	$(CC) $(CC_FLAGS) backprop.o facetrain.o imagenet.o backprop_cuda.o backprop_malloc.o -o backprop -L$(CUDA_LIB_DIR) -lcuda -lcudart -lm
+
+#%.o: %.[ch]
+#	$(CC) $(CC_FLAGS) $< -c
 
 facetrain.o: facetrain.c backprop.h
 	$(CC) $(CC_FLAGS) facetrain.c -c
 	
 backprop.o: backprop.c backprop.h
 	$(CC) $(CC_FLAGS) backprop.c -c
+
+backprop_malloc.o: backprop_malloc.cu
+	$(NVCC) $(NVCC_FLAGS) backprop_malloc.cu -c
 
 backprop_cuda.o: backprop_cuda.cu backprop.h
 	$(NVCC) $(NVCC_FLAGS) -c backprop_cuda.cu

@@ -51,42 +51,42 @@ float x;
 }
 
 
-/*** Allocate 1d array of floats ***/
-
-float *alloc_1d_dbl(n)
-int n;
-{
-  float *new;
-
-  new = (float *) malloc ((unsigned) (n * sizeof (float)));
-  if (new == NULL) {
-    printf("ALLOC_1D_DBL: Couldn't allocate array of floats\n");
-    return (NULL);
-  }
-  return (new);
-}
-
-
-/*** Allocate 2d array of floats ***/
-
-float **alloc_2d_dbl(m, n)
-int m, n;
-{
-  int i;
-  float **new;
-
-  new = (float **) malloc ((unsigned) (m * sizeof (float *)));
-  if (new == NULL) {
-    printf("ALLOC_2D_DBL: Couldn't allocate array of dbl ptrs\n");
-    return (NULL);
-  }
-
-  for (i = 0; i < m; i++) {
-    new[i] = alloc_1d_dbl(n);
-  }
-
-  return (new);
-}
+///*** Allocate 1d array of floats ***/
+//
+//float *alloc_1d_dbl(n)
+//int n;
+//{
+//  float *new;
+//
+//  new = (float *) malloc ((unsigned) (n * sizeof (float)));
+//  if (new == NULL) {
+//    printf("ALLOC_1D_DBL: Couldn't allocate array of floats\n");
+//    return (NULL);
+//  }
+//  return (new);
+//}
+//
+//
+///*** Allocate 2d array of floats ***/
+//
+//float **alloc_2d_dbl(m, n)
+//int m, n;
+//{
+//  int i;
+//  float **new;
+//
+//  new = (float **) malloc ((unsigned) (m * sizeof (float *)));
+//  if (new == NULL) {
+//    printf("ALLOC_2D_DBL: Couldn't allocate array of dbl ptrs\n");
+//    return (NULL);
+//  }
+//
+//  for (i = 0; i < m; i++) {
+//    new[i] = alloc_1d_dbl(n);
+//  }
+//
+//  return (new);
+//}
 
 
 bpnn_randomize_weights(w, m, n)
@@ -136,70 +136,70 @@ void bpnn_initialize(seed)
 }
 
 
-BPNN *bpnn_internal_create(n_in, n_hidden, n_out)
-int n_in, n_hidden, n_out;
-{
-  BPNN *newnet;
-
-  newnet = (BPNN *) malloc (sizeof (BPNN));
-  if (newnet == NULL) {
-    printf("BPNN_CREATE: Couldn't allocate neural network\n");
-    return (NULL);
-  }
-
-  newnet->input_n = n_in;
-  newnet->hidden_n = n_hidden;
-  newnet->output_n = n_out;
-  newnet->input_units = alloc_1d_dbl(n_in + 1);
-  newnet->hidden_units = alloc_1d_dbl(n_hidden + 1);
-  newnet->output_units = alloc_1d_dbl(n_out + 1);
-
-  newnet->hidden_delta = alloc_1d_dbl(n_hidden + 1);
-  newnet->output_delta = alloc_1d_dbl(n_out + 1);
-  newnet->target = alloc_1d_dbl(n_out + 1);
-
-  newnet->input_weights = alloc_2d_dbl(n_in + 1, n_hidden + 1);
-  newnet->hidden_weights = alloc_2d_dbl(n_hidden + 1, n_out + 1);
-
-  newnet->input_prev_weights = alloc_2d_dbl(n_in + 1, n_hidden + 1);
-  newnet->hidden_prev_weights = alloc_2d_dbl(n_hidden + 1, n_out + 1);
-
-  return (newnet);
-}
-
-
-void bpnn_free(net)
-BPNN *net;
-{
-  int n1, n2, i;
-
-  n1 = net->input_n;
-  n2 = net->hidden_n;
-
-  free((char *) net->input_units);
-  free((char *) net->hidden_units);
-  free((char *) net->output_units);
-
-  free((char *) net->hidden_delta);
-  free((char *) net->output_delta);
-  free((char *) net->target);
-
-  for (i = 0; i <= n1; i++) {
-    free((char *) net->input_weights[i]);
-    free((char *) net->input_prev_weights[i]);
-  }
-  free((char *) net->input_weights);
-  free((char *) net->input_prev_weights);
-
-  for (i = 0; i <= n2; i++) {
-    free((char *) net->hidden_weights[i]);
-    free((char *) net->hidden_prev_weights[i]);
-  }
-  free((char *) net->hidden_weights);
-  free((char *) net->hidden_prev_weights);
-
-  free((char *) net);
-}
+//BPNN *bpnn_internal_create(n_in, n_hidden, n_out)
+//int n_in, n_hidden, n_out;
+//{
+//  BPNN *newnet;
+//
+//  newnet = (BPNN *) malloc (sizeof (BPNN));
+//  if (newnet == NULL) {
+//    printf("BPNN_CREATE: Couldn't allocate neural network\n");
+//    return (NULL);
+//  }
+//
+//  newnet->input_n = n_in;
+//  newnet->hidden_n = n_hidden;
+//  newnet->output_n = n_out;
+//  newnet->input_units = alloc_1d_dbl(n_in + 1);
+//  newnet->hidden_units = alloc_1d_dbl(n_hidden + 1);
+//  newnet->output_units = alloc_1d_dbl(n_out + 1);
+//
+//  newnet->hidden_delta = alloc_1d_dbl(n_hidden + 1);
+//  newnet->output_delta = alloc_1d_dbl(n_out + 1);
+//  newnet->target = alloc_1d_dbl(n_out + 1);
+//
+//  newnet->input_weights = alloc_2d_dbl(n_in + 1, n_hidden + 1);
+//  newnet->hidden_weights = alloc_2d_dbl(n_hidden + 1, n_out + 1);
+//
+//  newnet->input_prev_weights = alloc_2d_dbl(n_in + 1, n_hidden + 1);
+//  newnet->hidden_prev_weights = alloc_2d_dbl(n_hidden + 1, n_out + 1);
+//
+//  return (newnet);
+//}
+//
+//
+//void bpnn_free(net)
+//BPNN *net;
+//{
+//  int n1, n2, i;
+//
+//  n1 = net->input_n;
+//  n2 = net->hidden_n;
+//
+//  free((char *) net->input_units);
+//  free((char *) net->hidden_units);
+//  free((char *) net->output_units);
+//
+//  free((char *) net->hidden_delta);
+//  free((char *) net->output_delta);
+//  free((char *) net->target);
+//
+//  for (i = 0; i <= n1; i++) {
+//    free((char *) net->input_weights[i]);
+//    free((char *) net->input_prev_weights[i]);
+//  }
+//  free((char *) net->input_weights);
+//  free((char *) net->input_prev_weights);
+//
+//  for (i = 0; i <= n2; i++) {
+//    free((char *) net->hidden_weights[i]);
+//    free((char *) net->hidden_prev_weights[i]);
+//  }
+//  free((char *) net->hidden_weights);
+//  free((char *) net->hidden_prev_weights);
+//
+//  free((char *) net);
+//}
 
 
 /*** Creates a new fully-connected network from scratch,
