@@ -9,10 +9,11 @@
 
 cd /ccs/home/lld/benchmarks/rodinia_3.1/cuda/cfd
 
-for(( j=0; j<3; j++ ))
+for(( j=0; j<1; j++ ))
 do
-  for(( i=100; i<2100; i+=100 ))
+  for(( i=50; i<=1000; i+=50 ))
   do
-    nvprof ./euler3d_lin ../../data/cfd/fvcorr.domn.193K $i
+#nvprof ./euler3d_lin ../../data/cfd/fvcorr.domn.193K $i
+    ./euler3d_lin ../../data/cfd/fvcorr.domn.193K $i
   done
 done

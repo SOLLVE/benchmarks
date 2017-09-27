@@ -499,7 +499,6 @@ int main(int argc, char** argv)
 		std::ifstream file(data_file_name);
 	
 		file >> nel;
-        file.close();
 		nelr = BLOCK_SIZE_0*((nel * input_time / BLOCK_SIZE_0 )+ std::min(1, (nel * input_time) % BLOCK_SIZE_0));
 
 	    areas = alloc<float>(nelr);
@@ -518,28 +517,38 @@ int main(int argc, char** argv)
 
 				
 		// read in data
-        for (int nn = 0; nn < input_time; nn++)
+		for(int i = 0; i < nel; i++)
+		{
+			file >> h_areas[i];
+			for(int j = 0; j < NNB; j++)
+			{
+				file >> h_elements_surrounding_elements[i + j*nelr];
+				if(h_elements_surrounding_elements[i+j*nelr] < 0) h_elements_surrounding_elements[i+j*nelr] = -1;
+				h_elements_surrounding_elements[i + j*nelr]--; //it's coming in with Fortran numbering				
+				
+				for(int k = 0; k < NDIM; k++)
+				{
+					file >> h_normals[i + (j + k*NNB)*nelr];
+					h_normals[i + (j + k*NNB)*nelr] = -h_normals[i + (j + k*NNB)*nelr];
+				}
+			}
+		}
+        file.close();
+        for (int nn = 1; nn < input_time; nn++)
         {
-            file.open(data_file_name);
-            int tmp;
-            file >> tmp;
 		    for(int i = 0; i < nel; i++)
 		    {
-		    	file >> h_areas[i + nn*nel];
+		    	h_areas[i + nn*nel] = h_areas[i];
 		    	for(int j = 0; j < NNB; j++)
 		    	{
-		    		file >> h_elements_surrounding_elements[i + j*nelr + nn*nel];
-		    		if(h_elements_surrounding_elements[i+j*nelr + nn*nel] < 0) h_elements_surrounding_elements[i+j*nelr + nn*nel] = -1;
-		    		h_elements_surrounding_elements[i + j*nelr + nn*nel]--; //it's coming in with Fortran numbering				
+		    		h_elements_surrounding_elements[i + j*nelr + nn*nel] = h_elements_surrounding_elements[i + j*nelr];
 		    		
 		    		for(int k = 0; k < NDIM; k++)
 		    		{
-		    			file >> h_normals[i + (j + k*NNB)*nelr + nn*nel];
-		    			h_normals[i + (j + k*NNB)*nelr + nn*nel] = -h_normals[i + (j + k*NNB)*nelr + nn*nel];
+		    			h_normals[i + (j + k*NNB)*nelr + nn*nel] = h_normals[i + (j + k*NNB)*nelr];
 		    		}
 		    	}
 		    }
-            file.close();
         }
         nel *= input_time;
 		
@@ -584,9 +593,11 @@ int main(int argc, char** argv)
 	// make sure CUDA isn't still doing something before we start timing
 	cudaThreadSynchronize();
 
-    unsigned long total_size = sizeof(float)*nelr // area
+    unsigned long long total_size = sizeof(float)*nelr // area
       + sizeof(int)*nelr*NNB + sizeof(float)*nelr*NDIM*NNB;
-    std::cout << "Size: " << total_size << "\n"; 
+    std::cout << "Input size: " << total_size << "\n"; 
+    total_size += sizeof(float)*nelr*NVAR*3 + sizeof(float)*nelr;
+    std::cout << "Total size: " << total_size << "\n"; 
 
 	// these need to be computed the first time in order to compute time step
 	std::cout << "Starting..." << std::endl;
