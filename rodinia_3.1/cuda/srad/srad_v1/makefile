@@ -1,4 +1,4 @@
-include ../../../common/make.config
+include ../../../common/make.config.summitdev
 
 CC := $(CUDA_DIR)/bin/nvcc
 
@@ -31,7 +31,7 @@ main.o: 	main.cu \
 				srad2_kernel.cu \
 				compress_kernel.cu
 	nvcc	main.cu \
-				-c -O3 -arch sm_35
+				-c -O3 -arch sm_60
 
 # delete all object files
 clean:

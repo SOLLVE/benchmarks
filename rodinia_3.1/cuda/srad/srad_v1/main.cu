@@ -39,6 +39,8 @@
 
 #include "device.c"				// (in library path specified to compiler)	needed by for device functions
 
+#define CUDA_UVM
+
 //====================================================================================================100
 //	MAIN FUNCTION
 //====================================================================================================100
@@ -124,15 +126,17 @@ int main(int argc, char *argv []){
 	// DEVICE
 	fp* d_sums;															// partial sum
 	fp* d_sums2;
-	int* d_iN;
-	int* d_iS;
-	int* d_jE;
-	int* d_jW;
 	fp* d_dN; 
 	fp* d_dS; 
 	fp* d_dW; 
 	fp* d_dE;
+#ifndef CUDA_UVM
+	int* d_iN;
+	int* d_iS;
+	int* d_jE;
+	int* d_jW;
 	fp* d_I;																// input IMAGE on DEVICE
+#endif
 	fp* d_c;
 
 	time1 = get_time();
@@ -179,7 +183,11 @@ int main(int argc, char *argv []){
 
 	Ne = Nr*Nc;
 
+#ifndef CUDA_UVM
 	image = (fp*)malloc(sizeof(fp) * Ne);
+#else
+    cudaMallocManaged((void**)&image, sizeof(fp) * Ne);
+#endif
 
 	resize(	image_ori,
 				image_ori_rows,
@@ -205,11 +213,18 @@ int main(int argc, char *argv []){
 
 	// allocate variables for surrounding pixels
 	mem_size_i = sizeof(int) * Nr;											//
+	mem_size_j = sizeof(int) * Nc;											//
+#ifndef CUDA_UVM
 	iN = (int *)malloc(mem_size_i) ;										// north surrounding element
 	iS = (int *)malloc(mem_size_i) ;										// south surrounding element
-	mem_size_j = sizeof(int) * Nc;											//
-	jW = (int *)malloc(mem_size_j) ;										// west surrounding element
 	jE = (int *)malloc(mem_size_j) ;										// east surrounding element
+	jW = (int *)malloc(mem_size_j) ;										// west surrounding element
+#else
+    cudaMallocManaged((void**)&iN, mem_size_i);
+    cudaMallocManaged((void**)&iS, mem_size_i);
+    cudaMallocManaged((void**)&jE, mem_size_j);
+    cudaMallocManaged((void**)&jW, mem_size_j);
+#endif
 
 	// N/S/W/E indices of surrounding pixels (every element of IMAGE)
 	for (i=0; i<Nr; i++) {
@@ -233,9 +248,12 @@ int main(int argc, char *argv []){
 
 	// allocate memory for entire IMAGE on DEVICE
 	mem_size = sizeof(fp) * Ne;																		// get the size of float representation of input IMAGE
+#ifndef CUDA_UVM
 	cudaMalloc((void **)&d_I, mem_size);														//
+#endif
 
 	// allocate memory for coordinates on DEVICE
+#ifndef CUDA_UVM
 	cudaMalloc((void **)&d_iN, mem_size_i);													//
 	cudaMemcpy(d_iN, iN, mem_size_i, cudaMemcpyHostToDevice);				//
 	cudaMalloc((void **)&d_iS, mem_size_i);													// 
@@ -244,7 +262,9 @@ int main(int argc, char *argv []){
 	cudaMemcpy(d_jE, jE, mem_size_j, cudaMemcpyHostToDevice);				//
 	cudaMalloc((void **)&d_jW, mem_size_j);													// 
 	cudaMemcpy(d_jW, jW, mem_size_j, cudaMemcpyHostToDevice);			//
+#endif
 
+#ifndef CUDA_UVM
 	// allocate memory for partial sums on DEVICE
 	cudaMalloc((void **)&d_sums, mem_size);													//
 	cudaMalloc((void **)&d_sums2, mem_size);												//
@@ -257,6 +277,20 @@ int main(int argc, char *argv []){
 
 	// allocate memory for coefficient on DEVICE
 	cudaMalloc((void **)&d_c, mem_size);														// 
+#else
+	// allocate memory for partial sums on DEVICE
+	cudaMallocManaged((void **)&d_sums, mem_size);													//
+	cudaMallocManaged((void **)&d_sums2, mem_size);												//
+
+	// allocate memory for derivatives
+	cudaMallocManaged((void **)&d_dN, mem_size);														// 
+	cudaMallocManaged((void **)&d_dS, mem_size);														// 
+	cudaMallocManaged((void **)&d_dW, mem_size);													// 
+	cudaMallocManaged((void **)&d_dE, mem_size);														// 
+
+	// allocate memory for coefficient on DEVICE
+	cudaMallocManaged((void **)&d_c, mem_size);														// 
+#endif
 
 	checkCUDAError("setup");
 
@@ -280,7 +314,9 @@ int main(int argc, char *argv []){
 	// 	COPY INPUT TO CPU
 	//================================================================================80
 
+#ifndef CUDA_UVM
 	cudaMemcpy(d_I, image, mem_size, cudaMemcpyHostToDevice);
+#endif
 
 	time6 = get_time();
 
@@ -289,7 +325,11 @@ int main(int argc, char *argv []){
 	//================================================================================80
 
 	extract<<<blocks, threads>>>(	Ne,
+#ifndef CUDA_UVM
 									d_I);
+#else
+									image);
+#endif
 
 	checkCUDAError("extract");
 
@@ -309,7 +349,11 @@ int main(int argc, char *argv []){
 
 		// execute square kernel
 		prepare<<<blocks, threads>>>(	Ne,
+#ifndef CUDA_UVM
 										d_I,
+#else
+									    image,
+#endif
 										d_sums,
 										d_sums2);
 
@@ -357,8 +401,13 @@ int main(int argc, char *argv []){
 
 		// copy total sums to device
 		mem_size_single = sizeof(fp) * 1;
+#ifndef CUDA_UVM
 		cudaMemcpy(&total, d_sums, mem_size_single, cudaMemcpyDeviceToHost);
 		cudaMemcpy(&total2, d_sums2, mem_size_single, cudaMemcpyDeviceToHost);
+#else
+        total = d_sums[0];
+        total2 = d_sums2[0];
+#endif
 
 		checkCUDAError("copy sum");
 
@@ -369,6 +418,7 @@ int main(int argc, char *argv []){
 		q0sqr = varROI / meanROI2;											// gets standard deviation of ROI
 
 		// execute srad kernel
+#ifndef CUDA_UVM
 		srad<<<blocks, threads>>>(	lambda,									// SRAD coefficient 
 									Nr,										// # of rows in input image
 									Nc,										// # of columns in input image
@@ -384,10 +434,28 @@ int main(int argc, char *argv []){
 									q0sqr,									// standard deviation of ROI 
 									d_c,									// diffusion coefficient
 									d_I);									// output image
+#else
+		srad<<<blocks, threads>>>(	lambda,									// SRAD coefficient 
+									Nr,										// # of rows in input image
+									Nc,										// # of columns in input image
+									Ne,										// # of elements in input image
+									iN,									// indices of North surrounding pixels
+									iS,									// indices of South surrounding pixels
+									jE,									// indices of East surrounding pixels
+									jW,									// indices of West surrounding pixels
+									d_dN,									// North derivative
+									d_dS,									// South derivative
+									d_dW,									// West derivative
+									d_dE,									// East derivative
+									q0sqr,									// standard deviation of ROI 
+									d_c,									// diffusion coefficient
+									image);
+#endif
 
 		checkCUDAError("srad");
 
 		// execute srad2 kernel
+#ifndef CUDA_UVM
 		srad2<<<blocks, threads>>>(	lambda,									// SRAD coefficient 
 									Nr,										// # of rows in input image
 									Nc,										// # of columns in input image
@@ -402,6 +470,22 @@ int main(int argc, char *argv []){
 									d_dE,									// East derivative
 									d_c,									// diffusion coefficient
 									d_I);									// output image
+#else
+		srad2<<<blocks, threads>>>(	lambda,									// SRAD coefficient 
+									Nr,										// # of rows in input image
+									Nc,										// # of columns in input image
+									Ne,										// # of elements in input image
+									iN,									// indices of North surrounding pixels
+									iS,									// indices of South surrounding pixels
+									jE,									// indices of East surrounding pixels
+									jW,									// indices of West surrounding pixels
+									d_dN,									// North derivative
+									d_dS,									// South derivative
+									d_dW,									// West derivative
+									d_dE,									// East derivative
+									d_c,									// diffusion coefficient
+									image);
+#endif
 
 		checkCUDAError("srad2");
 
@@ -416,7 +500,11 @@ int main(int argc, char *argv []){
 	//================================================================================80
 
 	compress<<<blocks, threads>>>(	Ne,
+#ifndef CUDA_UVM
 									d_I);
+#else
+									image);
+#endif
 
 	checkCUDAError("compress");
 
@@ -426,7 +514,9 @@ int main(int argc, char *argv []){
 	// 	COPY RESULTS BACK TO CPU
 	//================================================================================80
 
+#ifndef CUDA_UVM
 	cudaMemcpy(image, d_I, mem_size, cudaMemcpyDeviceToHost);
+#endif
 
 	checkCUDAError("copy back");
 
@@ -450,18 +540,28 @@ int main(int argc, char *argv []){
 	//================================================================================80
 
 	free(image_ori);
+#ifndef CUDA_UVM
 	free(image);
 	free(iN); 
 	free(iS); 
-	free(jW); 
 	free(jE);
+	free(jW); 
+#else
+	cudaFree(image);
+	cudaFree(iN); 
+	cudaFree(iS); 
+	cudaFree(jE);
+	cudaFree(jW); 
+#endif
 
+#ifndef CUDA_UVM
 	cudaFree(d_I);
-	cudaFree(d_c);
 	cudaFree(d_iN);
 	cudaFree(d_iS);
 	cudaFree(d_jE);
 	cudaFree(d_jW);
+#endif
+	cudaFree(d_c);
 	cudaFree(d_dN);
 	cudaFree(d_dS);
 	cudaFree(d_dE);
