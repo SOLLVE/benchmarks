@@ -12,10 +12,6 @@
 #define BLOCKS_PER_DIM 16
 #define THREADS_PER_BLOCK THREADS_PER_DIM*THREADS_PER_DIM
 
-#include "kmeans_cuda_kernel.cu"
-
-#define CUDA_UVM
-
 //#define BLOCK_DELTA_REDUCE
 //#define BLOCK_CENTER_REDUCE
 
@@ -26,10 +22,10 @@ extern "C"
 int setup(int argc, char** argv);									/* function prototype */
 
 // GLOBAL!!!!!
-unsigned int num_threads_perdim = THREADS_PER_DIM;					/* sqrt(256) -- see references for this choice */
-unsigned int num_blocks_perdim = BLOCKS_PER_DIM;					/* temporary */
-unsigned int num_threads = num_threads_perdim*num_threads_perdim;	/* number of threads */
-unsigned int num_blocks = num_blocks_perdim*num_blocks_perdim;		/* number of blocks */
+unsigned long long num_threads_perdim = THREADS_PER_DIM;					/* sqrt(256) -- see references for this choice */
+unsigned long long num_blocks_perdim = BLOCKS_PER_DIM;					/* temporary */
+unsigned long long num_threads = num_threads_perdim*num_threads_perdim;	/* number of threads */
+unsigned long long num_blocks = num_blocks_perdim*num_blocks_perdim;		/* number of blocks */
 
 /* _d denotes it resides on the device */
 int    *membership_new;												/* newly assignment membership */
@@ -43,11 +39,13 @@ float  *block_new_centers;											/* sum of points in a cluster (per block) *
 float  *block_clusters_d;											/* per block calculation of cluster centers */
 int    *block_deltas_d;												/* per block calculation of deltas */
 
+#include "kmeans_cuda_kernel.cu"
+
 
 /* -------------- allocateMemory() ------------------- */
 /* allocate device memory, calculate number of blocks and threads, and invert the data array */
 extern "C"
-void allocateMemory(int npoints, int nfeatures, int nclusters, float **features)
+void allocateMemory(unsigned long long npoints, int nfeatures, int nclusters, float **features)
 {	
 	num_blocks = npoints / num_threads;
 	if (npoints % num_threads > 0)		/* defeat truncation */
@@ -80,6 +78,7 @@ void allocateMemory(int npoints, int nfeatures, int nclusters, float **features)
 #else
 	cudaMallocManaged((void**) &feature_d, npoints*nfeatures*sizeof(float));
 #endif
+    total_size += npoints * sizeof(int) + npoints*nfeatures*sizeof(float);
 		
 	/* invert the data array (kernel execution) */	
 #ifndef CUDA_UVM
@@ -104,6 +103,7 @@ void allocateMemory(int npoints, int nfeatures, int nclusters, float **features)
 	cudaMallocManaged((void**) &block_deltas_d, num_blocks_perdim * num_blocks_perdim * sizeof(int));
 #endif
 	//cudaMemcpy(block_delta_d, &delta_h, sizeof(int), cudaMemcpyHostToDevice);
+    total_size += num_blocks_perdim * num_blocks_perdim * sizeof(int);
 #endif
 
 #ifdef BLOCK_CENTER_REDUCE
@@ -117,6 +117,7 @@ void allocateMemory(int npoints, int nfeatures, int nclusters, float **features)
         num_blocks_perdim * num_blocks_perdim * 
         nclusters * nfeatures * sizeof(float));
 #endif
+    total_size += num_blocks_perdim * num_blocks_perdim * nclusters * nfeatures * sizeof(float);
 	//cudaMemcpy(new_clusters_d, new_centers[0], nclusters*nfeatures*sizeof(float), cudaMemcpyHostToDevice);
 #endif
 
@@ -173,7 +174,7 @@ extern "C"
 int	// delta -- had problems when return value was of float type
 kmeansCuda(float  **feature,				/* in: [npoints][nfeatures] */
            int      nfeatures,				/* number of attributes for each point */
-           int      npoints,				/* number of data points */
+           unsigned long long npoints,				/* number of data points */
            int      nclusters,				/* number of clusters */
            int     *membership,				/* which cluster the point belongs to */
 		   float  **clusters,				/* coordinates of cluster centers */
@@ -182,7 +183,7 @@ kmeansCuda(float  **feature,				/* in: [npoints][nfeatures] */
 		   )
 {
 	int delta = 0;			/* if point has moved */
-	int i,j;				/* counters */
+	unsigned long long i,j;				/* counters */
 
 
 	cudaSetDevice(1);
@@ -195,19 +196,19 @@ kmeansCuda(float  **feature,				/* in: [npoints][nfeatures] */
 	cudaMemcpy(clusters_d, clusters[0], nclusters*nfeatures*sizeof(float), cudaMemcpyHostToDevice);
 #endif
 
-	/* set up texture */
-    cudaChannelFormatDesc chDesc0 = cudaCreateChannelDesc<float>();
-    t_features.filterMode = cudaFilterModePoint;   
-    t_features.normalized = false;
-    t_features.channelDesc = chDesc0;
+	///* set up texture */
+    //cudaChannelFormatDesc chDesc0 = cudaCreateChannelDesc<float>();
+    //t_features.filterMode = cudaFilterModePoint;   
+    //t_features.normalized = false;
+    //t_features.channelDesc = chDesc0;
 
-	if(cudaBindTexture(NULL, &t_features, feature_d, &chDesc0, npoints*nfeatures*sizeof(float)) != CUDA_SUCCESS)
-        printf("Couldn't bind features array to texture!\n");
+	//if(cudaBindTexture(NULL, &t_features, feature_d, &chDesc0, npoints*nfeatures*sizeof(float)) != CUDA_SUCCESS)
+    //    printf("Couldn't bind features array to texture!\n");
 
-	cudaChannelFormatDesc chDesc1 = cudaCreateChannelDesc<float>();
-    t_features_flipped.filterMode = cudaFilterModePoint;   
-    t_features_flipped.normalized = false;
-    t_features_flipped.channelDesc = chDesc1;
+	//cudaChannelFormatDesc chDesc1 = cudaCreateChannelDesc<float>();
+    //t_features_flipped.filterMode = cudaFilterModePoint;   
+    //t_features_flipped.normalized = false;
+    //t_features_flipped.channelDesc = chDesc1;
 
 //#ifndef CUDA_UVM
 //	if(cudaBindTexture(NULL, &t_features_flipped, feature_flipped_d, &chDesc1, npoints*nfeatures*sizeof(float)) != CUDA_SUCCESS)

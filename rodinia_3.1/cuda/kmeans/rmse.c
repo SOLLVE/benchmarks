@@ -61,11 +61,11 @@ int find_nearest_point(float  *pt,          /* [nfeatures] */
 /*----< rms_err(): calculates RMSE of clustering >-------------------------------------*/
 float rms_err	(float **feature,         /* [npoints][nfeatures] */
                  int     nfeatures,
-                 int     npoints,
+                 unsigned long long npoints,
                  float **cluster_centres, /* [nclusters][nfeatures] */
                  int     nclusters)
 {
-    int    i;
+    unsigned long long i;
 	int	   nearest_cluster_index;	/* cluster center id with min distance to pt */
     float  sum_euclid = 0.0;		/* sum of Euclidean distance squares */
     float  ret;						/* return value */

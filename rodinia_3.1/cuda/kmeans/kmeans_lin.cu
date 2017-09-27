@@ -76,7 +76,7 @@
 #include <limits.h>
 #include <math.h>
 #include <fcntl.h>
-//#include <omp.h>
+#include <omp.h>
 #include "kmeans.h"
 #include "getopt.h"
 #include <unistd.h>
@@ -113,7 +113,9 @@ int setup(int argc, char **argv) {
 		int		opt;
  extern char   *optarg;
 		char   *filename = 0;
+#ifndef CUDA_UVM
 		float  *buf;
+#endif
 		char	line[1024];
 		int		isBinaryFile = 0;
 
@@ -122,22 +124,23 @@ int setup(int argc, char **argv) {
 		int		min_nclusters=5;		/* default value */
 		int		best_nclusters = 0;
 		int		nfeatures = 0;
-		int		npoints = 0;
+		unsigned long long npoints = 0;
 		float	len;
 		         
 		float **features;
 		float **cluster_centres=NULL;
-		int		i, j, index;
+		unsigned long long		i, j, index;
 		int		nloops = 1;				/* default value */
 				
 		int		isRMSE = 0;		
 		float	rmse;
 		
 		int		isOutput = 0;
-		//float	cluster_timing, io_timing;		
+        int input_time = 1;
+		float	cluster_timing, io_timing;		
 
 		/* obtain command line arguments and change appropriate options */
-		while ( (opt=getopt(argc,argv,"i:t:m:n:l:bro"))!= EOF) {
+		while ( (opt=getopt(argc,argv,"i:t:m:n:l:p:bro"))!= EOF) {
         switch (opt) {
             case 'i': filename=optarg;
                       break;
@@ -154,6 +157,8 @@ int setup(int argc, char **argv) {
 			case 'o': isOutput = 1;
 					  break;
 		    case 'l': nloops = atoi(optarg);
+					  break;
+		    case 'p': input_time = atoi(optarg);
 					  break;
             case '?': usage(argv[0]);
                       break;
@@ -177,8 +182,8 @@ int setup(int argc, char **argv) {
         read(infile, &nfeatures, sizeof(int));        
 
         /* allocate space for features[][] and read attributes of all objects */
-        buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
 #ifndef CUDA_UVM
+        buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
         features    = (float**)malloc(npoints*          sizeof(float*));
         features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
 #else
@@ -188,7 +193,11 @@ int setup(int argc, char **argv) {
         for (i=1; i<npoints; i++)
             features[i] = features[i-1] + nfeatures;
 
+#ifndef CUDA_UVM
         read(infile, buf, npoints*nfeatures*sizeof(float));
+#else
+        read(infile, features[0], npoints*nfeatures*sizeof(float));
+#endif
 
         close(infile);
     }
@@ -210,9 +219,11 @@ int setup(int argc, char **argv) {
             }
         }        
 
+        npoints *= input_time;
+
         /* allocate space for features[] and read attributes of all objects */
-        buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
 #ifndef CUDA_UVM
+        buf         = (float*) malloc(npoints*nfeatures*sizeof(float));
         features    = (float**)malloc(npoints*          sizeof(float*));
         features[0] = (float*) malloc(npoints*nfeatures*sizeof(float));
 #else
@@ -226,11 +237,17 @@ int setup(int argc, char **argv) {
         while (fgets(line, 1024, infile) != NULL) {
             if (strtok(line, " \t\n") == NULL) continue;            
             for (j=0; j<nfeatures; j++) {
+#ifndef CUDA_UVM
                 buf[i] = atof(strtok(NULL, " ,\t\n"));             
+#else
+                features[0][i] = atof(strtok(NULL, " ,\t\n"));             
+#endif
                 i++;
             }            
         }
         fclose(infile);
+        for (j = i; j < npoints*nfeatures; j++)
+          features[0][j] = features[0][j - i];
     }
     //io_timing = omp_get_wtime() - io_timing;
     total_size = npoints*sizeof(float*) + npoints*nfeatures*sizeof(float);
@@ -249,12 +266,14 @@ int setup(int argc, char **argv) {
 	}
 
 	srand(7);												/* seed for future random number generator */	
+#ifndef CUDA_UVM
 	memcpy(features[0], buf, npoints*nfeatures*sizeof(float)); /* now features holds 2-dimensional array of features */
 	free(buf);
+#endif
 
 	/* ======================= core of the clustering ===================*/
 
-    //cluster_timing = omp_get_wtime();		/* Total clustering time */
+    cluster_timing = omp_get_wtime();		/* Total clustering time */
 	cluster_centres = NULL;
     index = cluster(npoints,				/* number of data points */
 					nfeatures,				/* number of features for each point */
@@ -268,7 +287,7 @@ int setup(int argc, char **argv) {
 					isRMSE,					/* calculate RMSE */
 					nloops);				/* number of iteration for each number of clusters */		
     
-	//cluster_timing = omp_get_wtime() - cluster_timing;
+	cluster_timing = omp_get_wtime() - cluster_timing;
 
 
 	/* =============== Command Line Output =============== */
@@ -290,7 +309,7 @@ int setup(int argc, char **argv) {
 
 	printf("Number of Iteration: %d\n", nloops);
 	//printf("Time for I/O: %.5fsec\n", io_timing);
-	//printf("Time for Entire Clustering: %.5fsec\n", cluster_timing);
+	printf("Time for Entire Clustering: %.5fsec\n", cluster_timing);
 	
 	if(min_nclusters != max_nclusters){
 		if(nloops != 1){									//range of k, multiple iteration

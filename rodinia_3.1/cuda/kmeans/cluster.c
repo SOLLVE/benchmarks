@@ -80,7 +80,7 @@ float	min_rmse_ref = FLT_MAX;			/* reference min_rmse value */
 
 /*---< cluster() >-----------------------------------------------------------*/
 extern "C"
-int cluster(int      npoints,				/* number of data points */
+int cluster(unsigned long long npoints,				/* number of data points */
             int      nfeatures,				/* number of attributes for each point */
             float  **features,			/* array: [npoints][nfeatures] */                  
             int      min_nclusters,			/* range of min to max number of clusters */

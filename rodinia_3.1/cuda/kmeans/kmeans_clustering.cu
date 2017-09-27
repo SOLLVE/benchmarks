@@ -73,15 +73,13 @@
 
 extern double wtime(void);
 
-#define CUDA_UVM
-
 #include "kmeans_cuda.cu"
 
 /*----< kmeans_clustering() >---------------------------------------------*/
 extern "C"
 float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
                           int     nfeatures,
-                          int     npoints,
+                          unsigned long long npoints,
                           int     nclusters,
                           float   threshold,
                           int    *membership) /* out: [npoints] */
@@ -115,6 +113,8 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 #endif
     for (i=1; i<nclusters; i++)
         clusters[i] = clusters[i-1] + nfeatures;
+    total_size += nclusters * sizeof(float*) + nclusters * nfeatures * sizeof(float);
+    printf("Total size: %llu\n", total_size);
 
 	/* initialize the random clusters */
 	initial = (int *) malloc (npoints * sizeof(int));

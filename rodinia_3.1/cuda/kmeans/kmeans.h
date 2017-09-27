@@ -47,16 +47,16 @@
 /* rmse.c */
 float   euclid_dist_2        (float*, float*, int);
 int     find_nearest_point   (float* , int, float**, int);
-float	rms_err(float**, int, int, float**, int);
+float	rms_err(float**, int, unsigned long long, float**, int);
 
 /* cluster.c */
-extern "C" int     cluster(int, int, float**, int, int, float, int*, float***, float*, int, int);
+extern "C" int     cluster(unsigned long long, int, float**, int, int, float, int*, float***, float*, int, int);
 
 /* kmeans_clustering.c */
-extern "C" float **kmeans_clustering(float**, int, int, int, float, int*);
+extern "C" float **kmeans_clustering(float**, int, unsigned long long, int, float, int*);
 
 extern "C"
-void allocateMemory(int npoints, int nfeatures, int nclusters, float **features);
+void allocateMemory(unsigned long long npoints, int nfeatures, int nclusters, float **features);
 
 extern "C"
 void deallocateMemory();
