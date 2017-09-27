@@ -20,6 +20,7 @@
 #include <string.h>
 #include <math.h>
 #include <cuda.h>
+#include <helper_timer.h>
 
 #define CUDA_UVM
 
@@ -163,6 +164,13 @@ void BFSGraph( int argc, char** argv)
     total_size += sizeof(bool)*no_of_nodes*3 + sizeof(int)*no_of_nodes;
     printf("Total size: %llu\n", total_size);
 
+	StopWatchInterface *timer = 0;
+	  //	unsigned int timer = 0;
+
+	// CUT_SAFE_CALL( cutCreateTimer( &timer));
+	// CUT_SAFE_CALL( cutStartTimer( timer));
+	sdkCreateTimer(&timer); 
+	sdkStartTimer(&timer); 
 #ifndef CUDA_UVM
 	//Copy the Node list to device memory
 	Node* d_graph_nodes;
@@ -267,6 +275,9 @@ void BFSGraph( int argc, char** argv)
 
 
 	printf("Kernel Executed %d times\n",k);
+
+	sdkStopTimer(&timer); 
+	printf("Time: %f\n", (sdkGetAverageTimerValue(&timer)/1000.0));
 
 	// copy result from device to host
 #ifndef CUDA_UVM

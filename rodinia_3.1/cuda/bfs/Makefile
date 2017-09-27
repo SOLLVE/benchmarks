@@ -1,4 +1,4 @@
-include ../../common/make.config
+include ../../common/make.config.summitdev
 
 CC := $(CUDA_DIR)/bin/nvcc
 
@@ -9,7 +9,7 @@ SRC = bfs_linput.cu
 EXE = bfs
 
 release: $(SRC)
-	$(CC) -arch=sm_35 $(SRC) -o $(EXE) -I$(INCLUDE) -L$(CUDA_LIB_DIR) 
+	$(CC) -arch=sm_60 $(SRC) -o $(EXE) -I$(INCLUDE) -L$(CUDA_LIB_DIR)  -I$(SDK_DIR)/common/inc  -L$(SDK_DIR)/lib
 
 enum: $(SRC)
 	$(CC) -deviceemu $(SRC) -o $(EXE) -I$(INCLUDE) -L$(CUDA_LIB_DIR) 

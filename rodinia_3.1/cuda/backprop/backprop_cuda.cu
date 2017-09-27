@@ -82,9 +82,11 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   float *input_weights_one_dim;
   float *input_weights_prev_one_dim;
   num_blocks = in / 16;  
-  dim3  grid( 1 , num_blocks);
+  //dim3  grid( 1 , num_blocks);
+  dim3  grid(num_blocks, 1);
   dim3  threads(16 , 16);
   
+  double cur_time = gettime();
 #ifndef CUDA_UVM
   input_weights_one_dim = (float *) malloc((in + 1)* (hid + 1) * sizeof(float));
   partial_sum = (float *) malloc(num_blocks * WIDTH * sizeof(float));
@@ -137,14 +139,12 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   
 #ifndef CUDA_UVM
   bpnn_layerforward_CUDA<<< grid, threads >>>(input_cuda,
-#else
-  bpnn_layerforward_CUDA<<< grid, threads >>>(net->input_units,
-#endif
 	                                          output_hidden_cuda,
-#ifndef CUDA_UVM
 											  input_hidden_cuda,
 											  hidden_partial_sum,
 #else
+  bpnn_layerforward_CUDA<<< grid, threads >>>(net->input_units,
+	                                          output_hidden_cuda,
                                               input_weights_one_dim,
                                               partial_sum,
 #endif
@@ -244,6 +244,8 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 
 #endif   
   
+  cur_time = gettime() - cur_time;
+  printf("Time: %f\n", cur_time);
   
   
 
