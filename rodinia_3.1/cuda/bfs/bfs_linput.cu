@@ -34,8 +34,8 @@ unsigned long long edge_list_size;
 //Structure to hold a node information
 struct Node
 {
-	int starting;
-	int no_of_edges;
+	unsigned long long starting;
+	unsigned long long no_of_edges;
 };
 
 #include "kernel.cu"
@@ -85,14 +85,14 @@ void BFSGraph( int argc, char** argv)
 	//fscanf(fp,"%d",&no_of_nodes);
     no_of_nodes = atoi(argv[1]);
 
-	int num_of_blocks = 1;
-	int num_of_threads_per_block = no_of_nodes;
+	unsigned long long num_of_blocks = 1;
+	unsigned long long num_of_threads_per_block = no_of_nodes;
 
 	//Make execution Parameters according to the number of nodes
 	//Distribute threads across multiple Blocks if necessary
 	if(no_of_nodes>MAX_THREADS_PER_BLOCK)
 	{
-		num_of_blocks = (int)ceil(no_of_nodes/(double)MAX_THREADS_PER_BLOCK); 
+		num_of_blocks = (unsigned long long)ceil(no_of_nodes/(double)MAX_THREADS_PER_BLOCK); 
 		num_of_threads_per_block = MAX_THREADS_PER_BLOCK; 
 	}
 
@@ -116,7 +116,7 @@ void BFSGraph( int argc, char** argv)
 	unsigned long long start, edgeno;   
     start = 0;
 	// initalize the memory
-	for( unsigned int i = 0; i < no_of_nodes; i++) 
+	for( unsigned long long i = 0; i < no_of_nodes; i++) 
 	{
 		//fscanf(fp,"%d %d",&start,&edgeno);
         edgeno = rand()%10+1;
@@ -139,14 +139,14 @@ void BFSGraph( int argc, char** argv)
 	//fscanf(fp,"%d",&edge_list_size);
     edge_list_size = start;
 
-	int id,cost;
+	//int id,cost;
 #ifndef CUDA_UVM
-	int* h_graph_edges = (int*) malloc(sizeof(int)*edge_list_size);
+	unsigned long long* h_graph_edges = (unsigned long long*) malloc(sizeof(unsigned long long)*edge_list_size);
 #else
-	int* h_graph_edges;
-	cudaMallocManaged( (void**) &h_graph_edges, sizeof(int)*edge_list_size) ;
+	unsigned long long* h_graph_edges;
+	cudaMallocManaged( (void**) &h_graph_edges, sizeof(unsigned long long)*edge_list_size) ;
 #endif
-	for(int i=0; i < edge_list_size ; i++)
+	for(unsigned long long i=0; i < edge_list_size ; i++)
 	{
 		//fscanf(fp,"%d",&id);
 		//fscanf(fp,"%d",&cost);
@@ -157,7 +157,11 @@ void BFSGraph( int argc, char** argv)
 	//if(fp)
 	//	fclose(fp);    
 
-	printf("Read File\n");
+	//printf("Read File\n");
+    unsigned long long total_size = sizeof(Node)*no_of_nodes + sizeof(unsigned long long)*edge_list_size;
+    printf("Input size: %llu\n", total_size);
+    total_size += sizeof(bool)*no_of_nodes*3 + sizeof(int)*no_of_nodes;
+    printf("Total size: %llu\n", total_size);
 
 #ifndef CUDA_UVM
 	//Copy the Node list to device memory
@@ -166,9 +170,9 @@ void BFSGraph( int argc, char** argv)
 	cudaMemcpy( d_graph_nodes, h_graph_nodes, sizeof(Node)*no_of_nodes, cudaMemcpyHostToDevice) ;
 
 	//Copy the Edge List to device Memory
-	int* d_graph_edges;
-	cudaMalloc( (void**) &d_graph_edges, sizeof(int)*edge_list_size) ;
-	cudaMemcpy( d_graph_edges, h_graph_edges, sizeof(int)*edge_list_size, cudaMemcpyHostToDevice) ;
+	unsigned long long* d_graph_edges;
+	cudaMalloc( (void**) &d_graph_edges, sizeof(unsigned long long)*edge_list_size) ;
+	cudaMemcpy( d_graph_edges, h_graph_edges, sizeof(unsigned long long)*edge_list_size, cudaMemcpyHostToDevice) ;
 
 	//Copy the Mask to device memory
 	bool* d_graph_mask;
@@ -192,7 +196,7 @@ void BFSGraph( int argc, char** argv)
 	int* h_cost;
 	cudaMallocManaged( (void**) &h_cost, sizeof(int)*no_of_nodes);
 #endif
-	for(int i=0;i<no_of_nodes;i++)
+	for(unsigned long long i=0;i<no_of_nodes;i++)
 		h_cost[i]=-1;
 	h_cost[source]=0;
 	
@@ -271,12 +275,12 @@ void BFSGraph( int argc, char** argv)
     cudaDeviceSynchronize();
 #endif
 
-	//Store the result into a file
-	FILE *fpo = fopen("result.txt","w");
-	for(int i=0;i<no_of_nodes;i++)
-		fprintf(fpo,"%d) cost:%d\n",i,h_cost[i]);
-	fclose(fpo);
-	printf("Result stored in result.txt\n");
+	////Store the result into a file
+	//FILE *fpo = fopen("result.txt","w");
+	//for(int i=0;i<no_of_nodes;i++)
+	//	fprintf(fpo,"%d) cost:%d\n",i,h_cost[i]);
+	//fclose(fpo);
+	//printf("Result stored in result.txt\n");
 
 
 	// cleanup memory
