@@ -21,8 +21,8 @@
 
 void write_graphics(	char* filename,
 									fp* input, 
-									int data_rows, 
-									int data_cols, 
+									unsigned long long data_rows, 
+									unsigned long long data_cols, 
 									int major,
 									int data_range){
 
@@ -31,7 +31,7 @@ void write_graphics(	char* filename,
 	//================================================================================80
 
 	FILE* fid;
-	int i, j;
+	unsigned long long i, j;
 
 	//================================================================================80
 	//	CREATE/OPEN FILE FOR WRITING
@@ -90,8 +90,8 @@ void write_graphics(	char* filename,
 
 void read_graphics(	char* filename,
 									fp* input,
-									int data_rows, 
-									int data_cols,
+									unsigned long long data_rows, 
+									unsigned long long data_cols,
 									int major){
 
 	//================================================================================80
@@ -99,7 +99,7 @@ void read_graphics(	char* filename,
 	//================================================================================80
 
 	FILE* fid;
-	int i, j;
+	unsigned long long i, j;
 	char c;
 	int temp;
 

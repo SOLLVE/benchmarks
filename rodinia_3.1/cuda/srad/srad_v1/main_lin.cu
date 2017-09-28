@@ -76,8 +76,8 @@ int main(int argc, char *argv []){
 
     // inputs image, input paramenters
     fp* image;															// input image
-    int Nr,Nc;													// IMAGE nbr of rows/cols/elements
-	long Ne;
+    unsigned long long Nr,Nc;													// IMAGE nbr of rows/cols/elements
+	unsigned long long Ne;
 
 	// algorithm parameters
     int niter;																// nbr of iterations
@@ -92,11 +92,11 @@ int main(int argc, char *argv []){
 
     // counters
     int iter;   // primary loop
-    long i,j;    // image row/col
+    unsigned long long i,j;    // image row/col
 
 	// memory sizes
-	int mem_size_i;
-	int mem_size_j;
+	unsigned long long mem_size_i;
+	unsigned long long mem_size_j;
 	int mem_size_single;
 
 	//================================================================================80
@@ -111,7 +111,7 @@ int main(int argc, char *argv []){
 	dim3 blocks3;
 
 	// memory sizes
-	int mem_size;															// matrix memory size
+	unsigned long long mem_size;															// matrix memory size
 
 	// HOST
 	int no;
@@ -139,13 +139,15 @@ int main(int argc, char *argv []){
 #endif
 	fp* d_c;
 
+    unsigned input_time;
+
 	time1 = get_time();
 
 	//================================================================================80
 	// 	GET INPUT PARAMETERS
 	//================================================================================80
 
-	if(argc != 5){
+	if(argc != 6){
 		printf("ERROR: wrong number of arguments\n");
 		return 0;
 	}
@@ -154,6 +156,7 @@ int main(int argc, char *argv []){
 		lambda = atof(argv[2]);
 		Nr = atoi(argv[3]);						// it is 502 in the original image
 		Nc = atoi(argv[4]);						// it is 458 in the original image
+		input_time = atoi(argv[5]);
 	}
 
 	time2 = get_time();
@@ -165,7 +168,7 @@ int main(int argc, char *argv []){
     // read image
 	image_ori_rows = 502;
 	image_ori_cols = 458;
-	image_ori_elem = image_ori_rows * image_ori_cols;
+	image_ori_elem = image_ori_rows * image_ori_cols * input_time;
 
 	image_ori = (fp*)malloc(sizeof(fp) * image_ori_elem);
 
@@ -174,6 +177,16 @@ int main(int argc, char *argv []){
 								image_ori_rows,
 								image_ori_cols,
 								1);
+
+    for (unsigned nn = 1; nn < input_time; nn++) {
+		for(i=0; i<image_ori_rows; i++){
+			for(j=nn*image_ori_cols; j<(nn+1)*image_ori_cols; j++){
+				image_ori[j*image_ori_rows+i] = image_ori[(j-nn*image_ori_cols)*image_ori_rows+i];
+			}
+		}
+    }
+    image_ori_cols *= input_time;
+    Nc *= input_time;
 
 	time3 = get_time();
 
@@ -337,6 +350,7 @@ int main(int argc, char *argv []){
 #endif
 
 	checkCUDAError("extract");
+    cudaThreadSynchronize();
 
 	time7 = get_time();
 
@@ -495,6 +509,7 @@ int main(int argc, char *argv []){
 		checkCUDAError("srad2");
 
 	}
+    cudaThreadSynchronize();
 
 	// printf("\n");
 
@@ -512,6 +527,7 @@ int main(int argc, char *argv []){
 #endif
 
 	checkCUDAError("compress");
+    cudaThreadSynchronize();
 
 	time9 = get_time();
 
@@ -521,6 +537,7 @@ int main(int argc, char *argv []){
 
 #ifndef CUDA_UVM
 	cudaMemcpy(image, d_I, mem_size, cudaMemcpyDeviceToHost);
+#else
 #endif
 
 	checkCUDAError("copy back");
@@ -531,12 +548,12 @@ int main(int argc, char *argv []){
 	// 	WRITE IMAGE AFTER PROCESSING
 	//================================================================================80
 
-	write_graphics(	"image_out.pgm",
-					image,
-					Nr,
-					Nc,
-					1,
-					255);
+	//write_graphics(	"image_out.pgm",
+	//				image,
+	//				Nr,
+	//				Nc,
+	//				1,
+	//				255);
 
 	time11 = get_time();
 
