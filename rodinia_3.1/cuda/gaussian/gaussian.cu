@@ -19,6 +19,8 @@
 #include <string.h>
 #include <math.h>
 
+#define CUDA_UVM
+
 #ifdef RD_WG_SIZE_0_0
         #define MAXBLOCKSIZE RD_WG_SIZE_0_0
 #elif defined(RD_WG_SIZE_0)
@@ -40,7 +42,7 @@
         #define BLOCK_SIZE_XY 4
 #endif
 
-int Size;
+unsigned long long Size;
 float *a, *b, *finalVec;
 float *m;
 
@@ -50,12 +52,12 @@ void InitProblemOnce(char *filename);
 void InitPerRun();
 void ForwardSub();
 void BackSub();
-__global__ void Fan1(float *m, float *a, int Size, int t);
-__global__ void Fan2(float *m, float *a, float *b,int Size, int j1, int t);
-void InitMat(float *ary, int nrow, int ncol);
-void InitAry(float *ary, int ary_size);
-void PrintMat(float *ary, int nrow, int ncolumn);
-void PrintAry(float *ary, int ary_size);
+__global__ void Fan1(float *m, float *a, unsigned long long Size, unsigned long long t);
+__global__ void Fan2(float *m, float *a, float *b,unsigned long long Size, unsigned long long j1, unsigned long long t);
+void InitMat(float *ary, unsigned long long nrow, unsigned long long ncol);
+void InitAry(float *ary, unsigned long long ary_size);
+void PrintMat(float *ary, unsigned long long nrow, unsigned long long ncolumn);
+void PrintAry(float *ary, unsigned long long ary_size);
 void PrintDeviceProperties();
 void checkCUDAError(const char *msg);
 
@@ -63,8 +65,8 @@ unsigned int totalKernelTime = 0;
 
 // create both matrix and right hand side, Ke Wang 2013/08/12 11:51:06
 void
-create_matrix(float *m, int size){
-  int i,j;
+create_matrix(float *m, unsigned long long size){
+  unsigned long long i,j;
   float lamda = -0.01;
   float coe[2*size-1];
   float coe_i =0.0;
@@ -93,7 +95,7 @@ int main(int argc, char *argv[])
 {
   printf("WG size of kernel 1 = %d, WG size of kernel 2= %d X %d\n", MAXBLOCKSIZE, BLOCK_SIZE_XY, BLOCK_SIZE_XY);
     int verbose = 1;
-    int i, j;
+    unsigned long long i, j;
     char flag;
     if (argc < 2) {
         printf("Usage: gaussian -f filename / -s size [-q]\n\n");
@@ -132,8 +134,9 @@ int main(int argc, char *argv[])
             case 's': // platform
               i++;
               Size = atoi(argv[i]);
-	      printf("Create matrix internally in parse, size = %d \n", Size);
+	      printf("Create matrix internally in parse, size = %llu \n", Size);
 
+#ifndef CUDA_UVM
 	      a = (float *) malloc(Size * Size * sizeof(float));
 	      create_matrix(a, Size);
 
@@ -142,6 +145,16 @@ int main(int argc, char *argv[])
 	    	b[j]=1.0;
 
 	      m = (float *) malloc(Size * Size * sizeof(float));
+#else
+	      cudaMallocManaged((void **) &a, Size * Size * sizeof(float));
+	      create_matrix(a, Size);
+	      
+	      cudaMallocManaged((void **) &b, Size * sizeof(float));	
+	      for (j =0; j< Size; j++)
+	    	b[j]=1.0;
+
+	      cudaMallocManaged((void **) &m, Size * Size * sizeof(float));
+#endif
               break;
             case 'f': // platform
               i++;
@@ -154,6 +167,10 @@ int main(int argc, char *argv[])
 	  }
       }
     }
+    unsigned long long total_size = Size * Size * sizeof(float);
+    printf("Input size: %llu\n", total_size);
+    total_size += Size * Size * sizeof(float) + Size * sizeof(float);
+    printf("Total size: %llu\n", total_size);
 
     //InitProblemOnce(filename);
     InitPerRun();
@@ -190,9 +207,15 @@ int main(int argc, char *argv[])
     /*printf("%d,%d\n",size,time_total);
     fprintf(stderr,"%d,%d\n",size,time_total);*/
     
+#ifndef CUDA_UVM
     free(m);
     free(a);
     free(b);
+#else
+    cudaFree(m);
+    cudaFree(a);
+    cudaFree(b);
+#endif
 }
 /*------------------------------------------------------
  ** PrintDeviceProperties
@@ -273,7 +296,7 @@ void InitProblemOnce(char *filename)
  */
 void InitPerRun() 
 {
-	int i;
+	unsigned long long i;
 	for (i=0; i<Size*Size; i++)
 			*(m+i) = 0.0;
 }
@@ -286,7 +309,7 @@ void InitPerRun()
  ** of t which is defined on the ForwardSub().
  **-------------------------------------------------------
  */
-__global__ void Fan1(float *m_cuda, float *a_cuda, int Size, int t)
+__global__ void Fan1(float *m_cuda, float *a_cuda, unsigned long long Size, unsigned long long t)
 {   
 	//if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) printf(".");
 	//printf("blockIDx.x:%d,threadIdx.x:%d,Size:%d,t:%d,Size-1-t:%d\n",blockIdx.x,threadIdx.x,Size,t,Size-1-t);
@@ -300,13 +323,13 @@ __global__ void Fan1(float *m_cuda, float *a_cuda, int Size, int t)
  **-------------------------------------------------------
  */ 
 
-__global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda,int Size, int j1, int t)
+__global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda,unsigned long long Size, unsigned long long j1, unsigned long long t)
 {
 	if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) return;
 	if(threadIdx.y + blockIdx.y * blockDim.y >= Size-t) return;
 	
-	int xidx = blockIdx.x * blockDim.x + threadIdx.x;
-	int yidx = blockIdx.y * blockDim.y + threadIdx.y;
+	unsigned long long xidx = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned long long yidx = blockIdx.y * blockDim.y + threadIdx.y;
 	//printf("blockIdx.x:%d,threadIdx.x:%d,blockIdx.y:%d,threadIdx.y:%d,blockDim.x:%d,blockDim.y:%d\n",blockIdx.x,threadIdx.x,blockIdx.y,threadIdx.y,blockDim.x,blockDim.y);
 	
 	a_cuda[Size*(xidx+1+t)+(yidx+t)] -= m_cuda[Size*(xidx+1+t)+t] * a_cuda[Size*t+(yidx+t)];
@@ -325,7 +348,8 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda,int Size, int j
  */
 void ForwardSub()
 {
-	int t;
+	unsigned long long t;
+#ifndef CUDA_UVM
     float *m_cuda,*a_cuda,*b_cuda;
 	
 	// allocate memory on GPU
@@ -339,6 +363,7 @@ void ForwardSub()
 	cudaMemcpy(m_cuda, m, Size * Size * sizeof(float),cudaMemcpyHostToDevice );
 	cudaMemcpy(a_cuda, a, Size * Size * sizeof(float),cudaMemcpyHostToDevice );
 	cudaMemcpy(b_cuda, b, Size * sizeof(float),cudaMemcpyHostToDevice );
+#endif
 	
 	int block_size,grid_size;
 	
@@ -361,11 +386,22 @@ void ForwardSub()
     // begin timing kernels
     struct timeval time_start;
     gettimeofday(&time_start, NULL);
-	for (t=0; t<(Size-1); t++) {
+	//for (t=0; t<(Size-1); t++) {
+    unsigned iteration_num = Size;
+    if (Size > 100)
+        iteration_num = 100;
+	for (t=0; t<(iteration_num-1); t++) {
+#ifndef CUDA_UVM
 		Fan1<<<dimGrid,dimBlock>>>(m_cuda,a_cuda,Size,t);
 		cudaThreadSynchronize();
 		Fan2<<<dimGridXY,dimBlockXY>>>(m_cuda,a_cuda,b_cuda,Size,Size-t,t);
+#else
+		Fan1<<<dimGrid,dimBlock>>>(m,a,Size,t);
 		cudaThreadSynchronize();
+		Fan2<<<dimGridXY,dimBlockXY>>>(m,a,b,Size,Size-t,t);
+#endif
+		cudaThreadSynchronize();
+        printf(".");
 		checkCUDAError("Fan2");
 	}
 	// end timing kernels
@@ -373,6 +409,7 @@ void ForwardSub()
     gettimeofday(&time_end, NULL);
     totalKernelTime = (time_end.tv_sec * 1000000 + time_end.tv_usec) - (time_start.tv_sec * 1000000 + time_start.tv_usec);
 	
+#ifndef CUDA_UVM
 	// copy memory back to CPU
 	cudaMemcpy(m, m_cuda, Size * Size * sizeof(float),cudaMemcpyDeviceToHost );
 	cudaMemcpy(a, a_cuda, Size * Size * sizeof(float),cudaMemcpyDeviceToHost );
@@ -380,6 +417,7 @@ void ForwardSub()
 	cudaFree(m_cuda);
 	cudaFree(a_cuda);
 	cudaFree(b_cuda);
+#endif
 }
 
 /*------------------------------------------------------
@@ -403,9 +441,9 @@ void BackSub()
 	}
 }
 
-void InitMat(float *ary, int nrow, int ncol)
+void InitMat(float *ary, unsigned long long nrow, unsigned long long ncol)
 {
-	int i, j;
+	unsigned long long i, j;
 	
 	for (i=0; i<nrow; i++) {
 		for (j=0; j<ncol; j++) {
@@ -418,9 +456,9 @@ void InitMat(float *ary, int nrow, int ncol)
  ** PrintMat() -- Print the contents of the matrix
  **------------------------------------------------------
  */
-void PrintMat(float *ary, int nrow, int ncol)
+void PrintMat(float *ary, unsigned long long nrow, unsigned long long ncol)
 {
-	int i, j;
+	unsigned long long i, j;
 	
 	for (i=0; i<nrow; i++) {
 		for (j=0; j<ncol; j++) {
@@ -436,9 +474,9 @@ void PrintMat(float *ary, int nrow, int ncol)
  ** data from the data file
  **------------------------------------------------------
  */
-void InitAry(float *ary, int ary_size)
+void InitAry(float *ary, unsigned long long ary_size)
 {
-	int i;
+	unsigned long long i;
 	
 	for (i=0; i<ary_size; i++) {
 		fscanf(fp, "%f",  &ary[i]);
@@ -449,9 +487,9 @@ void InitAry(float *ary, int ary_size)
  ** PrintAry() -- Print the contents of the array (vector)
  **------------------------------------------------------
  */
-void PrintAry(float *ary, int ary_size)
+void PrintAry(float *ary, unsigned long long ary_size)
 {
-	int i;
+	unsigned long long i;
 	for (i=0; i<ary_size; i++) {
 		printf("%.2f ", ary[i]);
 	}
