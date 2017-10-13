@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#BSUB -P GEN010SOLLVE
+#BSUB -J gputest
+#BSUB -o um_40k_092917.log
+#BSUB -W 240
+#BSUB -n 1
+#BSUB -q batch
+
+cd /ccs/home/lld/benchmarks/rodinia_3.1/cuda/gaussian
+
+for(( j=0; j<1; j++ ))
+do
+#  for(( i=200; i<=4000; i+=200 ))
+#  for(( i=500; i<=20000; i+=500 ))
+  for(( i=2000; i<=40000; i+=2000 ))
+  do
+    nvprof ./gaussian -s $i -q
+#    ./gaussian -s $i -q
+  done
+  ./gaussian -q -s 15800
+  ./gaussian -q -s 22400
+  ./gaussian -q -s 27400
+  ./gaussian -q -s 31600
+  ./gaussian -q -s 35400
+  ./gaussian -q -s 38800
+  ./gaussian -q -s 40000
+  ./gaussian -q -s 41800
+  ./gaussian -q -s 44800
+  ./gaussian -q -s 47400
+  ./gaussian -q -s 50000
+done
