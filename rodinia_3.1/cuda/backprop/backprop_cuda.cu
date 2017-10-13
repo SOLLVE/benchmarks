@@ -112,6 +112,7 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   cudaMalloc((void**) &input_hidden_cuda, (in + 1) * (hid + 1) * sizeof(float));
   cudaMalloc((void**) &hidden_partial_sum, num_blocks * WIDTH * sizeof(float));
 #endif
+  unsigned long long total_size = (in + 1) * (hid + 1) * sizeof(float) + (in + 1) * sizeof(float) + num_blocks * WIDTH * sizeof(float);
   
   
 #endif
@@ -195,6 +196,8 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   cudaMemcpy(input_prev_weights_cuda, input_weights_prev_one_dim, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
   //cudaMemcpy(input_hidden_cuda, input_weights_one_dim, (in + 1) * (hid + 1) * sizeof(float), cudaMemcpyHostToDevice);
 #endif  
+  total_size += (in + 1) * (hid + 1) * sizeof(float) + (hid + 1) * sizeof(float);
+  printf("Total size: %llu\n", total_size);
 
 
 #ifndef CUDA_UVM

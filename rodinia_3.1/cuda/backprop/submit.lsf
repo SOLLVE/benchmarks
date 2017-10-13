@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#BSUB -P GEN010SOLLVE
+#BSUB -J gputest
+#BSUB -o um_101317.log
+#BSUB -W 240
+#BSUB -n 1
+#BSUB -q batch
+
+cd /ccs/home/lld/benchmarks/rodinia_3.1/cuda/backprop
+
+for(( j=0; j<3; j++ ))
+do
+  for(( i=1000000; i<= 21000000; i+=1000000 ))
+  do
+#    nvprof ./backprop $i
+    ./backprop $i
+  done
+done

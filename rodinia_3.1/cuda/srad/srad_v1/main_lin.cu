@@ -39,7 +39,7 @@
 
 #include "device.c"				// (in library path specified to compiler)	needed by for device functions
 
-#define CUDA_UVM
+//#define CUDA_UVM
 
 //====================================================================================================100
 //	MAIN FUNCTION

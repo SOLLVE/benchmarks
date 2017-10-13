@@ -7,7 +7,7 @@
 #include <iostream>
 #include <fstream>
 
-#define CUDA_UVM 
+//#define CUDA_UVM 
  
 /*
  * Options 

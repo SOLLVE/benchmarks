@@ -174,6 +174,7 @@ int main(int argc, char *argv[])
 
     //InitProblemOnce(filename);
     InitPerRun();
+    printf("Start\n");
     //begin timing
     struct timeval time_start;
     gettimeofday(&time_start, NULL);	
@@ -314,8 +315,9 @@ __global__ void Fan1(float *m_cuda, float *a_cuda, unsigned long long Size, unsi
 	//if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) printf(".");
 	//printf("blockIDx.x:%d,threadIdx.x:%d,Size:%d,t:%d,Size-1-t:%d\n",blockIdx.x,threadIdx.x,Size,t,Size-1-t);
 
-	if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) return;
-	*(m_cuda+Size*(blockDim.x*blockIdx.x+threadIdx.x+t+1)+t) = *(a_cuda+Size*(blockDim.x*blockIdx.x+threadIdx.x+t+1)+t) / *(a_cuda+Size*t+t);
+    unsigned long long id = threadIdx.x + blockIdx.x * blockDim.x;
+	if(id >= Size-1-t) return;
+	*(m_cuda+Size*(id+t+1)+t) = *(a_cuda+Size*(id+t+1)+t) / *(a_cuda+Size*t+t);
 }
 
 /*-------------------------------------------------------
@@ -325,12 +327,12 @@ __global__ void Fan1(float *m_cuda, float *a_cuda, unsigned long long Size, unsi
 
 __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda,unsigned long long Size, unsigned long long j1, unsigned long long t)
 {
-	if(threadIdx.x + blockIdx.x * blockDim.x >= Size-1-t) return;
-	if(threadIdx.y + blockIdx.y * blockDim.y >= Size-t) return;
-	
 	unsigned long long xidx = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned long long yidx = blockIdx.y * blockDim.y + threadIdx.y;
 	//printf("blockIdx.x:%d,threadIdx.x:%d,blockIdx.y:%d,threadIdx.y:%d,blockDim.x:%d,blockDim.y:%d\n",blockIdx.x,threadIdx.x,blockIdx.y,threadIdx.y,blockDim.x,blockDim.y);
+	
+	if(xidx >= Size-1-t) return;
+	if(yidx >= Size-t) return;
 	
 	a_cuda[Size*(xidx+1+t)+(yidx+t)] -= m_cuda[Size*(xidx+1+t)+t] * a_cuda[Size*t+(yidx+t)];
 	//a_cuda[xidx+1+t][yidx+t] -= m_cuda[xidx+1+t][t] * a_cuda[t][yidx+t];
@@ -388,8 +390,10 @@ void ForwardSub()
     gettimeofday(&time_start, NULL);
 	//for (t=0; t<(Size-1); t++) {
     unsigned iteration_num = Size;
-    if (Size > 100)
-        iteration_num = 100;
+    if (Size > 4)
+        iteration_num = 4;
+        printf(".");
+        fflush(stdout);
 	for (t=0; t<(iteration_num-1); t++) {
 #ifndef CUDA_UVM
 		Fan1<<<dimGrid,dimBlock>>>(m_cuda,a_cuda,Size,t);
@@ -398,10 +402,13 @@ void ForwardSub()
 #else
 		Fan1<<<dimGrid,dimBlock>>>(m,a,Size,t);
 		cudaThreadSynchronize();
+        printf(".");
+        fflush(stdout);
 		Fan2<<<dimGridXY,dimBlockXY>>>(m,a,b,Size,Size-t,t);
 #endif
 		cudaThreadSynchronize();
         printf(".");
+        fflush(stdout);
 		checkCUDAError("Fan2");
 	}
 	// end timing kernels
