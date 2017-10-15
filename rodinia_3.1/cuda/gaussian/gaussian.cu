@@ -19,7 +19,7 @@
 #include <string.h>
 #include <math.h>
 
-#define CUDA_UVM
+//#define CUDA_UVM
 
 #ifdef RD_WG_SIZE_0_0
         #define MAXBLOCKSIZE RD_WG_SIZE_0_0
@@ -398,6 +398,8 @@ void ForwardSub()
 #ifndef CUDA_UVM
 		Fan1<<<dimGrid,dimBlock>>>(m_cuda,a_cuda,Size,t);
 		cudaThreadSynchronize();
+        printf(".");
+        fflush(stdout);
 		Fan2<<<dimGridXY,dimBlockXY>>>(m_cuda,a_cuda,b_cuda,Size,Size-t,t);
 #else
 		Fan1<<<dimGrid,dimBlock>>>(m,a,Size,t);

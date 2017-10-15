@@ -12,7 +12,7 @@
 #include "backprop_cuda_kernel.cu"
 #include "backprop.h"
 
-#define CUDA_UVM
+//#define CUDA_UVM
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +86,6 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
   dim3  grid(num_blocks, 1);
   dim3  threads(16 , 16);
   
-  double cur_time = gettime();
 #ifndef CUDA_UVM
   input_weights_one_dim = (float *) malloc((in + 1)* (hid + 1) * sizeof(float));
   partial_sum = (float *) malloc(num_blocks * WIDTH * sizeof(float));
@@ -106,6 +105,7 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
     }
   }
   
+  double cur_time = gettime();
 #ifndef CUDA_UVM
   cudaMalloc((void**) &input_cuda, (in + 1) * sizeof(float));
   //cudaMalloc((void**) &output_hidden_cuda, (hid + 1) * sizeof(float));
@@ -153,7 +153,7 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 											  hid);
  
   cudaThreadSynchronize();
-  
+
   cudaError_t error = cudaGetLastError();
 	if (error != cudaSuccess) {
 		printf("bpnn kernel error: %s\n", cudaGetErrorString(error));
@@ -247,8 +247,8 @@ void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 
 #endif   
   
-  cur_time = gettime() - cur_time;
-  printf("Time: %f\n", cur_time);
+  cudaDeviceSynchronize();
+  printf("Time: %f\n", gettime() - cur_time);
   
   
 

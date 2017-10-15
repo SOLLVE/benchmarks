@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include "backprop.h"
 
-#define CUDA_UVM
+//#define CUDA_UVM
 
 /*** Allocate 1d array of floats ***/
 
