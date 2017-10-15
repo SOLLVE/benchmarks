@@ -16,14 +16,14 @@
 /*** Allocate 1d array of floats ***/
 
 extern "C"
-float *alloc_1d_dbl(int n)
+float *alloc_1d_dbl(unsigned long long n)
 {
   float *newmem;
 
 #ifndef CUDA_UVM
-  newmem = (float *) malloc ((unsigned) (n * sizeof (float)));
+  newmem = (float *) malloc ((n * sizeof (float)));
 #else
-  cudaMallocManaged((void**)&newmem, (unsigned) (n * sizeof (float)));
+  cudaMallocManaged((void**)&newmem, (n * sizeof (float)));
 #endif
   if (newmem == NULL) {
     printf("ALLOC_1D_DBL: Couldn't allocate array of floats\n");
@@ -36,24 +36,36 @@ float *alloc_1d_dbl(int n)
 /*** Allocate 2d array of floats ***/
 
 extern "C"
-float **alloc_2d_dbl(int m, int n)
+float **alloc_2d_dbl(unsigned long long m, unsigned long long n)
 {
   int i;
   float **newmem;
+  float *newmem_content;
 
 #ifndef CUDA_UVM
-  newmem = (float **) malloc ((unsigned) (m * sizeof (float *)));
-#else
-  cudaMallocManaged((void**)&newmem, (unsigned) (m * sizeof (float *)));
-#endif
-  if (newmem == NULL) {
+  newmem = (float **) malloc ((m * sizeof (float *)));
+  newmem_content = (float *) malloc ((m * n * sizeof (float)));
+  if (newmem == NULL || newmem_content == NULL) {
     printf("ALLOC_2D_DBL: Couldn't allocate array of dbl ptrs\n");
     return (NULL);
   }
 
   for (i = 0; i < m; i++) {
-    newmem[i] = alloc_1d_dbl(n);
+    //newmem[i] = alloc_1d_dbl(n);
+    newmem[i] = &newmem_content[i*n];
   }
+#else
+  cudaMallocManaged((void**)&newmem, (m * sizeof (float *)));
+  cudaMallocManaged((void**)&newmem_content, (m * n * sizeof (float)));
+  if (newmem == NULL || newmem_content == NULL) {
+    printf("ALLOC_2D_DBL: Couldn't allocate array of dbl ptrs\n");
+    return (NULL);
+  }
+
+  for (i = 0; i < m; i++) {
+    newmem[i] = &newmem_content[i*n];
+  }
+#endif
 
   return (newmem);
 }

@@ -60,7 +60,7 @@ main( int argc, char** argv)
 extern "C"
 void bpnn_train_cuda(BPNN *net, float *eo, float *eh)
 {
-  int in, hid, out;
+  unsigned long long in, hid, out;
   float out_err, hid_err;
   
   in = net->input_n;

@@ -1,4 +1,5 @@
 *.o
+*.log
 spmv_*
 
 cusplibrary/performance/spmv/log
