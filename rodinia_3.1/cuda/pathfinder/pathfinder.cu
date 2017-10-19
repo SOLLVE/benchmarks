@@ -2,17 +2,20 @@
 #include <stdlib.h>
 #include <time.h>
 #include <assert.h>
+#include <helper_timer.h>
 
 #define BLOCK_SIZE 256
 #define STR_SIZE 256
 #define DEVICE 0
 #define HALO 1 // halo width along one direction when advancing to the next iteration
 
-#define BENCH_PRINT
+#define CUDA_UVM
+
+//#define BENCH_PRINT
 
 void run(int argc, char** argv);
 
-int rows, cols;
+unsigned long long rows, cols;
 int* data;
 int** wall;
 int* result;
@@ -32,26 +35,32 @@ init(int argc, char** argv)
                 printf("Usage: dynproc row_len col_len pyramid_height\n");
                 exit(0);
         }
+#ifndef CUDA_UVM
 	data = new int[rows*cols];
+#else
+    cudaMallocManaged((void**)&data, sizeof(int)*rows*cols);
+#endif
 	wall = new int*[rows];
-	for(int n=0; n<rows; n++)
+	for(unsigned long long n=0; n<rows; n++)
 		wall[n]=data+cols*n;
-	result = new int[cols];
-	
+#ifndef CUDA_UVM
+	result = new int[cols];
+#endif
+
 	int seed = M_SEED;
 	srand(seed);
-
-	for (int i = 0; i < rows; i++)
+
+	for (unsigned long long i = 0; i < rows; i++)
     {
-        for (int j = 0; j < cols; j++)
+        for (unsigned long long j = 0; j < cols; j++)
         {
             wall[i][j] = rand() % 10;
         }
     }
 #ifdef BENCH_PRINT
-    for (int i = 0; i < rows; i++)
+    for (unsigned long long i = 0; i < rows; i++)
     {
-        for (int j = 0; j < cols; j++)
+        for (unsigned long long j = 0; j < cols; j++)
         {
             printf("%d ",wall[i][j]) ;
         }
@@ -76,8 +85,8 @@ __global__ void dynproc_kernel(
                 int *gpuWall,
                 int *gpuSrc,
                 int *gpuResults,
-                int cols, 
-                int rows,
+                unsigned long long cols, 
+                unsigned long long rows,
                 int startStep,
                 int border)
 {
@@ -156,14 +165,14 @@ __global__ void dynproc_kernel(
 /*
    compute N time steps
 */
-int calc_path(int *gpuWall, int *gpuResult[2], int rows, int cols, \
+int calc_path(int *gpuWall, int *gpuResult[2], unsigned long long rows, unsigned long long cols, \
 	 int pyramid_height, int blockCols, int borderCols)
 {
         dim3 dimBlock(BLOCK_SIZE);
         dim3 dimGrid(blockCols);  
 	
         int src = 1, dst = 0;
-	for (int t = 0; t < rows-1; t+=pyramid_height) {
+	for (unsigned long long t = 0; t < rows-1; t+=pyramid_height) {
             int temp = src;
             src = dst;
             dst = temp;
@@ -199,31 +208,54 @@ void run(int argc, char** argv)
 	pyramid_height, cols, borderCols, BLOCK_SIZE, blockCols, smallBlockCol);
 	
     int *gpuWall, *gpuResult[2];
-    int size = rows*cols;
+    unsigned long long size = rows*cols;
 
+#ifndef CUDA_UVM
     cudaMalloc((void**)&gpuResult[0], sizeof(int)*cols);
     cudaMalloc((void**)&gpuResult[1], sizeof(int)*cols);
-    cudaMemcpy(gpuResult[0], data, sizeof(int)*cols, cudaMemcpyHostToDevice);
     cudaMalloc((void**)&gpuWall, sizeof(int)*(size-cols));
+#else
+    cudaMallocManaged((void**)&gpuResult[0], sizeof(int)*cols);
+    cudaMallocManaged((void**)&gpuResult[1], sizeof(int)*cols);
+    for (unsigned long long i = 0; i < cols; i++)
+      gpuResult[0][i] = data[i];
+    gpuWall = data+cols;
+#endif
+    unsigned long long total_size = sizeof(int)*(size-cols) + sizeof(int)*cols + sizeof(int)*cols;
+    printf("Total size: %llu\n", total_size);
+	StopWatchInterface *timer = 0;
+	sdkCreateTimer(&timer); 
+	sdkStartTimer(&timer); 
+#ifndef CUDA_UVM
+    cudaMemcpy(gpuResult[0], data, sizeof(int)*cols, cudaMemcpyHostToDevice);
     cudaMemcpy(gpuWall, data+cols, sizeof(int)*(size-cols), cudaMemcpyHostToDevice);
+#endif
 
 
     int final_ret = calc_path(gpuWall, gpuResult, rows, cols, \
 	 pyramid_height, blockCols, borderCols);
 
+#ifndef CUDA_UVM
     cudaMemcpy(result, gpuResult[final_ret], sizeof(int)*cols, cudaMemcpyDeviceToHost);
+#else
+    cudaDeviceSynchronize();
+    result = gpuResult[final_ret];
+#endif
+	sdkStopTimer(&timer); 
+	printf("Time: %f\n", (sdkGetAverageTimerValue(&timer)/1000.0));
 
 
 #ifdef BENCH_PRINT
-    for (int i = 0; i < cols; i++)
+    for (unsigned long long i = 0; i < cols; i++)
             printf("%d ",data[i]) ;
     printf("\n") ;
-    for (int i = 0; i < cols; i++)
+    for (unsigned long long i = 0; i < cols; i++)
             printf("%d ",result[i]) ;
     printf("\n") ;
 #endif
 
 
+#ifndef CUDA_UVM
     cudaFree(gpuWall);
     cudaFree(gpuResult[0]);
     cudaFree(gpuResult[1]);
@@ -231,6 +263,13 @@ void run(int argc, char** argv)
     delete [] data;
     delete [] wall;
     delete [] result;
+#else
+    cudaFree(gpuResult[0]);
+    cudaFree(gpuResult[1]);
+
+    cudaFree(data);
+    delete [] wall;
+#endif
 
 }
 

@@ -1,7 +1,7 @@
-include ../../common/make.config
+include ../../common/make.config.summitdev
 
 LOCAL_CC = gcc -g -O3 -Wall
-CC := $(CUDA_DIR)/bin/nvcc
+CC := $(CUDA_DIR)/bin/nvcc -I$(SDK_DIR)/common/inc  -L$(SDK_DIR)/lib
 
 all : nn hurricane_gen
 

@@ -1,6 +1,6 @@
-include ../../common/make.config
+include ../../common/make.config.summitdev
 
-CC := $(CUDA_DIR)/bin/nvcc
+CC := $(CUDA_DIR)/bin/nvcc -I$(SDK_DIR)/common/inc  -L$(SDK_DIR)/lib
 INCLUDE := $(CUDA_DIR)/include
 
 SRC = pathfinder.cu

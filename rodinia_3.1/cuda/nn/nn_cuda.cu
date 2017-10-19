@@ -9,6 +9,9 @@
 #include <float.h>
 #include <vector>
 #include "cuda.h"
+#include <helper_timer.h>
+
+#define CUDA_UVM
 
 #define min( a, b )			a > b ? b : a
 #define ceilDiv( a, b )		( a + b - 1 ) / b
@@ -36,7 +39,7 @@ typedef struct record
 } Record;
 
 int loadData(char *filename,std::vector<Record> &records,std::vector<LatLong> &locations);
-void findLowest(std::vector<Record> &records,float *distances,int numRecords,int topN);
+void findLowest(std::vector<Record> &records,float *distances,unsigned long long numRecords,int topN);
 void printUsage();
 int parseCommandline(int argc, char *argv[], char* filename,int *r,float *lat,float *lng,
                      int *q, int *t, int *p, int *d);
@@ -46,10 +49,10 @@ int parseCommandline(int argc, char *argv[], char* filename,int *r,float *lat,fl
 * Executed on GPU
 * Calculates the Euclidean distance from each record in the database to the target position
 */
-__global__ void euclid(LatLong *d_locations, float *d_distances, int numRecords,float lat, float lng)
+__global__ void euclid(LatLong *d_locations, float *d_distances, unsigned long long numRecords,float lat, float lng)
 {
 	//int globalId = gridDim.x * blockDim.x * blockIdx.y + blockDim.x * blockIdx.x + threadIdx.x;
-	int globalId = blockDim.x * ( gridDim.x * blockIdx.y + blockIdx.x ) + threadIdx.x; // more efficient
+	unsigned long long globalId = ((unsigned long long)blockDim.x) * ( gridDim.x * blockIdx.y + blockIdx.x ) + threadIdx.x; // more efficient
     LatLong *latLong = d_locations+globalId;
     if (globalId < numRecords) {
         float *dist=d_distances+globalId;
@@ -63,7 +66,7 @@ __global__ void euclid(LatLong *d_locations, float *d_distances, int numRecords,
 
 int main(int argc, char* argv[])
 {
-	int    i=0;
+	unsigned long long     i=0;
 	float lat, lng;
 	int quiet=0,timing=0,platform=0,device=0;
 
@@ -79,8 +82,20 @@ int main(int argc, char* argv[])
       return 0;
     }
 
-    int numRecords = loadData(filename,records,locations);
+    unsigned long long numRecords = loadData(filename,records,locations);
     if (resultsCount > numRecords) resultsCount = numRecords;
+
+    // reuse device as input_time
+    if (device > 0) {
+      int input_time = device;
+      for (unsigned long long j = 1; j < input_time; j++) {
+        for (i = 0; i < numRecords; i++) {
+          locations.push_back(locations[i]);
+          records.push_back(records[i]);
+        }
+      }
+      numRecords *= input_time;
+    }
 
     //for(i=0;i<numRecords;i++)
     //  printf("%s, %f, %f\n",(records[i].recString),locations[i].lat,locations[i].lng);
@@ -90,7 +105,9 @@ int main(int argc, char* argv[])
 	float *distances;
 	//Pointers to device memory
 	LatLong *d_locations;
+#ifndef CUDA_UVM
 	float *d_distances;
+#endif
 
 
 	// Scaling calculations - added by Sam Kauffman
@@ -105,11 +122,13 @@ int main(int argc, char* argv[])
 	cudaThreadSynchronize();
 	unsigned long usableDeviceMemory = freeDeviceMemory * 85 / 100; // 85% arbitrary throttle to compensate for known CUDA bug
 	unsigned long maxThreads = usableDeviceMemory / 12; // 4 bytes in 3 vectors per thread
+#ifndef CUDA_UVM
 	if ( numRecords > maxThreads )
 	{
 		fprintf( stderr, "Error: Input too large.\n" );
 		exit( 1 );
 	}
+#endif
 	unsigned long blocks = ceilDiv( numRecords, threadsPerBlock ); // extra threads will do nothing
 	unsigned long gridY = ceilDiv( blocks, maxGridX );
 	unsigned long gridX = ceilDiv( blocks, gridY );
@@ -133,36 +152,69 @@ int main(int argc, char* argv[])
 	/**
 	* Allocate memory on host and device
 	*/
+#ifndef CUDA_UVM
 	distances = (float *)malloc(sizeof(float) * numRecords);
 	cudaMalloc((void **) &d_locations,sizeof(LatLong) * numRecords);
 	cudaMalloc((void **) &d_distances,sizeof(float) * numRecords);
+#else
+	cudaMallocManaged((void **) &d_locations,sizeof(LatLong) * numRecords);
+	cudaMallocManaged((void **) &distances,sizeof(float) * numRecords);
+#endif
 
+    unsigned long long total_size = sizeof(LatLong) * numRecords + sizeof(float) * numRecords;
+    printf("Total size: %llu\n", total_size);
+
+#ifdef CUDA_UVM
+    for (i = 0; i < numRecords; i++) {
+      d_locations[i] = locations[i];
+    }
+#endif
+	StopWatchInterface *timer = 0;
+	sdkCreateTimer(&timer); 
+	sdkStartTimer(&timer); 
+
+#ifndef CUDA_UVM
    /**
     * Transfer data from host to device
     */
     cudaMemcpy( d_locations, &locations[0], sizeof(LatLong) * numRecords, cudaMemcpyHostToDevice);
+#endif
 
     /**
     * Execute kernel
     */
+#ifndef CUDA_UVM
     euclid<<< gridDim, threadsPerBlock >>>(d_locations,d_distances,numRecords,lat,lng);
+#else
+    euclid<<< gridDim, threadsPerBlock >>>(d_locations,distances,numRecords,lat,lng);
+#endif
     cudaThreadSynchronize();
 
+#ifndef CUDA_UVM
     //Copy data from device memory to host memory
     cudaMemcpy( distances, d_distances, sizeof(float)*numRecords, cudaMemcpyDeviceToHost );
+#endif
 
 	// find the resultsCount least distances
     findLowest(records,distances,numRecords,resultsCount);
 
+	sdkStopTimer(&timer); 
+	printf("Time: %f\n", (sdkGetAverageTimerValue(&timer)/1000.0));
     // print out results
     if (!quiet)
     for(i=0;i<resultsCount;i++) {
       printf("%s --> Distance=%f\n",records[i].recString,records[i].distance);
     }
+#ifndef CUDA_UVM
     free(distances);
     //Free memory
 	cudaFree(d_locations);
 	cudaFree(d_distances);
+#else
+	cudaFree(d_locations);
+	cudaFree(distances);
+#endif
+    return 0;
 
 }
 
@@ -220,10 +272,10 @@ int loadData(char *filename,std::vector<Record> &records,std::vector<LatLong> &l
     return recNum;
 }
 
-void findLowest(std::vector<Record> &records,float *distances,int numRecords,int topN){
-  int i,j;
+void findLowest(std::vector<Record> &records,float *distances,unsigned long long numRecords,int topN){
+  unsigned long long i,j;
   float val;
-  int minLoc;
+  unsigned long long minLoc;
   Record *tempRec;
   float tempDist;
 
