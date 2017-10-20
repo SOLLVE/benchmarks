@@ -142,7 +142,7 @@ __global__ void dynproc_kernel(
                   int right = prev[E];
                   int shortest = MIN(left, up);
                   shortest = MIN(shortest, right);
-                  int index = cols*(startStep+i)+xidx;
+                  unsigned long long index = cols*(startStep+i)+xidx;
                   result[tx] = shortest + gpuWall[index];
 	
             }
