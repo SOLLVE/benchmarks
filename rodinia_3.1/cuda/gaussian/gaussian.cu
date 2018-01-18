@@ -19,7 +19,9 @@
 #include <string.h>
 #include <math.h>
 
-//#define CUDA_UVM
+#define CUDA_UVM
+#define OCCUPANCY_TUNE
+#define SM_SIZE 12000
 
 #ifdef RD_WG_SIZE_0_0
         #define MAXBLOCKSIZE RD_WG_SIZE_0_0
@@ -330,6 +332,9 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda,unsigned long l
 	unsigned long long xidx = blockIdx.x * blockDim.x + threadIdx.x;
 	unsigned long long yidx = blockIdx.y * blockDim.y + threadIdx.y;
 	//printf("blockIdx.x:%d,threadIdx.x:%d,blockIdx.y:%d,threadIdx.y:%d,blockDim.x:%d,blockDim.y:%d\n",blockIdx.x,threadIdx.x,blockIdx.y,threadIdx.y,blockDim.x,blockDim.y);
+#ifdef OCCUPANCY_TUNE
+    __shared__ int s_occupy[SM_SIZE];
+#endif
 	
 	if(xidx >= Size-1-t) return;
 	if(yidx >= Size-t) return;
@@ -341,6 +346,9 @@ __global__ void Fan2(float *m_cuda, float *a_cuda, float *b_cuda,unsigned long l
 		//printf("xidx:%d,yidx:%d\n",xidx,yidx);
 		b_cuda[xidx+1+t] -= m_cuda[Size*(xidx+1+t)+(yidx+t)] * b_cuda[t];
 	}
+#ifdef OCCUPANCY_TUNE
+    s_occupy[xidx % SM_SIZE] = yidx + s_occupy[(xidx+1) % SM_SIZE];
+#endif
 }
 
 /*------------------------------------------------------
@@ -392,8 +400,7 @@ void ForwardSub()
     unsigned iteration_num = Size;
     if (Size > 4)
         iteration_num = 4;
-        printf(".");
-        fflush(stdout);
+    iteration_num = 2;
 	for (t=0; t<(iteration_num-1); t++) {
 #ifndef CUDA_UVM
 		Fan1<<<dimGrid,dimBlock>>>(m_cuda,a_cuda,Size,t);
