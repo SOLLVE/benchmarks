@@ -7,7 +7,9 @@
 #include <iostream>
 #include <fstream>
 
-//#define CUDA_UVM 
+#define CUDA_UVM 
+//#define CUDA_HST
+//#define CUDA_HYB // work when defined with one of previous two macros
  
 /*
  * Options 
@@ -100,14 +102,24 @@
  * Generic functions
  */
 template <typename T>
-T* alloc(int N)
+T* alloc(unsigned long long N)
 {
 	T* t;
-#ifndef CUDA_UVM
-	checkCudaErrors(cudaMalloc((void**)&t, sizeof(T)*N));
-#else
+#if defined (CUDA_UVM)
 	checkCudaErrors(cudaMallocManaged((void**)&t, sizeof(T)*N));
+#elif defined (CUDA_HST)
+	checkCudaErrors(cudaMallocHost((void**)&t, sizeof(T)*N));
+#else
+	checkCudaErrors(cudaMalloc((void**)&t, sizeof(T)*N));
 #endif
+	return t;
+}
+
+template <typename T>
+T* alloc_dev(int N)
+{
+	T* t;
+	checkCudaErrors(cudaMalloc((void**)&t, sizeof(T)*N));
 	return t;
 }
 
@@ -137,7 +149,7 @@ void download(T* dst, T* src, int N)
 
 void dump(float* variables, int nel, int nelr)
 {
-#ifndef CUDA_UVM
+#if !defined (CUDA_UVM) && !defined (CUDA_HST)
 	float* h_variables = new float[nelr*NVAR];
 	download(h_variables, variables, nelr*NVAR);
 #else
@@ -167,7 +179,7 @@ void dump(float* variables, int nel, int nelr)
 		file << nel << " " << nelr << std::endl;
 		for(int i = 0; i < nel; i++) file << h_variables[i + VAR_DENSITY_ENERGY*nelr] << std::endl;
 	}
-#ifndef CUDA_UVM
+#if !defined (CUDA_UVM) && !defined (CUDA_HST)
 	delete[] h_variables;
 #endif
 }
@@ -268,7 +280,11 @@ void compute_step_factor(int nelr, float* variables, float* areas, float* step_f
  *
  *
 */
+#if defined (CUDA_HYB)
+__global__ void cuda_compute_flux(int nelr, int* elements_surrounding_elements, float* normals, float* variables, float* fluxes, float* normals2, unsigned long long ele_dev_size)
+#else
 __global__ void cuda_compute_flux(int nelr, int* elements_surrounding_elements, float* normals, float* variables, float* fluxes)
+#endif
 {
 	const float smoothing_coefficient = float(0.2f);
 	const int i = (blockDim.x*blockIdx.x + threadIdx.x);
@@ -312,9 +328,27 @@ __global__ void cuda_compute_flux(int nelr, int* elements_surrounding_elements, 
 	for(j = 0; j < NNB; j++)
 	{
 		nb = elements_surrounding_elements[i + j*nelr];
+#if defined (CUDA_HYB)
+        unsigned long long idx = i + (j + 0*NNB)*nelr;
+        if (idx < ele_dev_size)
+		  normal.x = normals[idx];
+        else
+		  normal.x = normals2[idx - ele_dev_size];
+        idx += NNB*nelr;
+        if (idx < ele_dev_size)
+		  normal.y = normals[idx];
+        else
+		  normal.y = normals2[idx - ele_dev_size];
+        idx += NNB*nelr;
+        if (idx < ele_dev_size)
+		  normal.z = normals[idx];
+        else
+		  normal.z = normals2[idx - ele_dev_size];
+#else
 		normal.x = normals[i + (j + 0*NNB)*nelr];
 		normal.y = normals[i + (j + 1*NNB)*nelr];
 		normal.z = normals[i + (j + 2*NNB)*nelr];
+#endif
 		normal_len = sqrtf(normal.x*normal.x + normal.y*normal.y + normal.z*normal.z);
 		
 		if(nb >= 0) 	// a legitimate neighbor
@@ -398,10 +432,18 @@ __global__ void cuda_compute_flux(int nelr, int* elements_surrounding_elements, 
 	fluxes[i + (VAR_MOMENTUM+2)*nelr] = flux_i_momentum.z;
 	fluxes[i + VAR_DENSITY_ENERGY*nelr] = flux_i_density_energy;
 }
+#if defined (CUDA_HYB)
+void compute_flux(int nelr, int* elements_surrounding_elements, float* normals, float* variables, float* fluxes, float* normals2, unsigned long long ele_dev_size)
+#else
 void compute_flux(int nelr, int* elements_surrounding_elements, float* normals, float* variables, float* fluxes)
+#endif
 {
 	dim3 Dg(nelr / BLOCK_SIZE_3), Db(BLOCK_SIZE_3);
+#if defined (CUDA_HYB)
+	cuda_compute_flux<<<Dg,Db>>>(nelr, elements_surrounding_elements, normals, variables, fluxes, normals2, ele_dev_size);
+#else
 	cuda_compute_flux<<<Dg,Db>>>(nelr, elements_surrounding_elements, normals, variables, fluxes);
+#endif
 	getLastCudaError("compute_flux failed");
 }
 
@@ -495,24 +537,54 @@ int main(int argc, char** argv)
 	float* areas;
 	int* elements_surrounding_elements;
 	float* normals;
+#if defined (CUDA_HYB)
+    unsigned long long ele_dev_size;
+    float* normals2 = NULL;
+#endif
 	{
 		std::ifstream file(data_file_name);
 	
 		file >> nel;
 		nelr = BLOCK_SIZE_0*((nel * input_time / BLOCK_SIZE_0 )+ std::min(1, (nel * input_time) % BLOCK_SIZE_0));
 
+#if defined (CUDA_HYB)
+	    areas = alloc_dev<float>(nelr);
+	    elements_surrounding_elements = alloc_dev<int>(nelr*NNB);
+        long long avail_size = 14 * 1024 * 1024 * 1024L - sizeof(float)*nelr*NVAR*3 + sizeof(float)*nelr*2 - sizeof(int)*nelr*NNB;
+        if (avail_size <= 0) {
+	      std::cout << "Input is too large for HYB." << std::endl;
+	      return 0;
+        }
+        ele_dev_size = avail_size / sizeof(float);
+        unsigned long long ele_um_size = 0;
+        if (ele_dev_size >= nelr*NDIM*NNB) {
+	      std::cout << "Input is too small for HYB." << std::endl;
+          ele_dev_size = nelr*NDIM*NNB;
+        } else
+          ele_um_size = nelr*NDIM*NNB - ele_dev_size;
+	    normals = alloc_dev<float>(ele_dev_size);
+        if (ele_um_size)
+	      normals2 = alloc<float>(ele_um_size);
+#else
 	    areas = alloc<float>(nelr);
 	    elements_surrounding_elements = alloc<int>(nelr*NNB);
-	    normals = alloc<float>(nelr*NDIM*NNB);
+        unsigned long long size = (unsigned long long)nelr*NDIM*NNB;
+	    normals = alloc<float>(size);
+#endif
 
-#ifndef CUDA_UVM
+#if defined (CUDA_HYB)
 		float* h_areas = new float[nelr];
 		int* h_elements_surrounding_elements = new int[nelr*NNB];
-		float* h_normals = new float[nelr*NDIM*NNB];
-#else
+		float* h_normals = new float[ele_dev_size];
+		float* h_normals2 = normals2;
+#elif defined (CUDA_UVM) || defined (CUDA_HST)
 		float* h_areas = areas;
 		int* h_elements_surrounding_elements = elements_surrounding_elements;
 		float* h_normals = normals;
+#else
+		float* h_areas = new float[nelr];
+		int* h_elements_surrounding_elements = new int[nelr*NNB];
+		float* h_normals = new float[nelr*NDIM*NNB];
 #endif
 
 				
@@ -528,8 +600,19 @@ int main(int argc, char** argv)
 				
 				for(int k = 0; k < NDIM; k++)
 				{
+#if defined (CUDA_HYB)
+                    unsigned long long idx = i + (j + k*NNB)*nelr;
+                    if (idx < ele_dev_size) {
+					  file >> h_normals[idx];
+					  h_normals[idx] = -h_normals[idx];
+                    } else {
+					  file >> h_normals2[idx - ele_dev_size];
+					  h_normals2[idx - ele_dev_size] = -h_normals2[idx - ele_dev_size];
+                    }
+#else
 					file >> h_normals[i + (j + k*NNB)*nelr];
 					h_normals[i + (j + k*NNB)*nelr] = -h_normals[i + (j + k*NNB)*nelr];
+#endif
 				}
 			}
 		}
@@ -545,7 +628,23 @@ int main(int argc, char** argv)
 		    		
 		    		for(int k = 0; k < NDIM; k++)
 		    		{
+#if defined (CUDA_HYB)
+                      unsigned long long idx = i + (j + k*NNB)*nelr + nn*nel;
+                      unsigned long long idx2 = i + (j + k*NNB)*nelr;
+                      if (idx < ele_dev_size) {
+                        if (idx2 < ele_dev_size)
+		    			  h_normals[idx] = h_normals[idx2];
+                        else
+		    			  h_normals[idx] = h_normals2[idx2 - ele_dev_size];
+                      } else {
+                        if (idx2 < ele_dev_size)
+		    			  h_normals2[idx - ele_dev_size] = h_normals[idx2];
+                        else
+		    			  h_normals2[idx - ele_dev_size] = h_normals2[idx2 - ele_dev_size];
+                      }
+#else
 		    			h_normals[i + (j + k*NNB)*nelr + nn*nel] = h_normals[i + (j + k*NNB)*nelr];
+#endif
 		    		}
 		    	}
 		    }
@@ -561,11 +660,39 @@ int main(int argc, char** argv)
 			{
 				// duplicate the last element
 				h_elements_surrounding_elements[i + j*nelr] = h_elements_surrounding_elements[last + j*nelr];	
-				for(int k = 0; k < NDIM; k++) h_normals[last + (j + k*NNB)*nelr] = h_normals[last + (j + k*NNB)*nelr];
+#if defined (CUDA_HYB)
+				for(int k = 0; k < NDIM; k++) {
+                  unsigned long long idx = i + (j + k*NNB)*nelr;
+                  if (idx < ele_dev_size) {
+                    if (last + (j + k*NNB)*nelr < ele_dev_size)
+                      h_normals[idx] = h_normals[last + (j + k*NNB)*nelr];
+                    else
+                      h_normals[idx] = h_normals2[last + (j + k*NNB)*nelr - ele_dev_size];
+                  }
+                  else {
+                    if (last + (j + k*NNB)*nelr < ele_dev_size)
+                      h_normals2[idx - ele_dev_size] = h_normals[last + (j + k*NNB)*nelr];
+                    else
+                      h_normals2[idx - ele_dev_size] = h_normals2[last + (j + k*NNB)*nelr - ele_dev_size];
+                  }
+                }
+#else
+				for(int k = 0; k < NDIM; k++) h_normals[i + (j + k*NNB)*nelr] = h_normals[last + (j + k*NNB)*nelr];
+#endif
 			}
 		}
 		
-#ifndef CUDA_UVM
+#if defined (CUDA_HYB)
+		upload<float>(areas, h_areas, nelr);
+
+		upload<int>(elements_surrounding_elements, h_elements_surrounding_elements, nelr*NNB);
+
+		upload<float>(normals, h_normals, ele_dev_size);
+				
+		delete[] h_areas;
+		delete[] h_elements_surrounding_elements;
+		delete[] h_normals;
+#elif !defined (CUDA_UVM) && !defined (CUDA_HST)
 		upload<float>(areas, h_areas, nelr);
 
 		upload<int>(elements_surrounding_elements, h_elements_surrounding_elements, nelr*NNB);
@@ -620,7 +747,11 @@ int main(int argc, char** argv)
 		
 		for(int j = 0; j < RK; j++)
 		{
+#if defined (CUDA_HYB)
+			compute_flux(nelr, elements_surrounding_elements, normals, variables, fluxes, normals2, ele_dev_size);
+#else
 			compute_flux(nelr, elements_surrounding_elements, normals, variables, fluxes);
+#endif
 			getLastCudaError("compute_flux failed");			
 			time_step(j, nelr, old_variables, variables, step_factors, fluxes);
 			getLastCudaError("time_step failed");			
@@ -639,14 +770,14 @@ int main(int argc, char** argv)
 
 	
 	std::cout << "Cleaning up..." << std::endl;
-	dealloc<float>(areas);
-	dealloc<int>(elements_surrounding_elements);
-	dealloc<float>(normals);
-	
-	dealloc<float>(variables);
-	dealloc<float>(old_variables);
-	dealloc<float>(fluxes);
-	dealloc<float>(step_factors);
+	//dealloc<float>(areas);
+	//dealloc<int>(elements_surrounding_elements);
+	//dealloc<float>(normals);
+	//
+	//dealloc<float>(variables);
+	//dealloc<float>(old_variables);
+	//dealloc<float>(fluxes);
+	//dealloc<float>(step_factors);
 
 	std::cout << "Done..." << std::endl;
 
