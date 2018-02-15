@@ -26,6 +26,10 @@
 //#define CUDA_HST
 #define CUDA_HYB
 #define CUDA_HYB_HOST // This only works when CUDA_HYB is also defined
+#define CUDA_HYB_L // This only works when CUDA_HYB and CUDA_HYB_HOST are also defined
+//#define CUDA_HYS // Hybrid allocation for small inputs
+
+//#define UVM_OVER
 
 #define MAX_THREADS_PER_BLOCK 512
 
@@ -120,10 +124,24 @@ void BFSGraph( int argc, char** argv)
 	cudaMallocHost( (void**) &h_graph_visited, sizeof(bool)*no_of_nodes) ;
 #elif defined (CUDA_HYB)
 	// allocate host memory
-	Node* h_graph_nodes = (Node*) malloc(sizeof(Node)*no_of_nodes);
 	bool *h_graph_mask = (bool*) malloc(sizeof(bool)*no_of_nodes);
 	bool *h_updating_graph_mask = (bool*) malloc(sizeof(bool)*no_of_nodes);
+#if defined (CUDA_HYB_L)
+	Node* h_graph_nodes;
+	cudaMallocManaged( (void**) &h_graph_nodes, sizeof(Node)*no_of_nodes) ;
+	bool *h_graph_visited;
+	cudaMallocManaged( (void**) &h_graph_visited, sizeof(bool)*no_of_nodes) ;
+#else
+	Node* h_graph_nodes = (Node*) malloc(sizeof(Node)*no_of_nodes);
 	bool *h_graph_visited = (bool*) malloc(sizeof(bool)*no_of_nodes);
+#endif
+#elif defined (CUDA_HYS)
+	Node* h_graph_nodes;
+	cudaMallocManaged( (void**) &h_graph_nodes, sizeof(Node)*no_of_nodes) ;
+	bool *h_graph_mask = (bool*) malloc(sizeof(bool)*no_of_nodes);
+	bool *h_updating_graph_mask = (bool*) malloc(sizeof(bool)*no_of_nodes);
+	bool *h_graph_visited;
+	cudaMallocManaged( (void**) &h_graph_visited, sizeof(bool)*no_of_nodes) ;
 #else
 	// allocate host memory
 	Node* h_graph_nodes = (Node*) malloc(sizeof(Node)*no_of_nodes);
@@ -159,7 +177,7 @@ void BFSGraph( int argc, char** argv)
     edge_list_size = start;
 
 	//int id,cost;
-#if defined (CUDA_UVM)
+#if defined (CUDA_UVM) || defined (CUDA_HYS)
 	unsigned long long* h_graph_edges;
 	cudaMallocManaged( (void**) &h_graph_edges, sizeof(unsigned long long)*edge_list_size) ;
 #elif defined (CUDA_HST)
@@ -218,11 +236,6 @@ void BFSGraph( int argc, char** argv)
 	sdkCreateTimer(&timer); 
 	sdkStartTimer(&timer); 
 #if defined (CUDA_HYB)
-	//Copy the Node list to device memory
-	Node* d_graph_nodes;
-	cudaMalloc( (void**) &d_graph_nodes, sizeof(Node)*no_of_nodes) ;
-	cudaMemcpy( d_graph_nodes, h_graph_nodes, sizeof(Node)*no_of_nodes, cudaMemcpyHostToDevice) ;
-
 	//Copy the Edge List to device Memory
 	unsigned long long* d_graph_edges;
 	cudaMalloc( (void**) &d_graph_edges, sizeof(unsigned long long)*edge_dev_size) ;
@@ -237,10 +250,26 @@ void BFSGraph( int argc, char** argv)
 	cudaMalloc( (void**) &d_updating_graph_mask, sizeof(bool)*no_of_nodes) ;
 	cudaMemcpy( d_updating_graph_mask, h_updating_graph_mask, sizeof(bool)*no_of_nodes, cudaMemcpyHostToDevice) ;
 
+#if !defined (CUDA_HYB_L)
+	//Copy the Node list to device memory
+	Node* d_graph_nodes;
+	cudaMalloc( (void**) &d_graph_nodes, sizeof(Node)*no_of_nodes) ;
+	cudaMemcpy( d_graph_nodes, h_graph_nodes, sizeof(Node)*no_of_nodes, cudaMemcpyHostToDevice) ;
+
 	//Copy the Visited nodes array to device memory
 	bool* d_graph_visited;
 	cudaMalloc( (void**) &d_graph_visited, sizeof(bool)*no_of_nodes) ;
 	cudaMemcpy( d_graph_visited, h_graph_visited, sizeof(bool)*no_of_nodes, cudaMemcpyHostToDevice) ;
+#endif
+#elif defined (CUDA_HYS)
+	//Copy the Mask to device memory
+	bool* d_graph_mask;
+	cudaMalloc( (void**) &d_graph_mask, sizeof(bool)*no_of_nodes) ;
+	cudaMemcpy( d_graph_mask, h_graph_mask, sizeof(bool)*no_of_nodes, cudaMemcpyHostToDevice) ;
+
+	bool* d_updating_graph_mask;
+	cudaMalloc( (void**) &d_updating_graph_mask, sizeof(bool)*no_of_nodes) ;
+	cudaMemcpy( d_updating_graph_mask, h_updating_graph_mask, sizeof(bool)*no_of_nodes, cudaMemcpyHostToDevice) ;
 #elif !defined (CUDA_UVM) && !defined (CUDA_HST)
 	//Copy the Node list to device memory
 	Node* d_graph_nodes;
@@ -268,12 +297,15 @@ void BFSGraph( int argc, char** argv)
 #endif
 
 	// allocate mem for the result on host side
-#if defined (CUDA_UVM)
+#if defined (CUDA_UVM) || defined (CUDA_HYS)
 	int* h_cost;
 	cudaMallocManaged( (void**) &h_cost, sizeof(int)*no_of_nodes);
 #elif defined (CUDA_HST)
 	int* h_cost;
 	cudaMallocHost( (void**) &h_cost, sizeof(int)*no_of_nodes);
+#elif defined (CUDA_HYB) && defined (CUDA_HYB_L)
+	int* h_cost;
+	cudaMallocManaged( (void**) &h_cost, sizeof(int)*no_of_nodes);
 #else
 	int* h_cost = (int*) malloc( sizeof(int)*no_of_nodes);
 #endif
@@ -281,7 +313,8 @@ void BFSGraph( int argc, char** argv)
 		h_cost[i]=-1;
 	h_cost[source]=0;
 	
-#if !defined (CUDA_UVM) && !defined (CUDA_HST)
+#if defined (CUDA_HYB) && defined (CUDA_HYB_L)
+#elif !defined (CUDA_UVM) && !defined (CUDA_HST) && !defined (CUDA_HYS)
 	// allocate device memory for result
 	int* d_cost;
 	cudaMalloc( (void**) &d_cost, sizeof(int)*no_of_nodes);
@@ -290,7 +323,9 @@ void BFSGraph( int argc, char** argv)
 
 	//make a bool to check if the execution is over
 	bool *d_over;
-#if defined (CUDA_UVM)
+#if !defined (UVM_OVER)
+	cudaMalloc( (void**) &d_over, sizeof(bool));
+#elif defined (CUDA_UVM)
 	cudaMallocManaged( (void**) &d_over, sizeof(bool));
 #elif defined (CUDA_HST)
 	cudaMallocHost( (void**) &d_over, sizeof(bool));
@@ -306,14 +341,14 @@ void BFSGraph( int argc, char** argv)
 
 	int k=0;
 	printf("Start traversing the tree\n");
-#if !defined (CUDA_UVM) && !defined (CUDA_HST)
+#if !defined (UVM_OVER)
 	bool stop;
 #endif
 	//Call the Kernel untill all the elements of Frontier are not false
 	do
 	{
 		//if no thread changes this value then the loop stops
-#if !defined (CUDA_UVM) && !defined (CUDA_HST)
+#if !defined (UVM_OVER)
 		stop=false;
 		cudaMemcpy( d_over, &stop, sizeof(bool), cudaMemcpyHostToDevice) ;
 #else
@@ -321,8 +356,12 @@ void BFSGraph( int argc, char** argv)
 #endif
 #if defined (CUDA_UVM) || defined (CUDA_HST)
 		Kernel<<< grid, threads, 0 >>>( h_graph_nodes, h_graph_edges, h_graph_mask, h_updating_graph_mask, h_graph_visited, h_cost, no_of_nodes);
+#elif defined (CUDA_HYB) && defined (CUDA_HYB_L)
+		Kernel<<< grid, threads, 0 >>>( h_graph_nodes, d_graph_edges, d_graph_mask, d_updating_graph_mask, h_graph_visited, h_cost, no_of_nodes, h_graph_edges_2, edge_dev_size);
 #elif defined (CUDA_HYB)
 		Kernel<<< grid, threads, 0 >>>( d_graph_nodes, d_graph_edges, d_graph_mask, d_updating_graph_mask, d_graph_visited, d_cost, no_of_nodes, h_graph_edges_2, edge_dev_size);
+#elif defined (CUDA_HYS)
+		Kernel<<< grid, threads, 0 >>>( h_graph_nodes, h_graph_edges, d_graph_mask, d_updating_graph_mask, h_graph_visited, h_cost, no_of_nodes);
 #else
 		Kernel<<< grid, threads, 0 >>>( d_graph_nodes, d_graph_edges, d_graph_mask, d_updating_graph_mask, d_graph_visited, d_cost, no_of_nodes);
 #endif
@@ -331,22 +370,26 @@ void BFSGraph( int argc, char** argv)
 
 #if defined (CUDA_UVM) || defined (CUDA_HST)
 		Kernel2<<< grid, threads, 0 >>>( h_graph_mask, h_updating_graph_mask, h_graph_visited, d_over, no_of_nodes);
+#elif defined (CUDA_HYB) && defined (CUDA_HYB_L)
+		Kernel2<<< grid, threads, 0 >>>( d_graph_mask, d_updating_graph_mask, h_graph_visited, d_over, no_of_nodes);
 #elif defined (CUDA_HYB)
 		Kernel2<<< grid, threads, 0 >>>( d_graph_mask, d_updating_graph_mask, d_graph_visited, d_over, no_of_nodes);
+#elif defined (CUDA_HYS)
+		Kernel2<<< grid, threads, 0 >>>( d_graph_mask, d_updating_graph_mask, h_graph_visited, d_over, no_of_nodes);
 #else
 		Kernel2<<< grid, threads, 0 >>>( d_graph_mask, d_updating_graph_mask, d_graph_visited, d_over, no_of_nodes);
 #endif
 		// check if kernel execution generated and error
 		
 
-#if !defined (CUDA_UVM) && !defined (CUDA_HST)
+#if !defined (UVM_OVER)
 		cudaMemcpy( &stop, d_over, sizeof(bool), cudaMemcpyDeviceToHost) ;
 #else
         cudaDeviceSynchronize();
 #endif
 		k++;
 	}
-#if !defined (CUDA_UVM) && !defined (CUDA_HST)
+#if !defined (UVM_OVER)
 	while(stop);
 #else
 	while(*d_over);
@@ -359,10 +402,12 @@ void BFSGraph( int argc, char** argv)
 	printf("Time: %f\n", (sdkGetAverageTimerValue(&timer)/1000.0));
 
 	// copy result from device to host
-#if !defined (CUDA_UVM) && !defined (CUDA_HST)
-	cudaMemcpy( h_cost, d_cost, sizeof(int)*no_of_nodes, cudaMemcpyDeviceToHost) ;
-#else
+#if defined (CUDA_UVM) || defined (CUDA_HST) || defined (CUDA_HYS)
     cudaDeviceSynchronize();
+#elif defined (CUDA_HYB) && defined (CUDA_HYB_L)
+    cudaDeviceSynchronize();
+#else
+	cudaMemcpy( h_cost, d_cost, sizeof(int)*no_of_nodes, cudaMemcpyDeviceToHost) ;
 #endif
 
 	////Store the result into a file
@@ -382,20 +427,35 @@ void BFSGraph( int argc, char** argv)
 	cudaFree(h_graph_visited);
 	cudaFree(h_cost);
 #elif defined (CUDA_HYB)
-	free( h_graph_nodes);
 	free( h_graph_mask);
 	free( h_updating_graph_mask);
+	cudaFree(d_graph_mask);
+	cudaFree(d_updating_graph_mask);
+	free( h_graph_edges);
+	cudaFree(d_graph_edges);
+#if defined (CUDA_HYB_L)
+	cudaFree(h_graph_nodes);
+	cudaFree(h_graph_visited);
+	cudaFree(h_cost);
+#else
+	free( h_graph_nodes);
 	free( h_graph_visited);
 	free( h_cost);
 	cudaFree(d_graph_nodes);
-	cudaFree(d_graph_mask);
-	cudaFree(d_updating_graph_mask);
 	cudaFree(d_graph_visited);
 	cudaFree(d_cost);
-	free( h_graph_edges);
-	cudaFree(d_graph_edges);
+#endif
     if (h_graph_edges_2)
 	  cudaFree( h_graph_edges_2);
+#elif defined (CUDA_HYS)
+	cudaFree(h_graph_nodes);
+	cudaFree(h_graph_edges);
+	cudaFree(h_graph_visited);
+	cudaFree(h_cost);
+	free( h_graph_mask);
+	free( h_updating_graph_mask);
+	cudaFree(d_graph_mask);
+	cudaFree(d_updating_graph_mask);
 #else
 	free( h_graph_nodes);
 	free( h_graph_edges);
