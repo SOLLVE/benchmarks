@@ -9,6 +9,7 @@
 
 #ifdef OMP_GPU_OFFLOAD_UM
 #define CUDA_UM
+#define MAP_ALL
 #include <cuda_runtime_api.h>
 #endif
 
@@ -141,6 +142,15 @@ void BFSGraph( int argc, char** argv)
                 h_graph_visited[0:no_of_nodes], \
                 h_updating_graph_mask[0:no_of_nodes]) \
             map(tofrom: h_cost[0:no_of_nodes])
+    #elif defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+        #pragma omp target data \
+            map(to: no_of_nodes, \
+                h_graph_mask[0:no_of_nodes], \
+                h_graph_nodes[0:no_of_nodes], \
+                h_graph_edges[0:edge_list_size], \
+                h_graph_visited[0:no_of_nodes], \
+                h_updating_graph_mask[0:no_of_nodes]) \
+            map(tofrom: h_cost[0:no_of_nodes])
     #elif defined(OMP_GPU_OFFLOAD_UM)
         #pragma omp target data map(to: no_of_nodes)
     #endif
@@ -155,7 +165,9 @@ void BFSGraph( int argc, char** argv)
         //if no thread changes this value then the loop stops
         stop=false;
 
-        #if defined(OMP_GPU_OFFLOAD_UM)
+        #if defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+            #pragma omp target teams distribute parallel for
+        #elif defined(OMP_GPU_OFFLOAD_UM)
             #pragma omp target teams distribute parallel for \
                 is_device_ptr(h_graph_mask) \
                 is_device_ptr(h_graph_nodes) \
@@ -188,7 +200,9 @@ void BFSGraph( int argc, char** argv)
             }
         }
 
-        #if defined(OMP_GPU_OFFLOAD_UM)
+        #if defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+            #pragma omp target teams distribute parallel for map(tofrom: stop)
+        #elif defined(OMP_GPU_OFFLOAD_UM)
             #pragma omp target teams distribute parallel for \
                 map(tofrom: stop) \
                 is_device_ptr(h_graph_mask) \
