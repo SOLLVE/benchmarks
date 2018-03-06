@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 #ifdef OMP_GPU_OFFLOAD_UM
-#define CUDA_UM
-#define MAP_ALL
+//#define CUDA_UM
+//#define MAP_ALL
 #include <cuda_runtime_api.h>
 #endif
 
@@ -78,8 +78,10 @@ template <typename T> void copy(T* dst, T* src, int N)
 {
     #ifdef OMP_GPU_OFFLOAD
     #pragma omp target teams distribute parallel for default(shared) schedule(static)
-    #elif OMP_GPU_OFFLOAD_UM
-    #pragma omp target teams distribute parallel for default(shared) schedule(static) \
+    #elif defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+    #pragma omp target teams distribute parallel for
+    #elif defined(OMP_GPU_OFFLOAD_UM)
+    #pragma omp target teams distribute parallel for \
                 is_device_ptr(dst), is_device_ptr(src) map(to: N)
     #else
     #pragma omp parallel for default(shared) schedule(static)
@@ -179,6 +181,8 @@ void compute_step_factor(int nelr, float* __restrict variables, float* areas, fl
 {
     #ifdef OMP_GPU_OFFLOAD
     #pragma omp target teams distribute parallel for default(shared) schedule(auto)
+    #elif defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+    #pragma omp target teams distribute parallel for
     #elif defined(OMP_GPU_OFFLOAD_UM)
     #pragma omp target teams distribute parallel for default(shared) schedule(auto) \
                 is_device_ptr(areas) \
@@ -227,8 +231,9 @@ void compute_flux(int nelr, int* elements_surrounding_elements, float* normals, 
     const float smoothing_coefficient = float(0.2f);
 
     #if defined(OMP_GPU_OFFLOAD)
-    #pragma omp target data map(alloc:smoothing_coefficient)
-    #pragma omp target teams distribute parallel for default(shared) schedule(auto)
+    #pragma omp target teams distribute parallel for
+    #elif defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+    #pragma omp target teams distribute parallel for
     #elif defined(OMP_GPU_OFFLOAD_UM)
     #pragma omp target teams distribute parallel for default(shared) schedule(auto) \
                     map(alloc:smoothing_coefficient) \
@@ -384,6 +389,8 @@ void time_step(int j, int nelr, float* old_variables, float* variables, float* s
 {
     #ifdef OMP_GPU_OFFLOAD
     #pragma omp target teams distribute parallel for default(shared) schedule(auto)
+    #elif defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+    #pragma omp target teams distribute parallel for
     #elif defined(OMP_GPU_OFFLOAD_UM)
     #pragma omp target teams distribute parallel for default(shared) schedule(auto) \
                 is_device_ptr(old_variables) is_device_ptr(variables) \
@@ -578,6 +585,17 @@ int main(int argc, char** argv)
     #if defined(OMP_GPU_OFFLOAD)
     #pragma omp target data map(alloc: old_variables[0:(nelr*NVAR)]) \
                 map(to: nelr, areas[0:nelr], step_factors[0:nelr], \
+                    elements_surrounding_elements[0:(nelr*NNB)], \
+                    normals[0:(NDIM*NNB*nelr)], \
+                    fluxes[0:(nelr*NVAR)], \
+                    ff_variable[0:NVAR], ff_flux_contribution_momentum_x, \
+                    ff_flux_contribution_momentum_y, \
+                    ff_flux_contribution_momentum_z, \
+                    ff_flux_contribution_density_energy) \
+                map(tofrom: variables[0:(nelr*NVAR)])
+    #elif defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
+    #pragma omp target data map(alloc: old_variables[0:(nelr*NVAR)]) \
+                map(to: areas[0:nelr], step_factors[0:nelr], \
                     elements_surrounding_elements[0:(nelr*NNB)], \
                     normals[0:(NDIM*NNB*nelr)], \
                     fluxes[0:(nelr*NVAR)], \
