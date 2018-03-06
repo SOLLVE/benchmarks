@@ -7,8 +7,8 @@
 #include <stdio.h>
 
 #ifdef OMP_GPU_OFFLOAD_UM
-//#define CUDA_UM
-//#define MAP_ALL
+#define CUDA_UM
+#define MAP_ALL
 #include <cuda_runtime_api.h>
 #endif
 
