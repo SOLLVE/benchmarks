@@ -20,5 +20,8 @@ gpu: bfs_gpu.cpp
 um: bfs_gpu.cpp
 	$(CXX) $(CC_FLAGS) $(UM_FLAGS) bfs_gpu.cpp -o bfs_gpu_um
 
+mgpu: bfs_mulgpu.cpp
+	$(CXX) $(CC_FLAGS) $(UM_FLAGS) bfs_mulgpu.cpp -o bfs_mulgpu
+
 clean:
 	rm -f bfs bfs_offload bfs_gpu bfs_gpu_um result.txt
