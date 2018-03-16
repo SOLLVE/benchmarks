@@ -8,8 +8,8 @@
 #define OPEN
 
 #ifdef OMP_GPU_OFFLOAD_UM
-#define CUDA_UM
-#define MAP_ALL
+//#define CUDA_UM
+//#define MAP_ALL
 #include <cuda_runtime_api.h>
 #endif
 
@@ -67,10 +67,14 @@ void BFSGraph( int argc, char** argv)
     bool *h_graph_visited;
     cudaMallocManaged((void**)&h_graph_visited, sizeof(bool)*no_of_nodes, cudaMemAttachGlobal);
 #else
-    Node* h_graph_nodes = (Node*) omp_target_alloc(sizeof(Node)*no_of_nodes, omp_get_default_device());
-    bool *h_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
-    bool *h_updating_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
-    bool *h_graph_visited = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    //Node* h_graph_nodes = (Node*) omp_target_alloc(sizeof(Node)*no_of_nodes, omp_get_default_device());
+    //bool *h_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    //bool *h_updating_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    //bool *h_graph_visited = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    Node* h_graph_nodes = (Node*) omp_target_alloc(sizeof(Node)*no_of_nodes, -100);
+    bool *h_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, -100);
+    bool *h_updating_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, -100);
+    bool *h_graph_visited = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, -100);
 #endif
 #else
     Node* h_graph_nodes = (Node*) malloc(sizeof(Node)*no_of_nodes);
@@ -101,7 +105,8 @@ void BFSGraph( int argc, char** argv)
     unsigned long long* h_graph_edges;
     cudaMallocManaged((void**)&h_graph_edges, sizeof(unsigned long long)*edge_list_size, cudaMemAttachGlobal);
 #else
-    unsigned long long* h_graph_edges = (unsigned long long*) omp_target_alloc(sizeof(unsigned long long)*edge_list_size, omp_get_default_device());
+    //unsigned long long* h_graph_edges = (unsigned long long*) omp_target_alloc(sizeof(unsigned long long)*edge_list_size, omp_get_default_device());
+    unsigned long long* h_graph_edges = (unsigned long long*) omp_target_alloc(sizeof(unsigned long long)*edge_list_size, -100);
 #endif
 #else
     unsigned long long* h_graph_edges = (unsigned long long*) malloc(sizeof(unsigned long long)*edge_list_size);
@@ -118,7 +123,8 @@ void BFSGraph( int argc, char** argv)
     int* h_cost;
     cudaMallocManaged((void**)&h_cost, sizeof(int)*no_of_nodes, cudaMemAttachGlobal);
 #else
-    int* h_cost = (int*) omp_target_alloc( sizeof(int)*no_of_nodes, omp_get_default_device());
+    //int* h_cost = (int*) omp_target_alloc( sizeof(int)*no_of_nodes, omp_get_default_device());
+    int* h_cost = (int*) omp_target_alloc( sizeof(int)*no_of_nodes, -100);
 #endif
 #else
     int* h_cost = (int*) malloc( sizeof(int)*no_of_nodes);
@@ -144,15 +150,14 @@ void BFSGraph( int argc, char** argv)
             map(tofrom: h_cost[0:no_of_nodes])
     #elif defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
         #pragma omp target data \
-            map(to: no_of_nodes, \
-                h_graph_mask[0:no_of_nodes], \
+            map(to: h_graph_mask[0:no_of_nodes], \
                 h_graph_nodes[0:no_of_nodes], \
                 h_graph_edges[0:edge_list_size], \
                 h_graph_visited[0:no_of_nodes], \
                 h_updating_graph_mask[0:no_of_nodes]) \
             map(tofrom: h_cost[0:no_of_nodes])
     #elif defined(OMP_GPU_OFFLOAD_UM)
-        #pragma omp target data map(to: no_of_nodes)
+        //#pragma omp target data map(to: no_of_nodes)
     #endif
     {
 #if defined(OMP_GPU_OFFLOAD)

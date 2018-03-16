@@ -8,8 +8,8 @@
 #define OPEN
 
 #ifdef OMP_GPU_OFFLOAD_UM
-#define CUDA_UM
-#define MAP_ALL
+//#define CUDA_UM
+//#define MAP_ALL
 #include <cuda_runtime_api.h>
 #endif
 
@@ -69,10 +69,14 @@ void BFSGraph( int argc, char** argv)
     bool *h_graph_visited;
     cudaMallocManaged((void**)&h_graph_visited, sizeof(bool)*no_of_nodes, cudaMemAttachGlobal);
 #else
-    Node* h_graph_nodes = (Node*) omp_target_alloc(sizeof(Node)*no_of_nodes, omp_get_default_device());
-    bool *h_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
-    bool *h_updating_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
-    bool *h_graph_visited = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    //Node* h_graph_nodes = (Node*) omp_target_alloc(sizeof(Node)*no_of_nodes, omp_get_default_device());
+    //bool *h_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    //bool *h_updating_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    //bool *h_graph_visited = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, omp_get_default_device());
+    Node* h_graph_nodes = (Node*) omp_target_alloc(sizeof(Node)*no_of_nodes, -100);
+    bool *h_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, -100);
+    bool *h_updating_graph_mask = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, -100);
+    bool *h_graph_visited = (bool*) omp_target_alloc(sizeof(bool)*no_of_nodes, -100);
 #endif
 #else
     Node* h_graph_nodes = (Node*) malloc(sizeof(Node)*no_of_nodes);
@@ -103,7 +107,8 @@ void BFSGraph( int argc, char** argv)
     unsigned long long* h_graph_edges;
     cudaMallocManaged((void**)&h_graph_edges, sizeof(unsigned long long)*edge_list_size, cudaMemAttachGlobal);
 #else
-    unsigned long long* h_graph_edges = (unsigned long long*) omp_target_alloc(sizeof(unsigned long long)*edge_list_size, omp_get_default_device());
+    //unsigned long long* h_graph_edges = (unsigned long long*) omp_target_alloc(sizeof(unsigned long long)*edge_list_size, omp_get_default_device());
+    unsigned long long* h_graph_edges = (unsigned long long*) omp_target_alloc(sizeof(unsigned long long)*edge_list_size, -100);
 #endif
 #else
     unsigned long long* h_graph_edges = (unsigned long long*) malloc(sizeof(unsigned long long)*edge_list_size);
@@ -120,7 +125,8 @@ void BFSGraph( int argc, char** argv)
     int* h_cost;
     cudaMallocManaged((void**)&h_cost, sizeof(int)*no_of_nodes, cudaMemAttachGlobal);
 #else
-    int* h_cost = (int*) omp_target_alloc( sizeof(int)*no_of_nodes, omp_get_default_device());
+    //int* h_cost = (int*) omp_target_alloc( sizeof(int)*no_of_nodes, omp_get_default_device());
+    int* h_cost = (int*) omp_target_alloc( sizeof(int)*no_of_nodes, -100);
 #endif
 #else
     int* h_cost = (int*) malloc( sizeof(int)*no_of_nodes);
@@ -139,6 +145,7 @@ void BFSGraph( int argc, char** argv)
     printf("Device #: %d\n", numDevice);
     if (numDevice <= 0)
       return;
+    //numDevice = 1;
     unsigned long long numNodesPerDev = (no_of_nodes + numDevice - 1) / numDevice;
 
     double start_time = omp_get_wtime();
@@ -160,88 +167,72 @@ void BFSGraph( int argc, char** argv)
                 h_updating_graph_mask[0:no_of_nodes]) \
             map(tofrom: h_cost[0:no_of_nodes])
     #elif defined(OMP_GPU_OFFLOAD_UM)
-        #pragma omp target data map(to: no_of_nodes)
     #endif
     {
 #if defined(OMP_GPU_OFFLOAD)
     double trans_time =  omp_get_wtime();
     printf("Transfer time: %g\n", trans_time - start_time);
 #endif
-    bool stop;
+    //bool stop;
+    bool *stop;
+	//cudaMallocManaged( (void**) &stop, sizeof(bool));
+    stop = (bool*) omp_target_alloc(sizeof(bool), -100);
     do 
     {
         //if no thread changes this value then the loop stops
-        stop=false;
+        *stop=false;
 
         for (int d = 0; d < numDevice; d++) {
-          cudaSetDevice(d);
           unsigned long long start = d * numNodesPerDev;
-          unsigned long long end = min(d * (numNodesPerDev+1), no_of_nodes);
-        #if defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
-            #pragma omp target teams distribute parallel for
-        #elif defined(OMP_GPU_OFFLOAD_UM)
-            #pragma omp target teams distribute parallel for \
-                is_device_ptr(h_graph_mask) \
-                is_device_ptr(h_graph_nodes) \
-                is_device_ptr(h_graph_edges) \
-                is_device_ptr(h_graph_visited) \
-                is_device_ptr(h_updating_graph_mask) \
-                is_device_ptr(h_cost)
-        #elif defined(OMP_GPU_OFFLOAD)
-            #pragma omp target teams distribute parallel for
-        #else
-            #pragma omp target
-            #pragma omp parallel for 
-        #endif 
-        for(unsigned long long tid = start; tid < end; tid++ )
-        {
-            if (h_graph_mask[tid] == true) 
+          unsigned long long end = min((d+1) * numNodesPerDev, no_of_nodes);
+          #pragma omp target teams distribute parallel for device(d) \
+              is_device_ptr(h_graph_mask) \
+              is_device_ptr(h_graph_nodes) \
+              is_device_ptr(h_graph_edges) \
+              is_device_ptr(h_graph_visited) \
+              is_device_ptr(h_updating_graph_mask) \
+              is_device_ptr(h_cost)
+          for(unsigned long long tid = start; tid < end; tid++ )
+          {
+              if (h_graph_mask[tid] == true) 
+              {
+                  h_graph_mask[tid]=false;
+                  for(unsigned long long i=h_graph_nodes[tid].starting; 
+                          i<(h_graph_nodes[tid].no_of_edges + 
+                              h_graph_nodes[tid].starting); i++)
+                  {
+                      unsigned long long id = h_graph_edges[i];
+                      if(!h_graph_visited[id])
+                      {
+                          h_cost[id]=h_cost[tid]+1;
+                          h_updating_graph_mask[id]=true;
+                      }
+                  }
+              }
+          }
+        }
+        cudaDeviceSynchronize();
+
+        for (int d = 0; d < numDevice; d++) {
+          unsigned long long start = d * numNodesPerDev;
+          unsigned long long end = min((d+1) * numNodesPerDev, no_of_nodes);
+          #pragma omp target teams distribute parallel for device(d) \
+              is_device_ptr(stop) \
+              is_device_ptr(h_graph_mask) \
+              is_device_ptr(h_graph_visited) \
+              is_device_ptr(h_updating_graph_mask)
+            for(unsigned long long tid=start; tid< end; tid++ )
             {
-                h_graph_mask[tid]=false;
-                for(unsigned long long i=h_graph_nodes[tid].starting; 
-                        i<(h_graph_nodes[tid].no_of_edges + 
-                            h_graph_nodes[tid].starting); i++)
-                {
-                    unsigned long long id = h_graph_edges[i];
-                    if(!h_graph_visited[id])
-                    {
-                        h_cost[id]=h_cost[tid]+1;
-                        h_updating_graph_mask[id]=true;
-                    }
+                if (h_updating_graph_mask[tid] == true){
+                    h_graph_mask[tid]=true;
+                    h_graph_visited[tid]=true;
+                    *stop=true;
+                    h_updating_graph_mask[tid]=false;
                 }
             }
         }
-        }
-
-        for (int d = 0; d < numDevice; d++) {
-          cudaSetDevice(d);
-          unsigned long long start = d * numNodesPerDev;
-          unsigned long long end = min(d * (numNodesPerDev+1), no_of_nodes);
-        #if defined(OMP_GPU_OFFLOAD_UM) && defined(MAP_ALL)
-            #pragma omp target teams distribute parallel for map(tofrom: stop)
-        #elif defined(OMP_GPU_OFFLOAD_UM)
-            #pragma omp target teams distribute parallel for \
-                map(tofrom: stop) \
-                is_device_ptr(h_graph_mask) \
-                is_device_ptr(h_graph_visited) \
-                is_device_ptr(h_updating_graph_mask)
-        #elif defined(OMP_GPU_OFFLOAD)
-            #pragma omp target teams distribute parallel for map(tofrom: stop)
-        #else
-            #pragma omp target map(tofrom: stop)
-            #pragma omp parallel for
-        #endif
-        for(unsigned long long tid=start; tid< end; tid++ )
-        {
-            if (h_updating_graph_mask[tid] == true){
-                h_graph_mask[tid]=true;
-                h_graph_visited[tid]=true;
-                stop=true;
-                h_updating_graph_mask[tid]=false;
-            }
-        }
-        }
-    } while(stop);
+        cudaDeviceSynchronize();
+    } while(*stop);
     double end_time = omp_get_wtime();
     printf("Total time: %g\n", (end_time - start_time));
     }

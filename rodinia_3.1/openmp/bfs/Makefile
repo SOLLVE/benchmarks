@@ -1,9 +1,9 @@
 # C compiler
 CC = clang
-CXX = clang
+CXX = clang++
 ICC = clang
 #CC_FLAGS = -fopenmp -O3 -I/usr/local/cuda-9.0/include -lcudart
-CC_FLAGS = -fopenmp -O3 -I/sw/summitdev/cuda/9.0.69/include -lcudart
+CC_FLAGS = -fopenmp -O3 -I/sw/summitdev/cuda/9.0.69/include -lcudart -I/sw/summitdev/cuda/9.0.69/include -L/sw/summitdev/cuda/9.0.69/lib64
 GPU_FLAGS = -DOMP_GPU_OFFLOAD -fopenmp-targets=nvptx64-nvidia-cuda 
 UM_FLAGS = -DOMP_GPU_OFFLOAD_UM -fopenmp-targets=nvptx64-nvidia-cuda 
 
