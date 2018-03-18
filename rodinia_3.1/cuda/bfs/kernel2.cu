@@ -19,9 +19,16 @@ The CUDA Kernel for Applying BFS on a loaded Graph. Created By Pawan Harish
 #define _KERNEL2_H_
 
 __global__ void
+#if defined (MULTI_GPU)
+Kernel2( bool* g_graph_mask, bool *g_updating_graph_mask, bool* g_graph_visited, bool *g_over, unsigned long long no_of_nodes, unsigned long long start)
+#else
 Kernel2( bool* g_graph_mask, bool *g_updating_graph_mask, bool* g_graph_visited, bool *g_over, unsigned long long no_of_nodes)
+#endif
 {
 	unsigned long long tid = blockIdx.x*MAX_THREADS_PER_BLOCK + threadIdx.x;
+#if defined (MULTI_GPU)
+    tid += start;
+#endif
 	if( tid<no_of_nodes && g_updating_graph_mask[tid])
 	{
 
