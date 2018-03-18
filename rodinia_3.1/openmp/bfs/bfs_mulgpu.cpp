@@ -234,6 +234,7 @@ void BFSGraph( int argc, char** argv)
                 }
             }
         }
+        // FIXME: this does not produce the right results somehow
         for (int d = 0; d < numDevice; d++) {
           cudaSetDevice(d);
           cudaDeviceSynchronize();
