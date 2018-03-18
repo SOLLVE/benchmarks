@@ -211,7 +211,10 @@ void BFSGraph( int argc, char** argv)
               }
           }
         }
-        cudaDeviceSynchronize();
+        for (int d = 0; d < numDevice; d++) {
+          cudaSetDevice(d);
+          cudaDeviceSynchronize();
+        }
 
         for (int d = 0; d < numDevice; d++) {
           unsigned long long start = d * numNodesPerDev;
@@ -231,7 +234,10 @@ void BFSGraph( int argc, char** argv)
                 }
             }
         }
-        cudaDeviceSynchronize();
+        for (int d = 0; d < numDevice; d++) {
+          cudaSetDevice(d);
+          cudaDeviceSynchronize();
+        }
     } while(*stop);
     double end_time = omp_get_wtime();
     printf("Total time: %g\n", (end_time - start_time));
