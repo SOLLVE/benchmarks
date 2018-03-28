@@ -9,7 +9,7 @@
 
 #ifdef OMP_GPU_OFFLOAD_UM
 //#define CUDA_UM
-//#define MAP_ALL
+#define MAP_ALL
 #include <cuda_runtime_api.h>
 #endif
 
@@ -141,8 +141,7 @@ void BFSGraph( int argc, char** argv)
     double start_time = omp_get_wtime();
     #if defined(OMP_GPU_OFFLOAD)
         #pragma omp target data \
-            map(to: no_of_nodes, \
-                h_graph_mask[0:no_of_nodes], \
+            map(to: h_graph_mask[0:no_of_nodes], \
                 h_graph_nodes[0:no_of_nodes], \
                 h_graph_edges[0:edge_list_size], \
                 h_graph_visited[0:no_of_nodes], \
