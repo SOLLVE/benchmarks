@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 #ifdef OMP_GPU_OFFLOAD_UM
-#define CUDA_UM
+//#define CUDA_UM
 #define MAP_ALL
 #include <cuda_runtime_api.h>
 #endif
@@ -436,7 +436,7 @@ int main(int argc, char** argv)
     float *ff_variable;
     cudaMallocManaged((void**)&ff_variable, sizeof(float)*NVAR, cudaMemAttachGlobal);
 #elif defined (OMP_GPU_OFFLOAD_UM)
-    float *ff_variable = (float*) omp_target_alloc(sizeof(float)*NVAR, omp_get_default_device());
+    float *ff_variable = (float*) omp_target_alloc(sizeof(float)*NVAR, -100);
 #else
     float *ff_variable = (float*) malloc(sizeof(float)*NVAR);
 #endif
@@ -489,9 +489,9 @@ int main(int argc, char** argv)
         cudaMallocManaged((void**)&elements_surrounding_elements, sizeof(int)*nelr*NNB, cudaMemAttachGlobal);
         cudaMallocManaged((void**)&normals, sizeof(float)*NDIM*NNB*nelr, cudaMemAttachGlobal);
 #elif defined (OMP_GPU_OFFLOAD_UM)
-        areas = (float*) omp_target_alloc(sizeof(float)*nelr*NNB, omp_get_default_device());
-        elements_surrounding_elements = (int*) omp_target_alloc(sizeof(int)*nelr*NNB, omp_get_default_device());
-        normals = (float*) omp_target_alloc(sizeof(float)*NDIM*NNB*nelr, omp_get_default_device());
+        areas = (float*) omp_target_alloc(sizeof(float)*nelr*NNB, -100);
+        elements_surrounding_elements = (int*) omp_target_alloc(sizeof(int)*nelr*NNB, -100);
+        normals = (float*) omp_target_alloc(sizeof(float)*NDIM*NNB*nelr, -100);
 #else
         areas = new float[nelr];
         elements_surrounding_elements = new int[nelr*NNB];
@@ -551,10 +551,10 @@ int main(int argc, char** argv)
     cudaMallocManaged((void**)&fluxes, sizeof(float)*nelr*NVAR, cudaMemAttachGlobal);
     cudaMallocManaged((void**)&step_factors, sizeof(float)*nelr, cudaMemAttachGlobal);
 #elif defined (OMP_GPU_OFFLOAD_UM)
-    float* variables = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, omp_get_default_device());
-    float* old_variables = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, omp_get_default_device());
-    float* fluxes = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, omp_get_default_device());
-    float* step_factors = (float*)omp_target_alloc(sizeof(float)*nelr, omp_get_default_device());
+    float* variables = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, -100);
+    float* old_variables = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, -100);
+    float* fluxes = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, -100);
+    float* step_factors = (float*)omp_target_alloc(sizeof(float)*nelr, -100);
 #else
     float* variables = alloc<float>(nelr*NVAR);
     float* old_variables = alloc<float>(nelr*NVAR);
