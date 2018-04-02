@@ -90,8 +90,8 @@ void write_graphics(	char* filename,
 
 void read_graphics(	char* filename,
 									fp* input,
-									int data_rows, 
-									int data_cols,
+									unsigned long data_rows, 
+									unsigned long data_cols,
 									int major){
 
 	//================================================================================80
@@ -99,7 +99,7 @@ void read_graphics(	char* filename,
 	//================================================================================80
 
 	FILE* fid;
-	int i, j;
+	unsigned long i, j;
 	char c;
 	int temp;
 
@@ -118,12 +118,12 @@ void read_graphics(	char* filename,
 	//================================================================================80
 
 	i = 0;
-	while(i<3){
+/*	while(i<3){
 		c = fgetc(fid);
 		if(c == '\n'){
 			i = i+1;
 		}
-	};
+	};*/
 
 	//================================================================================80
 	//	READ VALUES FROM THE FILE
@@ -139,9 +139,13 @@ void read_graphics(	char* filename,
 	}
 	else{																				// if matrix is saved column major in memory (MATLAB)
 		for(i=0; i<data_rows; i++){
+            //printf("%lu %lu\n", i, data_cols);
 			for(j=0; j<data_cols; j++){
+                unsigned long idx = j*data_rows+i;
+                //printf("%lu\n", idx);
 				fscanf(fid, "%d", &temp);
-				input[j*data_rows+i] = (fp)temp;
+                //printf("%d\n", temp);
+				input[idx] = (fp)temp;
 			}
 		}
 	}

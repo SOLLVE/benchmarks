@@ -1,1 +1,14 @@
-./srad 100 0.5 502 458 4
+#!/usr/bin/bash
+for ((i=500; i<10000; i+=500))
+do
+    echo $i
+    bsub -W 240 -n 2 -P GEN010SOLLVE nvprof ./srad 1 0.5 $i 91600 40 $i
+    bsub -W 240 -n 2 -P GEN010SOLLVE nvprof ./srad_gpu 1 0.5 $i 91600 40 $i
+    bsub -W 240 -n 4 -P GEN010SOLLVE nvprof ./srad_um 1 0.5 $i 91600 40 $i
+    x=1;
+    while [ $x -gt 0 ];  
+    do
+        x=`bjobs 2> /dev/null | wc -l`;
+        sleep 2;
+    done;
+done

@@ -56,13 +56,15 @@ int main(int argc, char *argv []){
 	long long time9;
 	long long time10;
 
+    unsigned long total_size = 0;
+
 	time0 = get_time();
 
     // inputs image, input paramenters
     fp* image_ori;																// originalinput image
-	int image_ori_rows;
-	int image_ori_cols;
-	long image_ori_elem;
+	unsigned long image_ori_rows;
+	unsigned long image_ori_cols;
+	unsigned long image_ori_elem;
 
     // inputs image, input paramenters
     fp* image;															// input image
@@ -104,6 +106,7 @@ int main(int argc, char *argv []){
 
 	// number of threads
 	int threads;
+    int rows;
 
 	time1 = get_time();
 
@@ -111,7 +114,7 @@ int main(int argc, char *argv []){
 	// 	GET INPUT PARAMETERS
 	//================================================================================80
 
-	if(argc != 6){
+	if(argc != 7){
 		printf("ERROR: wrong number of arguments\n");
 		return 0;
 	}
@@ -121,6 +124,7 @@ int main(int argc, char *argv []){
 		Nr = atoi(argv[3]);						// it is 502 in the original image
 		Nc = atoi(argv[4]);						// it is 458 in the original image
 		threads = atoi(argv[5]);
+		rows = atoi(argv[6]);
 	}
 
 	omp_set_num_threads(threads);
@@ -134,17 +138,25 @@ int main(int argc, char *argv []){
 	//================================================================================80
 
     // read image
-	image_ori_rows = 502;
-	image_ori_cols = 458;
+	image_ori_rows = rows;//23092;//502;
+	image_ori_cols = 91600L;//458;
 	image_ori_elem = image_ori_rows * image_ori_cols;
+    printf("%lu %lu %lu\n", image_ori_elem, image_ori_rows, image_ori_cols); 
 
+//    total_size += sizeof(fp) * image_ori_elem;
+#ifdef OMP_GPU_OFFLOAD_UM
+    image_ori = (fp*)omp_target_alloc(sizeof(fp) * image_ori_elem, omp_get_default_device());
+#else
 	image_ori = (fp*)malloc(sizeof(fp) * image_ori_elem);
+#endif
 
-	read_graphics(	"../../../data/srad/image.pgm",
+    printf("Reading the file\n");
+	read_graphics(	"../../../data/srad/image3.pgm",
 								image_ori,
 								image_ori_rows,
 								image_ori_cols,
 								1);
+    printf("File Read\n");
 
 	time3 = get_time();
 
@@ -154,7 +166,12 @@ int main(int argc, char *argv []){
 
 	Ne = Nr*Nc;
 
+    total_size += sizeof(fp) * Ne;
+#ifdef OMP_GPU_OFFLOAD_UM
+    image = (fp*)omp_target_alloc(sizeof(fp) * Ne, omp_get_default_device());
+#else
 	image = (fp*)malloc(sizeof(fp) * Ne);
+#endif
 
 	resize(	image_ori,
 				image_ori_rows,
@@ -179,6 +196,24 @@ int main(int argc, char *argv []){
     NeROI = (r2-r1+1)*(c2-c1+1);											// number of elements in ROI, ROI size
     
     // allocate variables for surrounding pixels
+    total_size += sizeof(int*) * Nr * 2 + sizeof(int*) * Nc * 2;
+    total_size += sizeof(fp) * Ne * 4;
+    total_size += sizeof(fp) * Ne;
+#ifdef OMP_GPU_OFFLOAD_UM
+    iN = (int*)omp_target_alloc(sizeof(int*)*Nr, omp_get_default_device());									// north surrounding element
+    iS = (int*)omp_target_alloc(sizeof(int*)*Nr, omp_get_default_device());									// south surrounding element
+    jW = (int*)omp_target_alloc(sizeof(int*)*Nc, omp_get_default_device());									// west surrounding element
+    jE = (int*)omp_target_alloc(sizeof(int*)*Nc, omp_get_default_device());									// east surrounding element
+    
+	// allocate variables for directional derivatives
+	dN = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// north direction derivative
+    dS = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// south direction derivative
+    dW = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// west direction derivative
+    dE = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// east direction derivative
+
+	// allocate variable for diffusion coefficient
+    c  = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// diffusion coefficient
+#else
     iN = malloc(sizeof(int*)*Nr) ;									// north surrounding element
     iS = malloc(sizeof(int*)*Nr) ;									// south surrounding element
     jW = malloc(sizeof(int*)*Nc) ;									// west surrounding element
@@ -192,14 +227,25 @@ int main(int argc, char *argv []){
 
 	// allocate variable for diffusion coefficient
     c  = malloc(sizeof(fp)*Ne) ;											// diffusion coefficient
+#endif
         
     // N/S/W/E indices of surrounding pixels (every element of IMAGE)
-	// #pragma omp parallel
+#ifdef OMP_GPU_OFFLOAD_UM
+	#pragma omp target teams distribute parallel for private(i) firstprivate(Nr) is_device_ptr(iN,iS)
+#elif defined(OMP_GPU_OFFLOAD)
+    #pragma omp target data map(from: iN[0:Nr],iS[0:Nr])
+	#pragma omp target teams distribute parallel for private(i) firstprivate(Nr)
+#endif
     for (i=0; i<Nr; i++) {
         iN[i] = i-1;														// holds index of IMAGE row above
         iS[i] = i+1;														// holds index of IMAGE row below
     }
-	// #pragma omp parallel
+#ifdef OMP_GPU_OFFLOAD_UM
+	#pragma omp target teams distribute parallel for private(j) firstprivate(Nc) is_device_ptr(jW,jE)
+#elif defined(OMP_GPU_OFFLOAD)
+    #pragma omp target data map(from: jW[0:Nc],jE[0:Nc])
+	#pragma omp target teams distribute parallel for private(j) firstprivate(Nc)
+#endif
     for (j=0; j<Nc; j++) {
         jW[j] = j-1;														// holds index of IMAGE column on the left
         jE[j] = j+1;														// holds index of IMAGE column on the right
@@ -222,6 +268,7 @@ int main(int argc, char *argv []){
     }
 
 	time6 = get_time();
+    double start_time = omp_get_wtime();
 
 	//================================================================================80
 	// 	COMPUTATION
@@ -238,6 +285,20 @@ int main(int argc, char *argv []){
         // ROI statistics for entire ROI (single number for ROI)
         sum=0; 
 		sum2=0;
+#ifdef OMP_GPU_OFFLOAD_UM
+	    #pragma omp target teams distribute parallel for \
+                private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2) \
+                is_device_ptr(image) reduction(+:sum, sum2)
+#elif defined(OMP_GPU_OFFLOAD)
+        #pragma omp target data map(to: image[0:Ne])
+        #pragma omp target teams distribute parallel for \
+                private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2) \
+                reduction(+:sum, sum2) 
+#else
+        #pragma omp parallel for reduction(+:sum, sum2) \
+                private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2)
+#endif
+
         for (i=r1; i<=r2; i++) {											// do for the range of rows in ROI
             for (j=c1; j<=c2; j++) {										// do for the range of columns in ROI
                 tmp   = image[i + Nr*j];										// get coresponding value in IMAGE
@@ -250,7 +311,19 @@ int main(int argc, char *argv []){
         q0sqr   = varROI / (meanROI*meanROI);								// gets standard deviation of ROI
 
         // directional derivatives, ICOV, diffusion coefficent
+#ifdef OMP_GPU_OFFLOAD_UM
+	    #pragma omp target teams distribute parallel for \
+                private(i, j, k, Jc, G2, L, num, den, qsqr) \
+                is_device_ptr(dN, dS, dW, dE, c, image, iN, iS, jW, jE) firstprivate(Nr, Nc)
+#elif defined(OMP_GPU_OFFLOAD)
+        #pragma omp target data map(from: dN[0:Ne], dS[0:Ne], dW[0:Ne], dE[0:Ne], c[0:Ne]) \
+                                map(to: image[0:Ne], iN[0:Nr], iS[0:Nr], jW[0:Nc], jE[0:Nc])
+	    #pragma omp target teams distribute parallel for \
+                private(i, j, k, Jc, G2, L, num, den, qsqr) \
+                firstprivate(Nr, Nc)
+#else
 		#pragma omp parallel for shared(image, dN, dS, dW, dE, c, Nr, Nc, iN, iS, jW, jE) private(i, j, k, Jc, G2, L, num, den, qsqr)
+#endif
 		for (j=0; j<Nc; j++) {												// do for the range of columns in IMAGE
 
             for (i=0; i<Nr; i++) {											// do for the range of rows in IMAGE 
@@ -292,7 +365,18 @@ int main(int argc, char *argv []){
         }
 
         // divergence & image update
+#ifdef OMP_GPU_OFFLOAD_UM
+	    #pragma omp target teams distribute parallel for \
+                private(i, j, k, D, cS, cN, cW, cE) \
+                is_device_ptr(c, image, iS, jE, dN, dS, dW, dE) firstprivate(Nr, Nc, lambda)
+#elif defined(OMP_GPU_OFFLOAD)
+        #pragma omp target data map(c[0:Ne], image[0:Ne], iS[0:Nr], jE[0:Nc], dN[0:Ne], dS[0:Ne], dW[0:Ne], dE[0:Ne])
+	    #pragma omp target teams distribute parallel for \
+                private(i, j, k, D, cS, cN, cW, cE) \
+                firstprivate(Nr, Nc, lambda)
+#else
 		#pragma omp parallel for shared(image, c, Nr, Nc, lambda) private(i, j, k, D, cS, cN, cW, cE)
+#endif
         for (j=0; j<Nc; j++) {												// do for the range of columns in IMAGE
 
 			// printf("NUMBER OF THREADS: %d\n", omp_get_num_threads());
@@ -317,11 +401,13 @@ int main(int argc, char *argv []){
             }
 
         }
-
 	}
 
 	// printf("\n");
 
+    double end_time = omp_get_wtime();
+/*
+#ifndef OMP_GPU_OFFLOAD_UM
 	time7 = get_time();
 
 	//================================================================================80
@@ -347,11 +433,20 @@ int main(int argc, char *argv []){
 								255);
 
 	time9 = get_time();
-
+#endif
+*/
 	//================================================================================80
 	// 	DEALLOCATE
 	//================================================================================80
 
+#ifdef OMP_GPU_OFFLOAD_UM
+	omp_target_free(image_ori, omp_get_default_device());
+	omp_target_free(image, omp_get_default_device());
+
+    omp_target_free(iN, omp_get_default_device()); omp_target_free(iS, omp_get_default_device()); omp_target_free(jW, omp_get_default_device()); omp_target_free(jE, omp_get_default_device());									// deallocate surrounding pixel memory
+    omp_target_free(dN, omp_get_default_device()); omp_target_free(dS, omp_get_default_device()); omp_target_free(dW, omp_get_default_device()); omp_target_free(dE, omp_get_default_device());									// deallocate directional derivative memory
+    omp_target_free(c, omp_get_default_device());																// deallocate diffusion coefficient memory
+#else
 	free(image_ori);
 	free(image);
 
@@ -360,25 +455,29 @@ int main(int argc, char *argv []){
     free(c);																// deallocate diffusion coefficient memory
 
 	time10 = get_time();
+#endif
 
 	//================================================================================80
 	//		DISPLAY TIMING
 	//================================================================================80
 
+    printf("Total Size - %lu\n", total_size);
+//#ifdef OMP_GPU_OFFLOAD_UM
+	printf("Compute Time - %lf\n", end_time - start_time);
+/*#else
 	printf("Time spent in different stages of the application:\n");
-	printf("%.12f s, %.12f % : SETUP VARIABLES\n", 									(float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : READ COMMAND LINE PARAMETERS\n", 	(float) (time2-time1) / 1000000, (float) (time2-time1) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : READ IMAGE FROM FILE\n", 						(float) (time3-time2) / 1000000, (float) (time3-time2) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : RESIZE IMAGE\n", 										(float) (time4-time3) / 1000000, (float) (time4-time3) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : SETUP, MEMORY ALLOCATION\n", 				(float) (time5-time4) / 1000000, (float) (time5-time4) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : EXTRACT IMAGE\n", 									(float) (time6-time5) / 1000000, (float) (time6-time5) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : COMPUTE\n", 												(float) (time7-time6) / 1000000, (float) (time7-time6) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : COMPRESS IMAGE\n", 									(float) (time8-time7) / 1000000, (float) (time8-time7) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : SAVE IMAGE INTO FILE\n", 							(float) (time9-time8) / 1000000, (float) (time9-time8) / (float) (time10-time0) * 100);
-	printf("%.12f s, %.12f % : FREE MEMORY\n", 										(float) (time10-time9) / 1000000, (float) (time10-time9) / (float) (time10-time0) * 100);
-	printf("Total time:\n");
-	printf("%.12f s\n", 																					(float) (time10-time0) / 1000000);
-
+	printf("%.12fs, %.2f%% : SETUP VARIABLES\n", (float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : READ COMMAND LINE PARAMETERS\n", (float) (time2-time1) / 1000000, (float) (time2-time1) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : READ IMAGE FROM FILE\n", (float) (time3-time2) / 1000000, (float) (time3-time2) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : RESIZE IMAGE\n", (float) (time4-time3) / 1000000, (float) (time4-time3) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : SETUP, MEMORY ALLOCATION\n", (float) (time5-time4) / 1000000, (float) (time5-time4) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : EXTRACT IMAGE\n", (float) (time6-time5) / 1000000, (float) (time6-time5) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : COMPUTE\n", (float) (time7-time6) / 1000000, (float) (time7-time6) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : COMPRESS IMAGE\n", (float) (time8-time7) / 1000000, (float) (time8-time7) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : SAVE IMAGE INTO FILE\n", (float) (time9-time8) / 1000000, (float) (time9-time8) / (float) (time10-time0) * 100);
+	printf("%.12fs, %.2f%% : FREE MEMORY\n", (float) (time10-time9) / 1000000, (float) (time10-time9) / (float) (time10-time0) * 100);
+	printf("Total time: %.12fs\n", (float) (time10-time0) / 1000000);
+#endif*/
 //====================================================================================================100
 //	END OF FILE
 //====================================================================================================100
