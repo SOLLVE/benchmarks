@@ -10,6 +10,8 @@
 #include <omp.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "backprop.h"
 #include <math.h>
 #define OPEN
@@ -26,6 +28,7 @@
   for (_i = 0; _i < _l; _i++) *_to++ = *_from++;\
 }
 
+extern unsigned long total_size;
 /*** Return random number between 0.0 and 1.0 ***/
 float drnd()
 {
@@ -88,7 +91,7 @@ int m, n;
   return (new);
 }
 
-
+void
 bpnn_randomize_weights(w, m, n)
 float **w;
 int m, n;
@@ -103,6 +106,7 @@ int m, n;
   }
 }
 
+void
 bpnn_randomize_row(w, m)
 float *w;
 int m;
@@ -114,7 +118,7 @@ int m;
     }
 }
 
-
+void
 bpnn_zero_weights(w, m, n)
 float **w;
 int m, n;
@@ -131,7 +135,7 @@ int m, n;
 
 void bpnn_initialize(seed)
 {
-  printf("Random number generator seed: %d\n", seed);
+ // printf("Random number generator seed: %d\n", seed);
   srand(seed);
 }
 
@@ -243,7 +247,23 @@ int n1, n2;
   l1[0] = 1.0;
 #ifdef OPEN
   omp_set_num_threads(NUM_THREAD);
-  #pragma omp parallel for shared(conn, n1, n2, l1) private(k, j) reduction(+: sum) schedule(static)
+  total_size += sizeof(int)*2    // n1, n2
+                + sizeof(float)*n1 + sizeof(float)*n2 + sizeof(float)*n1*n2;
+  printf("n1: %lu, n2: %lu\n", n1, n2);
+  #ifdef OMP_GPU_OFFLOAD
+  #pragma omp target data map(to: conn,n1,n2,l1) map(tofrom: sum,l2)
+  #pragma omp target teams distribute parallel for \
+            shared(conn, n1, n2, l1) \
+                private(k, j) \
+                reduction(+: sum) \
+                schedule(static)
+  #else
+  #pragma omp parallel for \
+            shared(conn, n1, n2, l1) \
+                private(k, j) \
+                reduction(+: sum) \
+                schedule(static)
+  #endif/**/
 #endif 
   /*** For each unit in second layer ***/
   for (j = 1; j <= n2; j++) {
@@ -313,10 +333,25 @@ float *delta, *ly, **w, **oldw;
 
 #ifdef OPEN
   omp_set_num_threads(NUM_THREAD);
-  #pragma omp parallel for  \
+  total_size += sizeof(int)*2        // ndelta, nly
+                + sizeof(float)*ndelta              // detla
+                + sizeof(float)*nly                 // nly
+                + sizeof(float)*nly*ndelta          // w
+                + sizeof(float)*nly*ndelta;         // oldw
+
+  printf("ndelta=%lu, nly=%lu\n", ndelta, nly);
+  #ifdef OMP_GPU_OFFLOAD
+  #pragma omp target data map(to: delta, ndelta, nly) map(tofrom: w, oldw)
+  #pragma omp target teams distribute parallel for \
       shared(oldw, w, delta) \
 	  private(j, k, new_dw) \
 	  firstprivate(ndelta, nly) 
+  #else
+  #pragma omp parallel for \
+      shared(oldw, w, delta) \
+	  private(j, k, new_dw) \
+	  firstprivate(ndelta, nly) 
+  #endif/**/
 #endif 
   for (j = 1; j <= ndelta; j++) {
     for (k = 0; k <= nly; k++) {
@@ -401,7 +436,7 @@ char *filename;
   */
 
   n1 = net->input_n;  n2 = net->hidden_n;  n3 = net->output_n;
-  printf("Saving %dx%dx%d network to '%s'\n", n1, n2, n3, filename);
+//  printf("Saving %dx%dx%d network to '%s'\n", n1, n2, n3, filename);
   //fflush(stdout);
 
   //write(fd, (char *) &n1, sizeof(int));
@@ -458,7 +493,7 @@ char *filename;
     return (NULL);
   }
 
-  printf("Reading '%s'\n", filename);  //fflush(stdout);
+ // printf("Reading '%s'\n", filename);  //fflush(stdout);
 
   read(fd, (char *) &n1, sizeof(int));
   read(fd, (char *) &n2, sizeof(int));

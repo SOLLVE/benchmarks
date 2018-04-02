@@ -8,6 +8,7 @@
 #define MOMENTUM 0.3  //momentum value
 #define NUM_THREAD 8 //OpenMP threads
 
+double compute_time;
 
 typedef struct {
   int input_n;                  /* number of input units */
@@ -45,5 +46,7 @@ void bpnn_feedforward();
 void bpnn_save();
 BPNN *bpnn_read();
 
+void bpnn_train_kernel(BPNN *net, float *eo, float *eh);
+void load(BPNN *net);
 
 #endif

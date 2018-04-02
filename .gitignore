@@ -1,5 +1,8 @@
 *.o
 *.log
+*.ll
+*.lsf
+cuda_func_arg.lst
 spmv_*
 
 cusplibrary/performance/spmv/log
