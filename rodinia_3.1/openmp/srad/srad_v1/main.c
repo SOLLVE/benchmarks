@@ -31,6 +31,13 @@
 #include "resize.c"
 #include "timer.c"
 
+#ifdef OMP_GPU_OFFLOAD_UM
+#define MAP_ALL
+//#define MAP_NO
+#elif defined(OMP_GPU_OFFLOAD)
+#define MAP_ALL
+#endif
+
 //====================================================================================================100
 //====================================================================================================100
 //	MAIN FUNCTION
@@ -145,7 +152,7 @@ int main(int argc, char *argv []){
 
 //    total_size += sizeof(fp) * image_ori_elem;
 #ifdef OMP_GPU_OFFLOAD_UM
-    image_ori = (fp*)omp_target_alloc(sizeof(fp) * image_ori_elem, omp_get_default_device());
+    image_ori = (fp*)omp_target_alloc(sizeof(fp) * image_ori_elem, -100);
 #else
 	image_ori = (fp*)malloc(sizeof(fp) * image_ori_elem);
 #endif
@@ -168,7 +175,7 @@ int main(int argc, char *argv []){
 
     total_size += sizeof(fp) * Ne;
 #ifdef OMP_GPU_OFFLOAD_UM
-    image = (fp*)omp_target_alloc(sizeof(fp) * Ne, omp_get_default_device());
+    image = (fp*)omp_target_alloc(sizeof(fp) * Ne, -100);
 #else
 	image = (fp*)malloc(sizeof(fp) * Ne);
 #endif
@@ -200,19 +207,19 @@ int main(int argc, char *argv []){
     total_size += sizeof(fp) * Ne * 4;
     total_size += sizeof(fp) * Ne;
 #ifdef OMP_GPU_OFFLOAD_UM
-    iN = (int*)omp_target_alloc(sizeof(int*)*Nr, omp_get_default_device());									// north surrounding element
-    iS = (int*)omp_target_alloc(sizeof(int*)*Nr, omp_get_default_device());									// south surrounding element
-    jW = (int*)omp_target_alloc(sizeof(int*)*Nc, omp_get_default_device());									// west surrounding element
-    jE = (int*)omp_target_alloc(sizeof(int*)*Nc, omp_get_default_device());									// east surrounding element
+    iN = (int*)omp_target_alloc(sizeof(int*)*Nr, -100);									// north surrounding element
+    iS = (int*)omp_target_alloc(sizeof(int*)*Nr, -100);									// south surrounding element
+    jW = (int*)omp_target_alloc(sizeof(int*)*Nc, -100);									// west surrounding element
+    jE = (int*)omp_target_alloc(sizeof(int*)*Nc, -100);									// east surrounding element
     
 	// allocate variables for directional derivatives
-	dN = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// north direction derivative
-    dS = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// south direction derivative
-    dW = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// west direction derivative
-    dE = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// east direction derivative
+	dN = (fp*)omp_target_alloc(sizeof(fp)*Ne, -100);											// north direction derivative
+    dS = (fp*)omp_target_alloc(sizeof(fp)*Ne, -100);											// south direction derivative
+    dW = (fp*)omp_target_alloc(sizeof(fp)*Ne, -100);											// west direction derivative
+    dE = (fp*)omp_target_alloc(sizeof(fp)*Ne, -100);											// east direction derivative
 
 	// allocate variable for diffusion coefficient
-    c  = (fp*)omp_target_alloc(sizeof(fp)*Ne, omp_get_default_device());											// diffusion coefficient
+    c  = (fp*)omp_target_alloc(sizeof(fp)*Ne, -100);											// diffusion coefficient
 #else
     iN = malloc(sizeof(int*)*Nr) ;									// north surrounding element
     iS = malloc(sizeof(int*)*Nr) ;									// south surrounding element
@@ -230,9 +237,9 @@ int main(int argc, char *argv []){
 #endif
         
     // N/S/W/E indices of surrounding pixels (every element of IMAGE)
-#ifdef OMP_GPU_OFFLOAD_UM
+#ifdef MAP_NO
 	#pragma omp target teams distribute parallel for private(i) firstprivate(Nr) is_device_ptr(iN,iS)
-#elif defined(OMP_GPU_OFFLOAD)
+#elif defined(MAP_ALL)
     #pragma omp target data map(from: iN[0:Nr],iS[0:Nr])
 	#pragma omp target teams distribute parallel for private(i) firstprivate(Nr)
 #endif
@@ -240,9 +247,9 @@ int main(int argc, char *argv []){
         iN[i] = i-1;														// holds index of IMAGE row above
         iS[i] = i+1;														// holds index of IMAGE row below
     }
-#ifdef OMP_GPU_OFFLOAD_UM
+#ifdef MAP_NO
 	#pragma omp target teams distribute parallel for private(j) firstprivate(Nc) is_device_ptr(jW,jE)
-#elif defined(OMP_GPU_OFFLOAD)
+#elif defined(MAP_ALL)
     #pragma omp target data map(from: jW[0:Nc],jE[0:Nc])
 	#pragma omp target teams distribute parallel for private(j) firstprivate(Nc)
 #endif
@@ -285,11 +292,11 @@ int main(int argc, char *argv []){
         // ROI statistics for entire ROI (single number for ROI)
         sum=0; 
 		sum2=0;
-#ifdef OMP_GPU_OFFLOAD_UM
+#ifdef MAP_NO
 	    #pragma omp target teams distribute parallel for \
                 private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2) \
                 is_device_ptr(image) reduction(+:sum, sum2)
-#elif defined(OMP_GPU_OFFLOAD)
+#elif defined(MAP_ALL)
         #pragma omp target data map(to: image[0:Ne])
         #pragma omp target teams distribute parallel for \
                 private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2) \
@@ -311,11 +318,11 @@ int main(int argc, char *argv []){
         q0sqr   = varROI / (meanROI*meanROI);								// gets standard deviation of ROI
 
         // directional derivatives, ICOV, diffusion coefficent
-#ifdef OMP_GPU_OFFLOAD_UM
+#ifdef MAP_NO
 	    #pragma omp target teams distribute parallel for \
                 private(i, j, k, Jc, G2, L, num, den, qsqr) \
                 is_device_ptr(dN, dS, dW, dE, c, image, iN, iS, jW, jE) firstprivate(Nr, Nc)
-#elif defined(OMP_GPU_OFFLOAD)
+#elif defined(MAP_ALL)
         #pragma omp target data map(from: dN[0:Ne], dS[0:Ne], dW[0:Ne], dE[0:Ne], c[0:Ne]) \
                                 map(to: image[0:Ne], iN[0:Nr], iS[0:Nr], jW[0:Nc], jE[0:Nc])
 	    #pragma omp target teams distribute parallel for \
@@ -365,11 +372,11 @@ int main(int argc, char *argv []){
         }
 
         // divergence & image update
-#ifdef OMP_GPU_OFFLOAD_UM
+#ifdef MAP_NO
 	    #pragma omp target teams distribute parallel for \
                 private(i, j, k, D, cS, cN, cW, cE) \
                 is_device_ptr(c, image, iS, jE, dN, dS, dW, dE) firstprivate(Nr, Nc, lambda)
-#elif defined(OMP_GPU_OFFLOAD)
+#elif defined(MAP_ALL)
         #pragma omp target data map(c[0:Ne], image[0:Ne], iS[0:Nr], jE[0:Nc], dN[0:Ne], dS[0:Ne], dW[0:Ne], dE[0:Ne])
 	    #pragma omp target teams distribute parallel for \
                 private(i, j, k, D, cS, cN, cW, cE) \

@@ -9,6 +9,8 @@
 
 # link objects(binaries) together
 
+PLUGIN_FLAG = -Xclang -load -Xclang ~/git/unifiedmem/code/llvm-pass/build/uvm/libOMPPass.so
+
 all: a.out um gpu
 
 a.out:	main.o
@@ -25,7 +27,7 @@ main.o: 	main.c resize.c define.c graphics.c
 	clang	main.c -c -O3 -fopenmp
 
 main_um.o: 	main.c resize.c define.c graphics.c
-	clang	main.c -c -O3 -fopenmp -DOMP_GPU_OFFLOAD_UM -fopenmp-targets=nvptx64-nvidia-cuda -o main_um.o
+	clang	main.c -c -O3 -fopenmp -DOMP_GPU_OFFLOAD_UM -fopenmp-targets=nvptx64-nvidia-cuda -o main_um.o $(PLUGIN_FLAG)
 
 main_gpu.o: 	main.c resize.c define.c graphics.c
 	clang	main.c -c -O3 -fopenmp -DOMP_GPU_OFFLOAD -fopenmp-targets=nvptx64-nvidia-cuda -o main_gpu.o
