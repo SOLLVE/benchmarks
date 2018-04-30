@@ -480,7 +480,9 @@ int main(int argc, char** argv)
     {
         std::ifstream file;
 
-        nel = 8000000;
+        file.open(data_file_name);
+		file >> nel;
+        //nel = 8000000;
 
         nelr = block_length*((nel*num_iter / block_length )+ std::min(1, (nel*num_iter) % block_length));
 
@@ -500,27 +502,58 @@ int main(int argc, char** argv)
 
        // printf("%d\n", nel);
         // read in data
-        for(int nn=0; nn<num_iter; nn++) {
-            file.open(data_file_name);
+        //for(int nn=0; nn<num_iter; nn++) {
+        //    file.open(data_file_name);
+    
+        //    for(int i = 0; i < nel; i++)
+        //    {
+        //        file >> areas[i+nn*nel];
+        //        for(int j = 0; j < NNB; j++)
+        //        {
+        //            file >> elements_surrounding_elements[i + j*nelr + nn*nel];
+        //            if(elements_surrounding_elements[i+j*nelr+nn*nel] < 0)
+        //                elements_surrounding_elements[i+j*nelr+nn*nel] = -1;
+        //            elements_surrounding_elements[i + j*nelr + nn*nel]--; //it's coming in with Fortran numbering
+    
+        //            for(int k = 0; k < NDIM; k++)
+        //            {
+        //                file >>  normals[i + (j + k*NNB)*nelr + nn*nel];
+        //                normals[i + (j + k*NNB)*nelr + nn*nel] = -normals[i + (j + k*NNB)*nelr + nn*nel];
+        //            }
+        //        }
+        //    }
+        //    file.close();
+        //}
+        for(int i = 0; i < nel; i++)
+        {
+            file >> areas[i];
+            for(int j = 0; j < NNB; j++)
+            {
+                file >> elements_surrounding_elements[i + j*nelr];
+                if(elements_surrounding_elements[i+j*nelr] < 0)
+                    elements_surrounding_elements[i+j*nelr] = -1;
+                elements_surrounding_elements[i + j*nelr]--; //it's coming in with Fortran numbering
+    
+                for(int k = 0; k < NDIM; k++)
+                {
+                    file >>  normals[i + (j + k*NNB)*nelr];
+                    normals[i + (j + k*NNB)*nelr] = -normals[i + (j + k*NNB)*nelr];
+                }
+            }
+        }
+        file.close();
+        for(int nn=1; nn<num_iter; nn++) {
     
             for(int i = 0; i < nel; i++)
             {
-                file >> areas[i+nn*nel];
+                areas[i+nn*nel] = areas[i];
                 for(int j = 0; j < NNB; j++)
                 {
-                    file >> elements_surrounding_elements[i + j*nelr + nn*nel];
-                    if(elements_surrounding_elements[i+j*nelr+nn*nel] < 0)
-                        elements_surrounding_elements[i+j*nelr+nn*nel] = -1;
-                    elements_surrounding_elements[i + j*nelr + nn*nel]--; //it's coming in with Fortran numbering
-    
+                    elements_surrounding_elements[i + j*nelr + nn*nel] = elements_surrounding_elements[i + j*nelr];
                     for(int k = 0; k < NDIM; k++)
-                    {
-                        file >>  normals[i + (j + k*NNB)*nelr + nn*nel];
-                        normals[i + (j + k*NNB)*nelr + nn*nel] = -normals[i + (j + k*NNB)*nelr + nn*nel];
-                    }
+                        normals[i + (j + k*NNB)*nelr + nn*nel] = normals[i + (j + k*NNB)*nelr];
                 }
             }
-            file.close();
         }
         nel *= num_iter;
         //printf("%d\n", nel);
@@ -579,7 +612,7 @@ int main(int argc, char** argv)
             + sizeof(ff_flux_contribution_density_energy) 
             + sizeof(float)*nelr*NVAR       // old_variables
             + sizeof(float)*nelr*NVAR;      // variables
-    printf("Size: %lu\n", total_size);
+    printf("Size: %f\n", (double)total_size / (1024.0 * 1024.0 * 1024.0));
     //std::cout << total_size << ",";
     double start = omp_get_wtime();
     #if defined(OMP_GPU_OFFLOAD)
