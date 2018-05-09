@@ -2,8 +2,13 @@
 *.log
 *.ll
 *.lsf
+*_gpu
+*_um
+*_num
+*_h
 cuda_func_arg.lst
 spmv_*
+tmp*
 
 cusplibrary/performance/spmv/log
 cusplibrary/performance/spmv/pflog

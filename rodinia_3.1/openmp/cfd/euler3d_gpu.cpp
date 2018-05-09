@@ -64,7 +64,7 @@ struct float3d { float x, y, z; };
 /*
  * Generic functions
  */
-template <typename T> T* alloc(int N)
+template <typename T> T* alloc(unsigned long long N)
 {
     return new T[N];
 }
@@ -472,6 +472,7 @@ int main(int argc, char** argv)
     }
     int nel;
     int nelr;
+    unsigned long long nelr_ll; // prevent overflow
 
     // read in domain geometry
     float* areas;
@@ -482,48 +483,24 @@ int main(int argc, char** argv)
 
         file.open(data_file_name);
 		file >> nel;
-        //nel = 8000000;
 
         nelr = block_length*((nel*num_iter / block_length )+ std::min(1, (nel*num_iter) % block_length));
+        nelr_ll = nelr; // prevent overflow
 
 #if defined (CUDA_UM)
-        cudaMallocManaged((void**)&areas, sizeof(float)*nelr*NNB, cudaMemAttachGlobal);
-        cudaMallocManaged((void**)&elements_surrounding_elements, sizeof(int)*nelr*NNB, cudaMemAttachGlobal);
-        cudaMallocManaged((void**)&normals, sizeof(float)*NDIM*NNB*nelr, cudaMemAttachGlobal);
+        cudaMallocManaged((void**)&areas, sizeof(float)*nelr_ll*NNB, cudaMemAttachGlobal);
+        cudaMallocManaged((void**)&elements_surrounding_elements, sizeof(int)*nelr_ll*NNB, cudaMemAttachGlobal);
+        cudaMallocManaged((void**)&normals, sizeof(float)*NDIM*NNB*nelr_ll, cudaMemAttachGlobal);
 #elif defined (OMP_GPU_OFFLOAD_UM)
-        areas = (float*) omp_target_alloc(sizeof(float)*nelr*NNB, -100);
-        elements_surrounding_elements = (int*) omp_target_alloc(sizeof(int)*nelr*NNB, -100);
-        normals = (float*) omp_target_alloc(sizeof(float)*NDIM*NNB*nelr, -100);
+        areas = (float*) omp_target_alloc(sizeof(float)*nelr_ll*NNB, -100);
+        elements_surrounding_elements = (int*) omp_target_alloc(sizeof(int)*nelr_ll*NNB, -100);
+        normals = (float*) omp_target_alloc(sizeof(float)*NDIM*NNB*nelr_ll, -100);
 #else
-        areas = new float[nelr];
-        elements_surrounding_elements = new int[nelr*NNB];
-        normals = new float[NDIM*NNB*nelr];
+        areas = new float[nelr_ll];
+        elements_surrounding_elements = new int[nelr_ll*NNB];
+        normals = new float[NDIM*NNB*nelr_ll];
 #endif
 
-       // printf("%d\n", nel);
-        // read in data
-        //for(int nn=0; nn<num_iter; nn++) {
-        //    file.open(data_file_name);
-    
-        //    for(int i = 0; i < nel; i++)
-        //    {
-        //        file >> areas[i+nn*nel];
-        //        for(int j = 0; j < NNB; j++)
-        //        {
-        //            file >> elements_surrounding_elements[i + j*nelr + nn*nel];
-        //            if(elements_surrounding_elements[i+j*nelr+nn*nel] < 0)
-        //                elements_surrounding_elements[i+j*nelr+nn*nel] = -1;
-        //            elements_surrounding_elements[i + j*nelr + nn*nel]--; //it's coming in with Fortran numbering
-    
-        //            for(int k = 0; k < NDIM; k++)
-        //            {
-        //                file >>  normals[i + (j + k*NNB)*nelr + nn*nel];
-        //                normals[i + (j + k*NNB)*nelr + nn*nel] = -normals[i + (j + k*NNB)*nelr + nn*nel];
-        //            }
-        //        }
-        //    }
-        //    file.close();
-        //}
         for(int i = 0; i < nel; i++)
         {
             file >> areas[i];
@@ -579,20 +556,20 @@ int main(int argc, char** argv)
     float* old_variables;
     float* fluxes;
     float* step_factors;
-    cudaMallocManaged((void**)&variables, sizeof(float)*nelr*NVAR, cudaMemAttachGlobal);
-    cudaMallocManaged((void**)&old_variables, sizeof(float)*nelr*NVAR, cudaMemAttachGlobal);
-    cudaMallocManaged((void**)&fluxes, sizeof(float)*nelr*NVAR, cudaMemAttachGlobal);
-    cudaMallocManaged((void**)&step_factors, sizeof(float)*nelr, cudaMemAttachGlobal);
+    cudaMallocManaged((void**)&variables, sizeof(float)*nelr_ll*NVAR, cudaMemAttachGlobal);
+    cudaMallocManaged((void**)&old_variables, sizeof(float)*nelr_ll*NVAR, cudaMemAttachGlobal);
+    cudaMallocManaged((void**)&fluxes, sizeof(float)*nelr_ll*NVAR, cudaMemAttachGlobal);
+    cudaMallocManaged((void**)&step_factors, sizeof(float)*nelr_ll, cudaMemAttachGlobal);
 #elif defined (OMP_GPU_OFFLOAD_UM)
-    float* variables = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, -100);
-    float* old_variables = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, -100);
-    float* fluxes = (float*)omp_target_alloc(sizeof(float)*nelr*NVAR, -100);
-    float* step_factors = (float*)omp_target_alloc(sizeof(float)*nelr, -100);
+    float* variables = (float*)omp_target_alloc(sizeof(float)*nelr_ll*NVAR, -100);
+    float* old_variables = (float*)omp_target_alloc(sizeof(float)*nelr_ll*NVAR, -100);
+    float* fluxes = (float*)omp_target_alloc(sizeof(float)*nelr_ll*NVAR, -100);
+    float* step_factors = (float*)omp_target_alloc(sizeof(float)*nelr_ll, -100);
 #else
-    float* variables = alloc<float>(nelr*NVAR);
-    float* old_variables = alloc<float>(nelr*NVAR);
-    float* fluxes = alloc<float>(nelr*NVAR);
-    float* step_factors = alloc<float>(nelr);
+    float* variables = alloc<float>(nelr_ll*NVAR);
+    float* old_variables = alloc<float>(nelr_ll*NVAR);
+    float* fluxes = alloc<float>(nelr_ll*NVAR);
+    float* step_factors = alloc<float>(nelr_ll);
 #endif
     initialize_variables(nelr, variables, ff_variable);
 
