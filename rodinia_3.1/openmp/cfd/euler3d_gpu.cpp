@@ -74,7 +74,7 @@ template <typename T> void dealloc(T* array)
     delete[] array;
 }
 
-template <typename T> void copy(T* dst, T* src, int N)
+template <typename T> void copy(T* dst, T* src, unsigned long long N)
 {
     #ifdef OMP_GPU_OFFLOAD
     #pragma omp target teams distribute parallel for default(shared) schedule(static)
@@ -86,7 +86,7 @@ template <typename T> void copy(T* dst, T* src, int N)
     #else
     #pragma omp parallel for default(shared) schedule(static)
     #endif
-    for(int i = 0; i < N; i++)
+    for(unsigned long long i = 0; i < N; i++)
     {
         dst[i] = src[i];
     }
@@ -198,7 +198,7 @@ void compute_step_factor(int nelr, float* __restrict variables, float* areas, fl
         #if !defined(OMP_GPU_OFFLOAD) && !defined(OMP_GPU_OFFLOAD_UM)
         #pragma omp simd
         #endif
-        for(int i = b_start; i < b_end; i++)
+        for(unsigned long long i = b_start; i < b_end; i++)
         {
             float density = variables[i + VAR_DENSITY*nelr];
 
@@ -254,7 +254,7 @@ void compute_flux(int nelr, int* elements_surrounding_elements, float* normals, 
         #if !defined(OMP_GPU_OFFLOAD) && !defined(OMP_GPU_OFFLOAD_UM)
         #pragma omp simd
         #endif
-        for(int i = b_start; i < b_end; ++i)
+        for(unsigned long long i = b_start; i < b_end; ++i)
         {
             float density_i = variables[i + VAR_DENSITY*nelr];
             float3d momentum_i;
@@ -289,12 +289,12 @@ void compute_flux(int nelr, int* elements_surrounding_elements, float* normals, 
             float speed_sqd_nb, speed_of_sound_nb, pressure_nb;
 
             #pragma unroll
-            for(int j = 0; j < NNB; j++)
+            for(unsigned long long j = 0; j < NNB; j++)
             {
                 float3d normal; float normal_len;
                 float factor;
 
-                int nb = elements_surrounding_elements[i + j*nelr];
+                long long nb = elements_surrounding_elements[i + j*nelr];
                 normal.x = normals[i + (j + 0*NNB)*nelr];
                 normal.y = normals[i + (j + 1*NNB)*nelr];
                 normal.z = normals[i + (j + 2*NNB)*nelr];
@@ -405,7 +405,7 @@ void time_step(int j, int nelr, float* old_variables, float* variables, float* s
         #if !defined(OMP_GPU_OFFLOAD) && !defined(OMP_GPU_OFFLOAD_UM)
         #pragma omp simd
         #endif
-        for(int i = b_start; i < b_end; ++i)
+        for(unsigned long long i = b_start; i < b_end; ++i)
         {
             float factor = step_factors[i]/float(RK+1-j);
 
@@ -501,17 +501,17 @@ int main(int argc, char** argv)
         normals = new float[NDIM*NNB*nelr_ll];
 #endif
 
-        for(int i = 0; i < nel; i++)
+        for(unsigned long long i = 0; i < nel; i++)
         {
             file >> areas[i];
-            for(int j = 0; j < NNB; j++)
+            for(unsigned long long j = 0; j < NNB; j++)
             {
                 file >> elements_surrounding_elements[i + j*nelr];
                 if(elements_surrounding_elements[i+j*nelr] < 0)
                     elements_surrounding_elements[i+j*nelr] = -1;
                 elements_surrounding_elements[i + j*nelr]--; //it's coming in with Fortran numbering
     
-                for(int k = 0; k < NDIM; k++)
+                for(unsigned long long k = 0; k < NDIM; k++)
                 {
                     file >>  normals[i + (j + k*NNB)*nelr];
                     normals[i + (j + k*NNB)*nelr] = -normals[i + (j + k*NNB)*nelr];
@@ -519,15 +519,15 @@ int main(int argc, char** argv)
             }
         }
         file.close();
-        for(int nn=1; nn<num_iter; nn++) {
+        for(unsigned long long nn=1; nn<num_iter; nn++) {
     
-            for(int i = 0; i < nel; i++)
+            for(unsigned long long i = 0; i < nel; i++)
             {
                 areas[i+nn*nel] = areas[i];
-                for(int j = 0; j < NNB; j++)
+                for(unsigned long long j = 0; j < NNB; j++)
                 {
                     elements_surrounding_elements[i + j*nelr + nn*nel] = elements_surrounding_elements[i + j*nelr];
-                    for(int k = 0; k < NDIM; k++)
+                    for(unsigned long long k = 0; k < NDIM; k++)
                         normals[i + (j + k*NNB)*nelr + nn*nel] = normals[i + (j + k*NNB)*nelr];
                 }
             }
@@ -535,16 +535,16 @@ int main(int argc, char** argv)
         nel *= num_iter;
         //printf("%d\n", nel);
 
-        int last = nel-1;
+        unsigned long long last = nel-1;
 
-        for(int i = nel; i < nelr; i++)
+        for(unsigned long long i = nel; i < nelr; i++)
         {
             areas[i] = areas[last];
-            for(int j = 0; j < NNB; j++)
+            for(unsigned long long j = 0; j < NNB; j++)
             {
                 // duplicate the last element
                 elements_surrounding_elements[i + j*nelr] = elements_surrounding_elements[last + j*nelr];
-                for(int k = 0; k < NDIM; k++) normals[i + (j + k*NNB)*nelr] = normals[last + (j + k*NNB)*nelr];
+                for(unsigned long long k = 0; k < NDIM; k++) normals[i + (j + k*NNB)*nelr] = normals[last + (j + k*NNB)*nelr];
             }
         }
         // fill in remaining data
@@ -622,7 +622,7 @@ int main(int argc, char** argv)
     // Begin iterations
     for(int i = 0; i < iterations; i++)
     {
-        copy<float>(old_variables, variables, nelr*NVAR);
+        copy<float>(old_variables, variables, nelr_ll*NVAR);
 
         // for the first iteration we compute the time step
         compute_step_factor(nelr, variables, areas, step_factors);
