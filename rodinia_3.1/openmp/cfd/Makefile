@@ -27,10 +27,10 @@ euler3d_cpu_offload:
 	$(CXX) $(CC_FLAGS) $(OFFLOAD_CC_FLAGS) -Dblock_length=$(MIC_OMP_NUM_THREADS) euler3d_cpu.cpp -o euler3d_cpu_offload
 
 gpu:
-	$(CXX) $(CC_FLAGS) $(GPU_FLAGS) -Dblock_length=$(OMP_NUM_THREADS) euler3d_gpu.cpp -o euler3d_cpu_gpu 
+	$(CXX) $(CC_FLAGS) $(GPU_FLAGS) -Dblock_length=$(OMP_NUM_THREADS) euler3d_omp.cpp -o euler3d_cpu_gpu 
 
 um:
-	$(CXX) $(CC_FLAGS) $(UM_FLAGS) -Dblock_length=$(OMP_NUM_THREADS) euler3d_gpu.cpp -o euler3d_cpu_gpu_um $(PLUGIN_FLAG)
+	$(CXX) $(CC_FLAGS) $(UM_FLAGS) -Dblock_length=$(OMP_NUM_THREADS) euler3d_omp.cpp -o euler3d_cpu_gpu_um $(PLUGIN_FLAG)
 
 euler3d_cpu_double: euler3d_cpu_double.cpp
 	$(CXX) $(CC_FLAGS) -Dblock_length=$(OMP_NUM_THREADS) euler3d_cpu_double.cpp -o euler3d_cpu_double
