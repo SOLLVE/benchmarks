@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 #endif
 
     unsigned long long total_size = sizeof(LatLong) * numRecords + sizeof(float) * numRecords;
-    printf("Total size: %llu\n", total_size);
+    printf("Total size: %f GB\n", (float)((total_size/1024.0)/1024.0/1024.0));
 
     for (i = 0; i < numRecords; i++) {
       d_locations[i] = locations[i];
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
     findLowest(records,distances,numRecords,resultsCount);
 
     double end = omp_get_wtime();
-	printf("Time: %f\n", end - start);
+	printf("Compute time: %f\n", end - start);
     // print out results
     if (!quiet)
     for(i=0;i<resultsCount;i++) {
