@@ -28,7 +28,6 @@
   for (_i = 0; _i < _l; _i++) *_to++ = *_from++;\
 }
 
-extern unsigned long total_size;
 /*** Return random number between 0.0 and 1.0 ***/
 float drnd()
 {
@@ -47,10 +46,10 @@ float squash(x)
 float x;
 {
   float m;
-  //x = -x;
-  //m = 1 + x + x*x/2 + x*x*x/6 + x*x*x*x/24 + x*x*x*x*x/120;
-  //return(1.0 / (1.0 + m));
-  return (1.0 / (1.0 + exp(-x)));
+  x = -x;
+  m = 1 + x + x*x/2 + x*x*x/6 + x*x*x*x/24 + x*x*x*x*x/120;
+  return(1.0 / (1.0 + m));
+  //return (1.0 / (1.0 + exp(-x)));
 }
 
 
@@ -167,6 +166,11 @@ int n_in, n_hidden, n_out;
 
   newnet->input_prev_weights = alloc_2d_dbl(n_in + 1, n_hidden + 1);
   newnet->hidden_prev_weights = alloc_2d_dbl(n_hidden + 1, n_out + 1);
+  double size =
+      sizeof(float) *
+      ((n_in + 1) + 2 * (n_hidden + 1) + 3 * (n_out + 1) +
+       2 * (n_in + 1) * (n_hidden + 1) + 2 * (n_hidden + 1) * (n_out + 1));
+  printf("Size: %f\n", size / 1024 / 1024 / 1024);
 
   return (newnet);
 }
@@ -245,31 +249,26 @@ int n1, n2;
 
   /*** Set up thresholding unit ***/
   l1[0] = 1.0;
-#ifdef OPEN
-  omp_set_num_threads(NUM_THREAD);
-  total_size += sizeof(int)*2    // n1, n2
-                + sizeof(float)*n1 + sizeof(float)*n2 + sizeof(float)*n1*n2;
   printf("n1: %lu, n2: %lu\n", n1, n2);
-  #ifdef OMP_GPU_OFFLOAD
-  #pragma omp target data map(to: conn,n1,n2,l1) map(tofrom: sum,l2)
-  #pragma omp target teams distribute parallel for \
-            shared(conn, n1, n2, l1) \
-                private(k, j) \
-                reduction(+: sum) \
-                schedule(static)
-  #else
+#ifdef OPEN
+  #ifndef OMP_GPU_OFFLOAD_UM
+  omp_set_num_threads(NUM_THREAD);
   #pragma omp parallel for \
             shared(conn, n1, n2, l1) \
                 private(k, j) \
                 reduction(+: sum) \
                 schedule(static)
   #endif/**/
-#endif 
+#endif
   /*** For each unit in second layer ***/
   for (j = 1; j <= n2; j++) {
 
     /*** Compute weighted sum of its inputs ***/
     sum = 0.0;
+    #ifdef OMP_GPU_OFFLOAD_UM
+    #pragma omp target teams distribute parallel for map(to: conn[0:(n1+1)*(n2+1)], l1[0:n1+1]) \
+        map(from: l2[0:n2+1]) private(n1) reduction(+:sum)
+    #endif
     for (k = 0; k <= n1; k++) {	
       sum += conn[k][j] * l1[k]; 
     }
@@ -331,30 +330,22 @@ float *delta, *ly, **w, **oldw;
   //eta = 0.3;
   //momentum = 0.3;
 
-#ifdef OPEN
-  omp_set_num_threads(NUM_THREAD);
-  total_size += sizeof(int)*2        // ndelta, nly
-                + sizeof(float)*ndelta              // detla
-                + sizeof(float)*nly                 // nly
-                + sizeof(float)*nly*ndelta          // w
-                + sizeof(float)*nly*ndelta;         // oldw
-
   printf("ndelta=%lu, nly=%lu\n", ndelta, nly);
-  #ifdef OMP_GPU_OFFLOAD
+#ifdef OPEN
+  #ifdef OMP_GPU_OFFLOAD_UM
   #pragma omp target data map(to: delta, ndelta, nly) map(tofrom: w, oldw)
-  #pragma omp target teams distribute parallel for \
-      shared(oldw, w, delta) \
-	  private(j, k, new_dw) \
-	  firstprivate(ndelta, nly) 
+  #pragma omp target teams distribute parallel for map(tofrom: w[0:(nly+1)*(ndelta+1)], oldw[0:(nly+1)*(ndelta+1)]) \
+      map(to: delta[0:ndelta+1], ly[0:nly+1])
   #else
+  omp_set_num_threads(NUM_THREAD);
   #pragma omp parallel for \
       shared(oldw, w, delta) \
 	  private(j, k, new_dw) \
 	  firstprivate(ndelta, nly) 
   #endif/**/
 #endif 
-  for (j = 1; j <= ndelta; j++) {
-    for (k = 0; k <= nly; k++) {
+  for (k = 0; k <= nly; k++) {
+    for (j = 1; j <= ndelta; j++) {
       new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k][j]));
 	  w[k][j] += new_dw;
 	  oldw[k][j] = new_dw;

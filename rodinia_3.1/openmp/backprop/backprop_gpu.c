@@ -13,51 +13,51 @@
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
 #include "backprop.h"
-#ifdef OMP_GPU_OFFLOAD
-#pragma omp  declare target
-#endif
-#include <math.h>
-#ifdef OMP_GPU_OFFLOAD
-#pragma omp end declare target
-#endif
+//#ifdef OMP_GPU_OFFLOAD
+//#pragma omp  declare target
+//#endif
+//#include <math.h>
+//#ifdef OMP_GPU_OFFLOAD
+//#pragma omp end declare target
+//#endif
 #define OPEN
 
-#define ABS(x)  (((x) > 0.0) ? (x) : (-(x)))
+#define ABS(x)          (((x) > 0.0) ? (x) : (-(x)))
 
 #define fastcopy(to,from,len)\
 {\
-    register char *_to,*_from;\
-    register int _i,_l;\
-    _to = (char *)(to);\
-    _from = (char *)(from);\
-    _l = (len);\
-    for (_i = 0; _i < _l; _i++) *_to++ = *_from++;\
+  register char *_to,*_from;\
+  register int _i,_l;\
+  _to = (char *)(to);\
+  _from = (char *)(from);\
+  _l = (len);\
+  for (_i = 0; _i < _l; _i++) *_to++ = *_from++;\
 }
 
 extern unsigned long total_size;
 /*** Return random number between 0.0 and 1.0 ***/
 float drnd()
 {
-    return ((float) rand() / (float) BIGRND);
+  return ((float) rand() / (float) BIGRND);
 }
 
 /*** Return random number between -1.0 and 1.0 ***/
 float dpn1()
 {
-    return ((drnd() * 2.0) - 1.0);
+  return ((drnd() * 2.0) - 1.0);
 }
 
 #if defined(OMP_GPU_OFFLOAD) || defined(OMP_GPU_OFFLOAD_UM)
-#pragma omp  declare target
+#pragma omp declare target
 #endif
 /*** The squashing function.  Currently, it's a sigmoid. ***/
 float squash(float x)
 {
   float m;
-  //x = -x;
-  //m = 1 + x + x*x/2 + x*x*x/6 + x*x*x*x/24 + x*x*x*x*x/120;
-  //return(1.0 / (1.0 + m));
-  return (1.0 / (1.0 + exp(-x)));
+  x = -x;
+  m = 1 + x + x*x/2 + x*x*x/6 + x*x*x*x/24 + x*x*x*x*x/120;
+  return(1.0 / (1.0 + m));
+  //return (1.0 / (1.0 + exp(-x)));
 }
 #if defined(OMP_GPU_OFFLOAD) || defined(OMP_GPU_OFFLOAD_UM)
 #pragma omp end declare target
@@ -71,7 +71,7 @@ float *alloc_1d_dbl(n)
     float *new;
 
 #if defined(OMP_GPU_OFFLOAD_UM)
-    new = (float *) omp_target_alloc((unsigned) (n * sizeof (float)), omp_get_default_device());
+    new = (float *) omp_target_alloc((unsigned) (n * sizeof (float)), -100);
 #else
     new = (float *) malloc ((unsigned) (n * sizeof (float)));
 #endif
@@ -91,7 +91,7 @@ float **alloc_2d_dbl(m, n)
     float **new;
 
     #if defined(OMP_GPU_OFFLOAD_UM)
-    new = (float **) omp_target_alloc((unsigned) (m * sizeof (float*)), omp_get_default_device());
+    new = (float **) omp_target_alloc((unsigned) (m * sizeof (float*)), -100);
     #else
     new = (float **) malloc ((unsigned) (m * sizeof (float *)));
     #endif
@@ -170,7 +170,7 @@ BPNN *bpnn_internal_create(n_in, n_hidden, n_out)
     BPNN *newnet;
 
 #if defined(OMP_GPU_OFFLOAD_UM)
-    newnet = (BPNN *) omp_target_alloc((unsigned) (sizeof (BPNN)), omp_get_default_device());
+    newnet = (BPNN *) omp_target_alloc((unsigned) (sizeof (BPNN)), -100);
 #else
     newnet = (BPNN *) malloc (sizeof (BPNN));
 #endif
@@ -219,29 +219,29 @@ void bpnn_free(net)
     n2 = net->hidden_n;
 
 #if defined(OMP_GPU_OFFLOAD_UM)
-    omp_target_free((char *) net->input_units, omp_get_default_device());
-    omp_target_free((char *) net->hidden_units, omp_get_default_device());
-    omp_target_free((char *) net->output_units, omp_get_default_device());
+    omp_target_free((char *) net->input_units, -100);
+    omp_target_free((char *) net->hidden_units, -100);
+    omp_target_free((char *) net->output_units, -100);
 
-    omp_target_free((char *) net->hidden_delta, omp_get_default_device());
-    omp_target_free((char *) net->output_delta, omp_get_default_device());
-    omp_target_free((char *) net->target, omp_get_default_device());
+    omp_target_free((char *) net->hidden_delta, -100);
+    omp_target_free((char *) net->output_delta, -100);
+    omp_target_free((char *) net->target, -100);
 
     for (i = 0; i <= n1; i++) {
-        omp_target_free((char *) net->input_weights[i], omp_get_default_device());
-        omp_target_free((char *) net->input_prev_weights[i], omp_get_default_device());
+        omp_target_free((char *) net->input_weights[i], -100);
+        omp_target_free((char *) net->input_prev_weights[i], -100);
     }
-    omp_target_free((char *) net->input_weights, omp_get_default_device());
-    omp_target_free((char *) net->input_prev_weights, omp_get_default_device());
+    omp_target_free((char *) net->input_weights, -100);
+    omp_target_free((char *) net->input_prev_weights, -100);
 
     for (i = 0; i <= n2; i++) {
-        omp_target_free((char *) net->hidden_weights[i], omp_get_default_device());
-        omp_target_free((char *) net->hidden_prev_weights[i], omp_get_default_device());
+        omp_target_free((char *) net->hidden_weights[i], -100);
+        omp_target_free((char *) net->hidden_prev_weights[i], -100);
     }
-    omp_target_free((char *) net->hidden_weights, omp_get_default_device());
-    omp_target_free((char *) net->hidden_prev_weights, omp_get_default_device());
+    omp_target_free((char *) net->hidden_weights, -100);
+    omp_target_free((char *) net->hidden_prev_weights, -100);
 
-    omp_target_free((char *) net, omp_get_default_device());
+    omp_target_free((char *) net, -100);
 #else
     free((char *) net->input_units);
     free((char *) net->hidden_units);
@@ -316,11 +316,10 @@ void bpnn_layerforward(l1, l2, conn, n1, n2)
     /*** Set up thresholding unit ***/
     l1[0] = 1.0;
     #ifdef OPEN
-    //omp_set_num_threads(NUM_THREAD);
     double start_time = omp_get_wtime();
     total_size += sizeof(int)*2    // n1, n2
                 + sizeof(float)*n1 + sizeof(float)*n2 + sizeof(float)*n1*n2;
- //   printf("n1=%lu, n2=%lu\n", n1, n2);
+    printf("n1=%lu, n2=%lu\n", n1, n2);
     #ifdef OMP_GPU_OFFLOAD
  //   #pragma omp target data map(to: conn[0:n1][0:n2], n1, n2, l1[0:n1]) map(tofrom: sum, l2[0:n2])
  //   #pragma omp target teams distribute parallel for \
@@ -426,7 +425,7 @@ void bpnn_adjust_weights(delta, ndelta, ly, nly, w, oldw)
                 + sizeof(float)*nly*ndelta          // w
                 + sizeof(float)*nly*ndelta;         // oldw
     double start_time = omp_get_wtime();
-  //  printf("ndelta=%lu, nly=%lu\n", ndelta, nly);
+    printf("ndelta=%lu, nly=%lu\n", ndelta, nly);
     #ifdef OMP_GPU_OFFLOAD
     #pragma omp target data map(to: delta[0:ndelta], ly[0:nly]) map(tofrom: w[0:nly][0:ndelta], oldw[0:nly][0:ndelta])
     #pragma omp target teams distribute parallel for \
@@ -447,7 +446,6 @@ void bpnn_adjust_weights(delta, ndelta, ly, nly, w, oldw)
     #endif // end OPEN 
     for (k = 0; k <= nly; k++) {
         for (j = 1; j <= ndelta; j++) {
-        //for (k = 0; k <= nly; k++) {
             new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k][j]));
             w[k][j] += new_dw;
             oldw[k][j] = new_dw;

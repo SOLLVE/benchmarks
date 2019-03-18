@@ -1,6 +1,11 @@
+tags
 *.o
 *.log
+*.s
 *.ll
+*.bc
+*.out
+*.cubin
 *.lsf
 *_gpu
 *_um

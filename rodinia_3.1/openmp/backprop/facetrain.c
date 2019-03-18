@@ -6,7 +6,6 @@
 
 extern char *strcpy();
 extern void exit();
-extern unsigned long total_size;
 
 int layer_size = 0;
 
@@ -40,7 +39,5 @@ int setup(int argc, char *argv[])
   bpnn_initialize(seed);
   backprop_face();
 
-  printf("Compute Time - %f\n", compute_time);
-  printf("Total Size - %lu\n", (unsigned long)(total_size*5.33));
   exit(0);
 }

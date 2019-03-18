@@ -8,8 +8,6 @@
 #define MOMENTUM 0.3  //momentum value
 #define NUM_THREAD 8 //OpenMP threads
 
-double compute_time;
-
 typedef struct {
   int input_n;                  /* number of input units */
   int hidden_n;                 /* number of hidden units */
