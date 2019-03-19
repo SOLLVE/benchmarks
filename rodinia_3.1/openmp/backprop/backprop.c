@@ -60,7 +60,11 @@ int n;
 {
   float *new;
 
+#ifdef OMP_GPU_OFFLOAD_UM
+  new = (float *) omp_target_alloc ((unsigned) (n * sizeof (float)), -100);
+#else
   new = (float *) malloc ((unsigned) (n * sizeof (float)));
+#endif
   if (new == NULL) {
     printf("ALLOC_1D_DBL: Couldn't allocate array of floats\n");
     return (NULL);
@@ -77,7 +81,12 @@ int m, n;
   int i;
   float **new;
 
+#ifdef OMP_GPU_OFFLOAD_UM
+  //new = (float *)omp_target_alloc((unsigned)(m * n * sizeof(float)), -100);
+  new = (float **) omp_target_alloc ((unsigned) (m * sizeof (float *)), -100);
+#else
   new = (float **) malloc ((unsigned) (m * sizeof (float *)));
+#endif
   if (new == NULL) {
     printf("ALLOC_2D_DBL: Couldn't allocate array of dbl ptrs\n");
     return (NULL);
@@ -266,8 +275,11 @@ int n1, n2;
     /*** Compute weighted sum of its inputs ***/
     sum = 0.0;
     #ifdef OMP_GPU_OFFLOAD_UM
-    #pragma omp target teams distribute parallel for map(to: conn[0:(n1+1)*(n2+1)], l1[0:n1+1]) \
-        map(from: l2[0:n2+1]) private(n1) reduction(+:sum)
+    //#pragma omp target teams distribute parallel for map(to: conn[0:(n1+1)*(n2+1)], l1[0:n1+1]) \
+    //    map(from: l2[0:n2+1]) private(n1) reduction(+:sum)
+    #pragma omp target teams distribute parallel for \
+        map(tofrom: sum) reduction(+:sum) \
+        is_device_ptr(conn, l1, l2)
     #endif
     for (k = 0; k <= n1; k++) {	
       sum += conn[k][j] * l1[k]; 
@@ -333,9 +345,10 @@ float *delta, *ly, **w, **oldw;
   printf("ndelta=%lu, nly=%lu\n", ndelta, nly);
 #ifdef OPEN
   #ifdef OMP_GPU_OFFLOAD_UM
-  #pragma omp target data map(to: delta, ndelta, nly) map(tofrom: w, oldw)
-  #pragma omp target teams distribute parallel for map(tofrom: w[0:(nly+1)*(ndelta+1)], oldw[0:(nly+1)*(ndelta+1)]) \
-      map(to: delta[0:ndelta+1], ly[0:nly+1])
+  //#pragma omp target teams distribute parallel for map(tofrom: w[0:(nly+1)*(ndelta+1)], oldw[0:(nly+1)*(ndelta+1)]) \
+  //    map(to: delta[0:ndelta+1], ly[0:nly+1])
+  #pragma omp target teams distribute parallel for \
+      is_device_ptr(w, oldw, delta, ly) private(j, k, new_dw)
   #else
   omp_set_num_threads(NUM_THREAD);
   #pragma omp parallel for \
