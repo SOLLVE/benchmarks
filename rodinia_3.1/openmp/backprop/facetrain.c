@@ -7,12 +7,11 @@
 extern char *strcpy();
 extern void exit();
 
-int layer_size = 0;
+long long layer_size = 0;
 
 void backprop_face()
 {
   BPNN *net;
-  int i;
   float out_err, hid_err;
   net = bpnn_create(layer_size, 16, 1); // (16, 1 can not be changed)
   //printf("Input layer size : %d\n", layer_size);

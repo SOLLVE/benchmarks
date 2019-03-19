@@ -9,9 +9,9 @@
 #define NUM_THREAD 8 //OpenMP threads
 
 typedef struct {
-  int input_n;                  /* number of input units */
-  int hidden_n;                 /* number of hidden units */
-  int output_n;                 /* number of output units */
+  long long input_n;                  /* number of input units */
+  long long hidden_n;                 /* number of hidden units */
+  long long output_n;                 /* number of output units */
 
   float *input_units;          /* the input units */
   float *hidden_units;         /* the hidden units */

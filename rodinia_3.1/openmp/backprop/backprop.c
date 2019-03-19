@@ -56,12 +56,12 @@ float x;
 /*** Allocate 1d array of floats ***/
 
 float *alloc_1d_dbl(n)
-int n;
+long long n;
 {
   float *new;
 
 #ifdef OMP_GPU_OFFLOAD_UM
-  new = (float *) omp_target_alloc ((unsigned) (n * sizeof (float)), -100);
+  new = (float *) omp_target_alloc ((unsigned long long) (n * sizeof (float)), -100);
 #else
   new = (float *) malloc ((unsigned) (n * sizeof (float)));
 #endif
@@ -80,13 +80,13 @@ float *alloc_2d_dbl(m, n)
 #else
 float **alloc_2d_dbl(m, n)
 #endif
-int m, n;
+long long m, n;
 {
-  int i;
+  long long i;
 
 #ifdef OMP_GPU_OFFLOAD_UM
   float *new;
-  new = (float *)omp_target_alloc((unsigned)(m * n * sizeof(float)), -100);
+  new = (float *)omp_target_alloc((unsigned long long)(m * n * sizeof(float)), -100);
   //new = (float **) omp_target_alloc ((unsigned) (m * sizeof (float *)), -100);
 #else
   float **new;
@@ -113,9 +113,9 @@ float *w;
 #else
 float **w;
 #endif
-int m, n;
+long long m, n;
 {
-  int i, j;
+  unsigned long long i, j;
 
   for (i = 0; i <= m; i++) {
     for (j = 0; j <= n; j++) {
@@ -132,9 +132,9 @@ int m, n;
 void
 bpnn_randomize_row(w, m)
 float *w;
-int m;
+long long m;
 {
-	int i;
+	long long i;
 	for (i = 0; i <= m; i++) {
      //w[i] = (float) rand()/RAND_MAX;
 	 w[i] = 0.1;
@@ -148,9 +148,9 @@ float *w;
 #else
 float **w;
 #endif
-int m, n;
+long long m, n;
 {
-  int i, j;
+  long long i, j;
 
   for (i = 0; i <= m; i++) {
     for (j = 0; j <= n; j++) {
@@ -172,7 +172,7 @@ void bpnn_initialize(seed)
 
 
 BPNN *bpnn_internal_create(n_in, n_hidden, n_out)
-int n_in, n_hidden, n_out;
+long long n_in, n_hidden, n_out;
 {
   BPNN *newnet;
 
@@ -211,7 +211,7 @@ int n_in, n_hidden, n_out;
 void bpnn_free(net)
 BPNN *net;
 {
-  int n1, n2, i;
+  long long n1, n2, i;
 
   n1 = net->input_n;
   n2 = net->hidden_n;
@@ -256,7 +256,7 @@ BPNN *net;
 ***/
 
 BPNN *bpnn_create(n_in, n_hidden, n_out)
-int n_in, n_hidden, n_out;
+long long n_in, n_hidden, n_out;
 {
 
   BPNN *newnet;
@@ -282,14 +282,13 @@ float *l1, *l2, *conn;
 #else
 float *l1, *l2, **conn;
 #endif
-int n1, n2;
+long long n1, n2;
 {
   float sum;
-  int j, k;
+  long long j, k;
 
   /*** Set up thresholding unit ***/
   l1[0] = 1.0;
-  printf("n1: %lu, n2: %lu\n", n1, n2);
 #ifdef OPEN
   #ifndef OMP_GPU_OFFLOAD_UM
   omp_set_num_threads(NUM_THREAD);
@@ -326,9 +325,9 @@ int n1, n2;
 //extern "C"
 void bpnn_output_error(delta, target, output, nj, err)  
 float *delta, *target, *output, *err;
-int nj;
+long long nj;
 {
-  int j;
+  long long j;
   float o, t, errsum;
   errsum = 0.0;
   for (j = 1; j <= nj; j++) {
@@ -353,9 +352,9 @@ float *delta_h, *delta_o, *hidden, *who, *err;
 #else
 float *delta_h, *delta_o, *hidden, **who, *err;
 #endif
-int nh, no;
+long long nh, no;
 {
-  int j, k;
+  long long j, k;
   float h, sum, errsum;
 
   errsum = 0.0;
@@ -384,12 +383,11 @@ float *delta, *ly, **w, **oldw;
 #endif
 {
   float new_dw;
-  int k, j;
+  long long k, j;
   ly[0] = 1.0;
   //eta = 0.3;
   //momentum = 0.3;
 
-  printf("ndelta=%lu, nly=%lu\n", ndelta, nly);
 #ifdef OPEN
   #ifdef OMP_GPU_OFFLOAD_UM
   //#pragma omp target teams distribute parallel for map(tofrom: w[0:(nly+1)*(ndelta+1)], oldw[0:(nly+1)*(ndelta+1)]) \
@@ -423,7 +421,7 @@ float *delta, *ly, **w, **oldw;
 void bpnn_feedforward(net)
 BPNN *net;
 {
-  int in, hid, out;
+  long long in, hid, out;
 
   in = net->input_n;
   hid = net->hidden_n;
@@ -442,7 +440,7 @@ void bpnn_train(net, eo, eh)
 BPNN *net;
 float *eo, *eh;
 {
-  int in, hid, out;
+  long long in, hid, out;
   float out_err, hid_err;
 
   in = net->input_n;
@@ -478,7 +476,7 @@ void bpnn_save(net, filename)
 BPNN *net;
 char *filename;
 {
-  int n1, n2, n3, i, j, memcnt;
+  long long n1, n2, n3, i, j, memcnt;
 #ifdef OMP_GPU_OFFLOAD_UM
   float dvalue, *w;
 #else
@@ -556,7 +554,7 @@ char *filename;
 {
   char *mem;
   BPNN *new;
-  int fd, n1, n2, n3, i, j, memcnt;
+  long long fd, n1, n2, n3, i, j, memcnt;
 
   if ((fd = open(filename, 0, 0644)) == -1) {
     return (NULL);
@@ -611,4 +609,26 @@ char *filename;
   bpnn_zero_weights(new->hidden_prev_weights, n2, n3);
 
   return (new);
+}
+
+void bpnn_train_kernel(BPNN *net, float *eo, float *eh)
+{
+  long long in, hid, out;
+  float out_err, hid_err;
+
+  in = net->input_n;
+  hid = net->hidden_n;
+  out = net->output_n;
+
+  printf("Performing computation\n");
+  double start_time = omp_get_wtime();
+  bpnn_layerforward(net->input_units, net->hidden_units,net->input_weights, in, hid);
+  bpnn_layerforward(net->hidden_units, net->output_units, net->hidden_weights, hid, out);
+  bpnn_output_error(net->output_delta, net->target, net->output_units, out, &out_err);
+  bpnn_hidden_error(net->hidden_delta, hid, net->output_delta, out, net->hidden_weights, net->hidden_units, &hid_err);  
+  bpnn_adjust_weights(net->output_delta, out, net->hidden_units, hid, net->hidden_weights, net->hidden_prev_weights);
+  bpnn_adjust_weights(net->hidden_delta, hid, net->input_units, in, net->input_weights, net->input_prev_weights);
+  double end_time = omp_get_wtime();
+  double compute_time = end_time - start_time;
+  printf("Time: %f\n", compute_time);
 }

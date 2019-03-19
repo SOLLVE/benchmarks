@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include "backprop.h"
 
-extern int layer_size;
+extern long long layer_size;
 
 void load(BPNN *net)
 {
   float *units;
-  int nr, nc, imgsize, i, j, k;
+  long long nr, nc, imgsize, i, j, k;
 
   nr = layer_size;
   
