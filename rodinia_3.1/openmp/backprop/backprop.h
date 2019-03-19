@@ -22,12 +22,21 @@ typedef struct {
 
   float *target;               /* storage for target vector */
 
+#ifdef OMP_GPU_OFFLOAD_UM
+  float *input_weights;       /* weights from input to hidden layer */
+  float *hidden_weights;      /* weights from hidden to output layer */
+
+                                /*** The next two are for momentum ***/
+  float *input_prev_weights;  /* previous change on input to hidden wgt */
+  float *hidden_prev_weights; /* previous change on hidden to output wgt */
+#else
   float **input_weights;       /* weights from input to hidden layer */
   float **hidden_weights;      /* weights from hidden to output layer */
 
                                 /*** The next two are for momentum ***/
   float **input_prev_weights;  /* previous change on input to hidden wgt */
   float **hidden_prev_weights; /* previous change on hidden to output wgt */
+#endif
 } BPNN;
 
 

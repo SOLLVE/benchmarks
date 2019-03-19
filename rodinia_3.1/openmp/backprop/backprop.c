@@ -75,16 +75,21 @@ int n;
 
 /*** Allocate 2d array of floats ***/
 
+#ifdef OMP_GPU_OFFLOAD_UM
+float *alloc_2d_dbl(m, n)
+#else
 float **alloc_2d_dbl(m, n)
+#endif
 int m, n;
 {
   int i;
-  float **new;
 
 #ifdef OMP_GPU_OFFLOAD_UM
-  //new = (float *)omp_target_alloc((unsigned)(m * n * sizeof(float)), -100);
-  new = (float **) omp_target_alloc ((unsigned) (m * sizeof (float *)), -100);
+  float *new;
+  new = (float *)omp_target_alloc((unsigned)(m * n * sizeof(float)), -100);
+  //new = (float **) omp_target_alloc ((unsigned) (m * sizeof (float *)), -100);
 #else
+  float **new;
   new = (float **) malloc ((unsigned) (m * sizeof (float *)));
 #endif
   if (new == NULL) {
@@ -92,23 +97,33 @@ int m, n;
     return (NULL);
   }
 
+#ifndef OMP_GPU_OFFLOAD_UM
   for (i = 0; i < m; i++) {
     new[i] = alloc_1d_dbl(n);
   }
+#endif
 
   return (new);
 }
 
 void
 bpnn_randomize_weights(w, m, n)
+#ifdef OMP_GPU_OFFLOAD_UM
+float *w;
+#else
 float **w;
+#endif
 int m, n;
 {
   int i, j;
 
   for (i = 0; i <= m; i++) {
     for (j = 0; j <= n; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+     w[i*(n+1)+j] = (float) rand()/RAND_MAX;
+#else
      w[i][j] = (float) rand()/RAND_MAX;
+#endif
     //  w[i][j] = dpn1();
     }
   }
@@ -128,14 +143,22 @@ int m;
 
 void
 bpnn_zero_weights(w, m, n)
+#ifdef OMP_GPU_OFFLOAD_UM
+float *w;
+#else
 float **w;
+#endif
 int m, n;
 {
   int i, j;
 
   for (i = 0; i <= m; i++) {
     for (j = 0; j <= n; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      w[i*(n+1)+j] = 0.0;
+#else
       w[i][j] = 0.0;
+#endif
     }
   }
 }
@@ -201,17 +224,21 @@ BPNN *net;
   free((char *) net->output_delta);
   free((char *) net->target);
 
+#ifndef OMP_GPU_OFFLOAD_UM
   for (i = 0; i <= n1; i++) {
     free((char *) net->input_weights[i]);
     free((char *) net->input_prev_weights[i]);
   }
+#endif
   free((char *) net->input_weights);
   free((char *) net->input_prev_weights);
 
+#ifndef OMP_GPU_OFFLOAD_UM
   for (i = 0; i <= n2; i++) {
     free((char *) net->hidden_weights[i]);
     free((char *) net->hidden_prev_weights[i]);
   }
+#endif
   free((char *) net->hidden_weights);
   free((char *) net->hidden_prev_weights);
 
@@ -250,7 +277,11 @@ int n_in, n_hidden, n_out;
 
 
 void bpnn_layerforward(l1, l2, conn, n1, n2)
+#ifdef OMP_GPU_OFFLOAD_UM
+float *l1, *l2, *conn;
+#else
 float *l1, *l2, **conn;
+#endif
 int n1, n2;
 {
   float sum;
@@ -282,7 +313,11 @@ int n1, n2;
         is_device_ptr(conn, l1, l2)
     #endif
     for (k = 0; k <= n1; k++) {	
+#ifdef OMP_GPU_OFFLOAD_UM
+      sum += conn[k*(n2+1)+j] * l1[k]; 
+#else
       sum += conn[k][j] * l1[k]; 
+#endif
     }
     l2[j] = squash(sum);
   }
@@ -313,7 +348,11 @@ void bpnn_hidden_error(delta_h,
 					   who, 
 					   hidden, 
 					   err)
+#ifdef OMP_GPU_OFFLOAD_UM
+float *delta_h, *delta_o, *hidden, *who, *err;
+#else
 float *delta_h, *delta_o, *hidden, **who, *err;
+#endif
 int nh, no;
 {
   int j, k;
@@ -324,7 +363,11 @@ int nh, no;
     h = hidden[j];
     sum = 0.0;
     for (k = 1; k <= no; k++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      sum += delta_o[k] * who[j*(no+1)+k];
+#else
       sum += delta_o[k] * who[j][k];
+#endif
     }
     delta_h[j] = h * (1.0 - h) * sum;
     errsum += ABS(delta_h[j]);
@@ -334,7 +377,11 @@ int nh, no;
 
 
 void bpnn_adjust_weights(delta, ndelta, ly, nly, w, oldw)
+#ifdef OMP_GPU_OFFLOAD_UM
+float *delta, *ly, *w, *oldw;
+#else
 float *delta, *ly, **w, **oldw;
+#endif
 {
   float new_dw;
   int k, j;
@@ -359,9 +406,15 @@ float *delta, *ly, **w, **oldw;
 #endif 
   for (k = 0; k <= nly; k++) {
     for (j = 1; j <= ndelta; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k*(ndelta+1)+j]));
+	  w[k*(ndelta+1)+j] += new_dw;
+	  oldw[k*(ndelta+1)+j] = new_dw;
+#else
       new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k][j]));
 	  w[k][j] += new_dw;
 	  oldw[k][j] = new_dw;
+#endif
     }
   }
 }
@@ -426,7 +479,11 @@ BPNN *net;
 char *filename;
 {
   int n1, n2, n3, i, j, memcnt;
+#ifdef OMP_GPU_OFFLOAD_UM
+  float dvalue, *w;
+#else
   float dvalue, **w;
+#endif
   char *mem;
   ///add//
   FILE *pFile;
@@ -458,7 +515,11 @@ char *filename;
   mem = (char *) malloc ((unsigned) ((n1+1) * (n2+1) * sizeof(float)));
   for (i = 0; i <= n1; i++) {
     for (j = 0; j <= n2; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      dvalue = w[i*(n2+1)+j];
+#else
       dvalue = w[i][j];
+#endif
       fastcopy(&mem[memcnt], &dvalue, sizeof(float));
       memcnt += sizeof(float);
     }
@@ -472,7 +533,11 @@ char *filename;
   mem = (char *) malloc ((unsigned) ((n2+1) * (n3+1) * sizeof(float)));
   for (i = 0; i <= n2; i++) {
     for (j = 0; j <= n3; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      dvalue = w[i*(n3+1)+j];
+#else
       dvalue = w[i][j];
+#endif
       fastcopy(&mem[memcnt], &dvalue, sizeof(float));
       memcnt += sizeof(float);
     }
@@ -512,7 +577,11 @@ char *filename;
   read(fd, mem, (n1+1) * (n2+1) * sizeof(float));
   for (i = 0; i <= n1; i++) {
     for (j = 0; j <= n2; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      fastcopy(&(new->input_weights[i*(n2+1)+j]), &mem[memcnt], sizeof(float));
+#else
       fastcopy(&(new->input_weights[i][j]), &mem[memcnt], sizeof(float));
+#endif
       memcnt += sizeof(float);
     }
   }
@@ -525,7 +594,11 @@ char *filename;
   read(fd, mem, (n2+1) * (n3+1) * sizeof(float));
   for (i = 0; i <= n2; i++) {
     for (j = 0; j <= n3; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      fastcopy(&(new->hidden_weights[i*(n3+1)+j]), &mem[memcnt], sizeof(float));
+#else
       fastcopy(&(new->hidden_weights[i][j]), &mem[memcnt], sizeof(float));
+#endif
       memcnt += sizeof(float);
     }
   }

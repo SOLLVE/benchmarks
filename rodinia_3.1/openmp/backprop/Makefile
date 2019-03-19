@@ -1,6 +1,6 @@
 # C compiler
 CC = clang
-PLUGIN_FLAG = -Xclang -load -Xclang ~/git/unifiedmem/code/llvm-pass/build/uvm/libOMPPass.so
+#PLUGIN_FLAG = -Xclang -load -Xclang ~/git/unifiedmem/code/llvm-pass/build/uvm/libOMPPass.so
 CC_FLAGS = -g -DOMP_GPU_OFFLOAD_UM -fopenmp -O2 -fopenmp-targets=nvptx64-nvidia-cuda $(PLUGIN_FLAG)
 BC_FLAGS = -cc1 -DOMP_GPU_OFFLOAD_UM -fopenmp -triple powerpc64le-unknown-unknown -fopenmp-targets=nvptx64-nvidia-cuda -emit-llvm-bc
 LL_DEV_FLAGS = -cc1 -DOMP_GPU_OFFLOAD_UM -fopenmp -triple nvptx64-nvidia-cuda -fopenmp-targets=nvptx64-nvidia-cuda -target-cpu sm_70 -emit-llvm -I. -fopenmp-is-device -fopenmp-host-ir-file-path

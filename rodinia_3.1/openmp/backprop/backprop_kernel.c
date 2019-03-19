@@ -9,6 +9,15 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef OMP_GPU_OFFLOAD_UM
+extern void bpnn_layerforward(float *l1, float *l2, float *conn, int n1, int n2);
+
+extern void bpnn_output_error(float *delta, float *target, float *output, int nj, float *err);
+
+extern void bpnn_hidden_error(float *delta_h, int nh, float *delta_o, int no, float *who, float *hidden, float *err);
+
+extern void bpnn_adjust_weights(float *delta, int ndelta, float *ly, int nly, float *w, float *oldw);
+#else
 extern void bpnn_layerforward(float *l1, float *l2, float **conn, int n1, int n2);
 
 extern void bpnn_output_error(float *delta, float *target, float *output, int nj, float *err);
@@ -16,6 +25,7 @@ extern void bpnn_output_error(float *delta, float *target, float *output, int nj
 extern void bpnn_hidden_error(float *delta_h, int nh, float *delta_o, int no, float **who, float *hidden, float *err);
 
 extern void bpnn_adjust_weights(float *delta, int ndelta, float *ly, int nly, float **w, float **oldw);
+#endif
 
 
 extern int setup(int argc, char** argv);
