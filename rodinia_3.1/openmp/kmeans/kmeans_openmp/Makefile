@@ -1,24 +1,36 @@
 # C compiler
-CC = gcc
-CC_FLAGS = -g -fopenmp -O2 
+CC = clang
+CC_FLAGS = -g -fopenmp -O2
+GPU_FLAGS_UM = -DOMP_GPU_OFFLOAD_UM -fopenmp-targets=nvptx64-nvidia-cuda
 
-kmeans: cluster.o getopt.o kmeans.o kmeans_clustering.o 
-	$(CC) $(CC_FLAGS) cluster.o getopt.o kmeans.o kmeans_clustering.o  -o kmeans
+all: kmeans um
+
+kmeans: cluster.o kmeans.o kmeans_clustering.o 
+	$(CC) $(CC_FLAGS) cluster.o kmeans.o kmeans_clustering.o  -o kmeans
+
+um: cluster_um.o kmeans_um.o kmeans_clustering_um.o 
+	$(CC) $(CC_FLAGS) $(GPU_FLAGS_UM) cluster_um.o kmeans_um.o kmeans_clustering_um.o  -o kmeans_um
 
 %.o: %.[ch]
 	$(CC) $(CC_FLAGS) $< -c
 
 cluster.o: cluster.c 
 	$(CC) $(CC_FLAGS) cluster.c -c
-	
-getopt.o: getopt.c 
-	$(CC) $(CC_FLAGS) getopt.c -c
+
+cluster_um.o: cluster.c 
+	$(CC) $(CC_FLAGS) $(GPU_FLAGS_UM) cluster.c -c -o cluster_um.o
 	
 kmeans.o: kmeans.c 
 	$(CC) $(CC_FLAGS) kmeans.c -c
 
+kmeans_um.o: kmeans.c 
+	$(CC) $(CC_FLAGS) $(GPU_FLAGS_UM) kmeans.c -c -o kmeans_um.o
+
 kmeans_clustering.o: kmeans_clustering.c kmeans.h
 	$(CC) $(CC_FLAGS) kmeans_clustering.c -c
 
+kmeans_clustering_um.o: kmeans_clustering.c kmeans.h
+	$(CC) $(CC_FLAGS) $(GPU_FLAGS_UM) kmeans_clustering.c -c -o kmeans_clustering_um.o
+
 clean:
-	rm -f *.o *~ kmeans 
+	rm -f *.o *~ kmeans kmeans_gpu kmeans_um

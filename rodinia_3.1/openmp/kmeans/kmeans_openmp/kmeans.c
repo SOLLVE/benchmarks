@@ -76,6 +76,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <omp.h>
+#include <unistd.h>
 #include "getopt.h"
 
 #include "kmeans.h"
@@ -83,6 +84,7 @@
 extern double wtime(void);
 
 int num_omp_threads = 1;
+double total_size = 0.0;
 
 /*---< usage() >------------------------------------------------------------*/
 void usage(char *argv0) {
@@ -99,146 +101,106 @@ void usage(char *argv0) {
 
 /*---< main() >-------------------------------------------------------------*/
 int main(int argc, char **argv) {
-           int     opt;
-    extern char   *optarg;
-    extern int     optind;
-           int     nclusters=5;
-           char   *filename = 0;           
-           float  *buf;
-           float **attributes;
-           float **cluster_centres=NULL;
-           int     i, j;
-                
-           int     numAttributes;
-           int     numObjects;        
-           char    line[1024];           
-           int     isBinaryFile = 0;
-           int     nloops = 1;
-           float   threshold = 0.001;
-		   double  timing;		   
+  int opt;
+  extern char *optarg;
+  extern int optind;
+  int nclusters = 5;
+  char *filename = 0;
+  float **attributes;
+  float **cluster_centres = NULL;
+  unsigned long i, j;
 
-	while ( (opt=getopt(argc,argv,"i:k:t:b:n:?"))!= EOF) {
-		switch (opt) {
-            case 'i': filename=optarg;
-                      break;
-            case 'b': isBinaryFile = 1;
-                      break;
-            case 't': threshold=atof(optarg);
-                      break;
-            case 'k': nclusters = atoi(optarg);
-                      break;			
-			case 'n': num_omp_threads = atoi(optarg);
-					  break;
-            case '?': usage(argv[0]);
-                      break;
-            default: usage(argv[0]);
-                      break;
-        }
+  int numAttributes;
+  unsigned long numObjects;
+  char line[1024];
+  int isBinaryFile = 0;
+  int nloops = 1;
+  float threshold = 0.001;
+  unsigned long long num = 0;
+
+  while ((opt = getopt(argc, argv, "i:k:t:b:n:l:?")) != EOF) {
+    switch (opt) {
+    case 'i':
+      filename = optarg;
+      break;
+    case 'b':
+      isBinaryFile = 1;
+      break;
+    case 't':
+      threshold = atof(optarg);
+      break;
+    case 'k':
+      nclusters = atoi(optarg);
+      break;
+    case 'n':
+      num_omp_threads = atoi(optarg);
+      break;
+    case 'l':
+      num = strtoul(optarg, NULL, 10);
+      break;
+    case '?':
+      usage(argv[0]);
+      break;
+    default:
+      usage(argv[0]);
+      break;
     }
+  }
 
-
-    if (filename == 0) usage(argv[0]);
-
-    numAttributes = numObjects = 0;
-
-    /* from the input file, get the numAttributes and numObjects ------------*/
-   
-    if (isBinaryFile) {
-        int infile;
-        if ((infile = open(filename, O_RDONLY, "0600")) == -1) {
-            fprintf(stderr, "Error: no such file (%s)\n", filename);
-            exit(1);
-        }
-        read(infile, &numObjects,    sizeof(int));
-        read(infile, &numAttributes, sizeof(int));
-   
-
-        /* allocate space for attributes[] and read attributes of all objects */
-        buf           = (float*) malloc(numObjects*numAttributes*sizeof(float));
-        attributes    = (float**)malloc(numObjects*             sizeof(float*));
-        attributes[0] = (float*) malloc(numObjects*numAttributes*sizeof(float));
-        for (i=1; i<numObjects; i++)
-            attributes[i] = attributes[i-1] + numAttributes;
-
-        read(infile, buf, numObjects*numAttributes*sizeof(float));
-
-        close(infile);
+    numAttributes = 34;
+    if (num == 0)
+      return 0;
+    numObjects = num;
+#ifdef OMP_GPU_OFFLOAD_UM
+    attributes = (float **)omp_target_alloc(numObjects * sizeof(float *), -100);
+    attributes[0] = (float *)omp_target_alloc(
+        numObjects * numAttributes * sizeof(float), -100);
+    for (i = 1; i < numObjects; i++) {
+      attributes[i] = attributes[i - 1] + numAttributes;
     }
-    else {
-        FILE *infile;
-        if ((infile = fopen(filename, "r")) == NULL) {
-            fprintf(stderr, "Error: no such file (%s)\n", filename);
-            exit(1);
-        }
-        while (fgets(line, 1024, infile) != NULL)
-            if (strtok(line, " \t\n") != 0)
-                numObjects++;
-        rewind(infile);
-        while (fgets(line, 1024, infile) != NULL) {
-            if (strtok(line, " \t\n") != 0) {
-                /* ignore the id (first attribute): numAttributes = 1; */
-                while (strtok(NULL, " ,\t\n") != NULL) numAttributes++;
-                break;
-            }
-        }
-     
+    for (i = 0; i < numObjects; i++)
+      for (j = 0; j < numAttributes; j++)
+        attributes[i][j] = ((float)rand() / (float)RAND_MAX);
+    total_size += numObjects * sizeof(float *) +
+                  numObjects * numAttributes * sizeof(float);
+#else
+    total_size += numObjects * sizeof(float *);
+    attributes = (float **)malloc(numObjects * sizeof(float *));
+    for (i = 0; i < numObjects; i++) {
+      attributes[i] = (float *)malloc(numAttributes * sizeof(float));
+      total_size += numAttributes * sizeof(float);
+    }
+#endif
 
-        /* allocate space for attributes[] and read attributes of all objects */
-        buf           = (float*) malloc(numObjects*numAttributes*sizeof(float));
-        attributes    = (float**)malloc(numObjects*             sizeof(float*));
-        attributes[0] = (float*) malloc(numObjects*numAttributes*sizeof(float));
-        for (i=1; i<numObjects; i++)
-            attributes[i] = attributes[i-1] + numAttributes;
-        rewind(infile);
-        i = 0;
-        while (fgets(line, 1024, infile) != NULL) {
-            if (strtok(line, " \t\n") == NULL) continue; 
-            for (j=0; j<numAttributes; j++) {
-                buf[i] = atof(strtok(NULL, " ,\t\n"));
-                i++;
-            }
-        }
-        fclose(infile);
-    }     
-	printf("I/O completed\n");	
-
-	memcpy(attributes[0], buf, numObjects*numAttributes*sizeof(float));
-
-	timing = omp_get_wtime();
     for (i=0; i<nloops; i++) {
-        
+
         cluster_centres = NULL;
         cluster(numObjects,
                 numAttributes,
                 attributes,           /* [numObjects][numAttributes] */                
                 nclusters,
                 threshold,
-                &cluster_centres   
+                &cluster_centres
                );
-     
-    }
-    timing = omp_get_wtime() - timing;
-	
 
-	printf("number of Clusters %d\n",nclusters); 
-	printf("number of Attributes %d\n\n",numAttributes); 
-  /*  	printf("Cluster Centers Output\n"); 
-	printf("The first number is cluster number and the following data is arribute value\n");
-	printf("=============================================================================\n\n");
-	
-    for (i=0; i< nclusters; i++) {
-		printf("%d: ", i);
-        for (j=0; j<numAttributes; j++)
-            printf("%.2f ", cluster_centres[i][j]);
-        printf("\n\n");
     }
-*/
-	printf("Time for process: %f\n", timing);
+    printf("Size: %f\n", total_size / 1024 / 1024 / 1024);
 
+#ifdef OMP_GPU_OFFLOAD_UM
+    //for (i=0; i<numObjects; i++)
+    //    omp_target_free(attributes[i], omp_get_default_device());
+    //omp_target_free(attributes, omp_get_default_device());
+    //for(i=0; i<nclusters; i++) 
+    //    omp_target_free(cluster_centres[i], omp_get_default_device());
+    //omp_target_free(cluster_centres, omp_get_default_device());
+#else
+    for (i=0; i<numObjects; i++)
+        free(attributes[i]);
     free(attributes);
-    free(cluster_centres[0]);
+    for(i=0; i<nclusters; i++) 
+        free(cluster_centres[i]);
     free(cluster_centres);
-    free(buf);
+#endif
     return(0);
 }
 

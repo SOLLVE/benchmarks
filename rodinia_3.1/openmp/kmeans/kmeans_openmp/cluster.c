@@ -73,22 +73,26 @@
 
 #include "kmeans.h"
 
-
+extern unsigned long total_size;
 /*---< cluster() >-----------------------------------------------------------*/
-int cluster(int      numObjects,      /* number of input objects */
+int cluster(unsigned long      numObjects,      /* number of input objects */
             int      numAttributes,   /* size of attribute of each object */
             float  **attributes,      /* [numObjects][numAttributes] */            
             int      nclusters,
             float    threshold,       /* in:   */
             float ***cluster_centres /* out: [best_nclusters][numAttributes] */
-    
             )
 {
     int    *membership;
     float **tmp_cluster_centres;
 
+    #if defined(OMP_GPU_OFFLOAD) || defined(OMP_GPU_OFFLOAD_UM)
+    membership = (int*) omp_target_alloc(numObjects * sizeof(int), -100);
+    #else
     membership = (int*) malloc(numObjects * sizeof(int));
-   
+    #endif
+    total_size += numObjects * sizeof(int);
+
     srand(7);
 	/* perform regular Kmeans */
     tmp_cluster_centres = kmeans_clustering(attributes,
@@ -97,15 +101,18 @@ int cluster(int      numObjects,      /* number of input objects */
                                             nclusters,
                                             threshold,
                                             membership);      
-	
+
     if (*cluster_centres) {
 		free((*cluster_centres)[0]);
         free(*cluster_centres);
     }
     *cluster_centres = tmp_cluster_centres;
 
-   
+    #if defined(OMP_GPU_OFFLOAD) || defined(OMP_GPU_OFFLOAD_UM)
+	//omp_target_free(membership, omp_get_default_device());
+    #else
 	free(membership);
+    #endif
 
     return 0;
 }

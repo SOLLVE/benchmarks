@@ -74,19 +74,26 @@
 
 extern double wtime(void);
 extern int num_omp_threads;
+extern unsigned long total_size;
 
+#ifdef OMP_GPU_OFFLOAD_UM
+#pragma omp declare target
+#endif
 int find_nearest_point(float  *pt,          /* [nfeatures] */
                        int     nfeatures,
                        float **pts,         /* [npts][nfeatures] */
                        int     npts)
 {
-    int index, i;
+    int index, i, j;
     float min_dist=FLT_MAX;
 
     /* find the cluster center id with min distance to pt */
     for (i=0; i<npts; i++) {
         float dist;
-        dist = euclid_dist_2(pt, pts[i], nfeatures);  /* no need square root */
+        //dist = euclid_dist_2(pt, pts[i], nfeatures);  /* no need square root */
+        dist = 0;
+        for (j=0; j<nfeatures; j++)
+            dist += (pt[j]-pts[i][j]) * (pt[j]-pts[i][j]);
         if (dist < min_dist) {
             min_dist = dist;
             index    = i;
@@ -110,24 +117,27 @@ float euclid_dist_2(float *pt1,
 
     return(ans);
 }
+#if defined(OMP_GPU_OFFLOAD_UM) || defined(OMP_GPU_OFFLOAD_UM_UM)
+#pragma omp end declare target
+#endif
 
 
 /*----< kmeans_clustering() >---------------------------------------------*/
 float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
                           int     nfeatures,
-                          int     npoints,
+                          unsigned long     npoints,
                           int     nclusters,
                           float   threshold,
                           int    *membership) /* out: [npoints] */
 {
 
-    int      i, j, k, n=0, index, loop=0;
+    unsigned long i, j, k, n=0, index, loop=0;
     int     *new_centers_len;			/* [nclusters]: no. of points in each cluster */
-	float  **new_centers;				/* [nclusters][nfeatures] */
-	float  **clusters;					/* out: [nclusters][nfeatures] */
-    float    delta;
-        
-    double   timing;
+	float   **new_centers;				/* [nclusters][nfeatures] */
+	float   **clusters;					/* out: [nclusters][nfeatures] */
+    float   delta;
+
+    double  timing;
 
 	int      nthreads;
     int    **partial_new_centers_len;
@@ -136,10 +146,21 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
     nthreads = num_omp_threads; 
 
     /* allocate space for returning variable clusters[] */
+    #if defined(OMP_GPU_OFFLOAD_UM)
+    clusters    = (float**) omp_target_alloc(nclusters * sizeof(float*), -100);
+    total_size += nclusters * sizeof(float*);
+    for (i=0; i<nclusters; i++) {
+        clusters[i] = (float*)  omp_target_alloc(nfeatures * sizeof(float), -100);
+        total_size += nfeatures * sizeof(float);
+    }
+    #else
     clusters    = (float**) malloc(nclusters *             sizeof(float*));
-    clusters[0] = (float*)  malloc(nclusters * nfeatures * sizeof(float));
-    for (i=1; i<nclusters; i++)
-        clusters[i] = clusters[i-1] + nfeatures;
+    total_size += nclusters * sizeof(float*);
+    for (i=0; i<nclusters; i++) {
+        clusters[i] = (float*)  malloc(nfeatures * sizeof(float));
+        total_size += nfeatures * sizeof(float);
+    }
+    #endif
 
     /* randomly pick cluster centers */
     for (i=0; i<nclusters; i++) {
@@ -153,59 +174,102 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 		membership[i] = -1;
 
     /* need to initialize new_centers_len and new_centers[0] to all 0 */
+    total_size += nclusters * sizeof(float);
+    #if defined(OMP_GPU_OFFLOAD_UM)
+    new_centers_len = (int*) omp_target_alloc(nclusters * sizeof(int), -100);
+    new_centers    = (float**) omp_target_alloc(nclusters * sizeof(float*), -100);
+    for (i=0; i<nclusters; i++) {
+        new_centers[i] = (float*)  omp_target_alloc(nfeatures * sizeof(float), -100);
+        total_size += nfeatures * sizeof(float);
+    }
+    #else
     new_centers_len = (int*) calloc(nclusters, sizeof(int));
+    new_centers    = (float**) malloc(nclusters *  sizeof(float*));
+    for (i=0; i<nclusters; i++) {
+        new_centers[i] = (float*)  calloc(nfeatures, sizeof(float));
+        total_size += nfeatures * sizeof(float);
+    }
+    #endif
 
-    new_centers    = (float**) malloc(nclusters *            sizeof(float*));
-    new_centers[0] = (float*)  calloc(nclusters * nfeatures, sizeof(float));
-    for (i=1; i<nclusters; i++)
-        new_centers[i] = new_centers[i-1] + nfeatures;
-
-
+    total_size += nthreads * sizeof(int*);
+    total_size += nthreads * sizeof(float**);
+    #if defined(OMP_GPU_OFFLOAD_UM)
+    partial_new_centers_len = (int**) omp_target_alloc(nthreads * sizeof(int*), -100);
+	partial_new_centers = (float***) omp_target_alloc(nthreads * sizeof(float**), -100);
+    for (i=0; i<nthreads; i++) {
+        partial_new_centers_len[i] = (int*)  omp_target_alloc(nclusters * sizeof(int), -100);
+        partial_new_centers[i] =(float**) omp_target_alloc(nclusters * sizeof(float*), -100);
+        total_size += nclusters * sizeof(int);
+        total_size += nclusters * sizeof(float*);
+    }
+    #else
     partial_new_centers_len    = (int**) malloc(nthreads * sizeof(int*));
-    partial_new_centers_len[0] = (int*)  calloc(nthreads*nclusters, sizeof(int));
-    for (i=1; i<nthreads; i++)
-		partial_new_centers_len[i] = partial_new_centers_len[i-1]+nclusters;
-
 	partial_new_centers    =(float***)malloc(nthreads * sizeof(float**));
-    partial_new_centers[0] =(float**) malloc(nthreads*nclusters * sizeof(float*));
-    for (i=1; i<nthreads; i++)
-        partial_new_centers[i] = partial_new_centers[i-1] + nclusters;
+    for (i=0; i<nthreads; i++) {
+        partial_new_centers_len[i] = (int*)  calloc(nclusters, sizeof(int));
+        partial_new_centers[i] =(float**) malloc(nclusters * sizeof(float*));
+        total_size += nclusters * sizeof(int);
+        total_size += nclusters * sizeof(float*);
+    }
+    #endif
 
 	for (i=0; i<nthreads; i++)
 	{
-        for (j=0; j<nclusters; j++)
+        for (j=0; j<nclusters; j++) {
+            #if defined(OMP_GPU_OFFLOAD_UM)
+            partial_new_centers[i][j] = (float*) omp_target_alloc(nfeatures * sizeof(float), -100);
+            #else
             partial_new_centers[i][j] = (float*)calloc(nfeatures, sizeof(float));
+            #endif
+            total_size += nfeatures * sizeof(float);
+        }
 	}
-	printf("num of threads = %d\n", num_omp_threads);
+	double start_time = omp_get_wtime();
     do {
         delta = 0.0;
+        #ifndef OMP_GPU_OFFLOAD_UM
 		omp_set_num_threads(num_omp_threads);
-		#pragma omp parallel \
+     		#pragma omp parallel \
                 shared(feature,clusters,membership,partial_new_centers,partial_new_centers_len)
+        #endif
         {
-            int tid = omp_get_thread_num();				
+            #if defined(OMP_GPU_OFFLOAD_UM)
+            int tid = 0;
+            #else
+            int tid = omp_get_thread_num();
+            #endif
+            #if defined(OMP_GPU_OFFLOAD_UM)
+		    #pragma omp target teams distribute parallel for \
+                        private(i, j, index) is_device_ptr(feature) \
+                        is_device_ptr(membership) \
+                        is_device_ptr(partial_new_centers_len) is_device_ptr(partial_new_centers) \
+                        is_device_ptr(clusters) \
+                        reduction(+:delta) \
+                        firstprivate(npoints, nclusters, nfeatures)
+            #else
             #pragma omp for \
-                        private(i,j,index) \
-                        firstprivate(npoints,nclusters,nfeatures) \
+                        private(i, j, index) \
+                        firstprivate(npoints, nfeatures) \
                         schedule(static) \
                         reduction(+:delta)
+            #endif
             for (i=0; i<npoints; i++) {
-	        /* find the index of nestest cluster centers */					
-	        index = find_nearest_point(feature[i],
-		             nfeatures,
-		             clusters,
-		             nclusters);				
-	        /* if membership changes, increase delta by 1 */
-	        if (membership[i] != index) delta += 1.0;
+	            /* find the index of nestest cluster centers */					
+    	        index = find_nearest_point(feature[i],
+    		             nfeatures,
+    		             clusters,
+    		             nclusters);				
+    	        /* if membership changes, increase delta by 1 */
+    	        if (membership[i] != index) delta += 1.0;
 
-	        /* assign the membership to object i */
-	        membership[i] = index;
-				
-	        /* update new cluster centers : sum of all objects located
-		       within */
-	        partial_new_centers_len[tid][index]++;				
-	        for (j=0; j<nfeatures; j++)
-		       partial_new_centers[tid][index][j] += feature[i][j];
+    	        /* assign the membership to object i */
+    	        membership[i] = index;
+
+    	        /* update new cluster centers : sum of all objects located
+    		       within */
+    	        partial_new_centers_len[tid][index]++;				
+    	        for (j=0; j<nfeatures; j++)
+    		       partial_new_centers[tid][index][j] += feature[i][j];
             }
         } /* end of #pragma omp parallel */
 
@@ -231,13 +295,20 @@ float** kmeans_clustering(float **feature,    /* in: [npoints][nfeatures] */
 			new_centers_len[i] = 0;   /* set back to 0 */
 		}
         
-    } while (delta > threshold && loop++ < 500);
+    } while (delta > threshold && loop++ < 10);
 
-    
+    double end_time = omp_get_wtime();
+    printf("Time: %f\n", end_time - start_time);
+    #ifdef OMP_GPU_OFFLOAD_UM 
+    //omp_target_free(new_centers[0], 0);
+    //omp_target_free(new_centers, 0);
+    //omp_target_free(new_centers_len, 0);
+    #else
     free(new_centers[0]);
     free(new_centers);
     free(new_centers_len);
-
+    #endif
+    
     return clusters;
 }
 
