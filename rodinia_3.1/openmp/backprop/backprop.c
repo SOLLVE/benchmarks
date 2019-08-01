@@ -620,14 +620,191 @@ void bpnn_train_kernel(BPNN *net, float *eo, float *eh)
   hid = net->hidden_n;
   out = net->output_n;
 
+  net->input_units = (float *)omp_target_alloc((unsigned long long)(net->input_units), -200);
+  net->hidden_units = (float *)omp_target_alloc((unsigned long long)(net->hidden_units), -200);
+  net->output_units = (float *)omp_target_alloc((unsigned long long)(net->output_units), -200);
+  net->input_weights = (float *)omp_target_alloc((unsigned long long)(net->input_weights), -200);
+  net->hidden_weights = (float *)omp_target_alloc((unsigned long long)(net->hidden_weights), -200);
+  net->input_prev_weights = (float *)omp_target_alloc((unsigned long long)(net->input_prev_weights), -200);
+  net->hidden_prev_weights = (float *)omp_target_alloc((unsigned long long)(net->hidden_prev_weights), -200);
+  net->output_delta = (float *)omp_target_alloc((unsigned long long)(net->output_delta), -200);
+  net->hidden_delta = (float *)omp_target_alloc((unsigned long long)(net->hidden_delta), -200);
+
   printf("Performing computation\n");
   double start_time = omp_get_wtime();
-  bpnn_layerforward(net->input_units, net->hidden_units,net->input_weights, in, hid);
-  bpnn_layerforward(net->hidden_units, net->output_units, net->hidden_weights, hid, out);
+  //bpnn_layerforward(net->input_units, net->hidden_units,net->input_weights, in, hid);
+#ifdef OMP_GPU_OFFLOAD_UM
+  float *l1, *l2, *conn;
+#else
+  float *l1, *l2, **conn;
+#endif
+  long long n1, n2;
+  l1 = net->input_units;
+  l2 = net->hidden_units;
+  conn = net->input_weights;
+  n1 = in;
+  n2 = hid;
+  float sum;
+  long long j, k;
+
+  /*** Set up thresholding unit ***/
+  l1[0] = 1.0;
+#ifdef OPEN
+  #ifndef OMP_GPU_OFFLOAD_UM
+  omp_set_num_threads(NUM_THREAD);
+  #pragma omp parallel for \
+            shared(conn, n1, n2, l1) \
+                private(k, j) \
+                reduction(+: sum) \
+                schedule(static)
+  #endif/**/
+#endif
+  /*** For each unit in second layer ***/
+  for (j = 1; j <= n2; j++) {
+
+    /*** Compute weighted sum of its inputs ***/
+    sum = 0.0;
+    #ifdef OMP_GPU_OFFLOAD_UM
+    #pragma omp target teams distribute parallel for map(to: conn[0:(n1+1)*(n2+1)], l1[0:n1+1]) \
+        map(tofrom: sum) reduction(+:sum)
+    //#pragma omp target teams distribute parallel for \
+    //    map(tofrom: sum) reduction(+:sum) is_device_ptr(conn, l1, l2)
+    #endif
+    for (k = 0; k <= n1; k++) {	
+#ifdef OMP_GPU_OFFLOAD_UM
+      sum += conn[k*(n2+1)+j] * l1[k]; 
+#else
+      sum += conn[k][j] * l1[k]; 
+#endif
+    }
+    l2[j] = squash(sum);
+  }
+  //bpnn_layerforward(net->hidden_units, net->output_units, net->hidden_weights, hid, out);
+  l1 = net->hidden_units;
+  l2 = net->output_units;
+  conn = net->hidden_weights;
+  n1 = hid;
+  n2 = out;
+  /*** Set up thresholding unit ***/
+  l1[0] = 1.0;
+#ifdef OPEN
+  #ifndef OMP_GPU_OFFLOAD_UM
+  omp_set_num_threads(NUM_THREAD);
+  #pragma omp parallel for \
+            shared(conn, n1, n2, l1) \
+                private(k, j) \
+                reduction(+: sum) \
+                schedule(static)
+  #endif/**/
+#endif
+  /*** For each unit in second layer ***/
+  for (j = 1; j <= n2; j++) {
+
+    /*** Compute weighted sum of its inputs ***/
+    sum = 0.0;
+    #ifdef OMP_GPU_OFFLOAD_UM
+    #pragma omp target teams distribute parallel for map(to: conn[0:(n1+1)*(n2+1)], l1[0:n1+1]) \
+        map(tofrom: sum) reduction(+:sum)
+    //#pragma omp target teams distribute parallel for \
+    //    map(tofrom: sum) reduction(+:sum) is_device_ptr(conn, l1, l2)
+    #endif
+    for (k = 0; k <= n1; k++) {	
+#ifdef OMP_GPU_OFFLOAD_UM
+      sum += conn[k*(n2+1)+j] * l1[k]; 
+#else
+      sum += conn[k][j] * l1[k]; 
+#endif
+    }
+    l2[j] = squash(sum);
+  }
+
   bpnn_output_error(net->output_delta, net->target, net->output_units, out, &out_err);
   bpnn_hidden_error(net->hidden_delta, hid, net->output_delta, out, net->hidden_weights, net->hidden_units, &hid_err);  
-  bpnn_adjust_weights(net->output_delta, out, net->hidden_units, hid, net->hidden_weights, net->hidden_prev_weights);
-  bpnn_adjust_weights(net->hidden_delta, hid, net->input_units, in, net->input_weights, net->input_prev_weights);
+
+  //bpnn_adjust_weights(net->output_delta, out, net->hidden_units, hid, net->hidden_weights, net->hidden_prev_weights);
+#ifdef OMP_GPU_OFFLOAD_UM
+  float *delta, *ly, *w, *oldw;
+#else
+  float *delta, *ly, **w, **oldw;
+#endif
+  long long ndelta;
+  long long nly;
+  delta = net->output_delta;
+  ly = net->hidden_units;
+  w = net->hidden_weights;
+  oldw = net->hidden_prev_weights;
+  ndelta = out;
+  nly = hid;
+  float new_dw;
+  ly[0] = 1.0;
+  //eta = 0.3;
+  //momentum = 0.3;
+
+#ifdef OPEN
+  #ifdef OMP_GPU_OFFLOAD_UM
+  #pragma omp target teams distribute parallel for map(tofrom: w[0:(nly+1)*(ndelta+1)], oldw[0:(nly+1)*(ndelta+1)]) \
+      map(to: delta[0:ndelta+1], ly[0:nly+1]) private(j, k, new_dw)
+  //#pragma omp target teams distribute parallel for \
+  //    is_device_ptr(w, oldw, delta, ly) private(j, k, new_dw)
+  #else
+  omp_set_num_threads(NUM_THREAD);
+  #pragma omp parallel for \
+      shared(oldw, w, delta) \
+	  private(j, k, new_dw) \
+	  firstprivate(ndelta, nly) 
+  #endif/**/
+#endif 
+  for (k = 0; k <= nly; k++) {
+    for (j = 1; j <= ndelta; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k*(ndelta+1)+j]));
+	  w[k*(ndelta+1)+j] += new_dw;
+	  oldw[k*(ndelta+1)+j] = new_dw;
+#else
+      new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k][j]));
+	  w[k][j] += new_dw;
+	  oldw[k][j] = new_dw;
+#endif
+    }
+  }
+  //bpnn_adjust_weights(net->hidden_delta, hid, net->input_units, in, net->input_weights, net->input_prev_weights);
+  delta = net->hidden_delta;
+  ly = net->input_units;
+  w = net->input_weights;
+  oldw = net->input_prev_weights;
+  ndelta = hid;
+  nly = in;
+  ly[0] = 1.0;
+  //eta = 0.3;
+  //momentum = 0.3;
+
+#ifdef OPEN
+  #ifdef OMP_GPU_OFFLOAD_UM
+  #pragma omp target teams distribute parallel for map(tofrom: w[0:(nly+1)*(ndelta+1)], oldw[0:(nly+1)*(ndelta+1)]) \
+      map(to: delta[0:ndelta+1], ly[0:nly+1]) private(j, k, new_dw)
+  //#pragma omp target teams distribute parallel for \
+  //    is_device_ptr(w, oldw, delta, ly) private(j, k, new_dw)
+  #else
+  omp_set_num_threads(NUM_THREAD);
+  #pragma omp parallel for \
+      shared(oldw, w, delta) \
+	  private(j, k, new_dw) \
+	  firstprivate(ndelta, nly) 
+  #endif/**/
+#endif 
+  for (k = 0; k <= nly; k++) {
+    for (j = 1; j <= ndelta; j++) {
+#ifdef OMP_GPU_OFFLOAD_UM
+      new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k*(ndelta+1)+j]));
+	  w[k*(ndelta+1)+j] += new_dw;
+	  oldw[k*(ndelta+1)+j] = new_dw;
+#else
+      new_dw = ((ETA * delta[j] * ly[k]) + (MOMENTUM * oldw[k][j]));
+	  w[k][j] += new_dw;
+	  oldw[k][j] = new_dw;
+#endif
+    }
+  }
   double end_time = omp_get_wtime();
   double compute_time = end_time - start_time;
   printf("Time: %f\n", compute_time);

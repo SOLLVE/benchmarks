@@ -17,7 +17,7 @@ a.out:	main.o
 	clang	main.o -lm -fopenmp -o srad
 
 um: main_um.o
-	clang	main_um.o -lm -fopenmp -o srad_um -fopenmp-targets=nvptx64-nvidia-cuda
+	clang	-O2 main_um.o -lm -fopenmp -o srad_um -fopenmp-targets=nvptx64-nvidia-cuda
 
 gpu: main_gpu.o
 	clang	main_gpu.o -lm -fopenmp -o srad_gpu -fopenmp-targets=nvptx64-nvidia-cuda

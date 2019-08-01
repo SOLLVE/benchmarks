@@ -240,8 +240,7 @@ int main(int argc, char *argv []){
 #ifdef MAP_NO
 	#pragma omp target teams distribute parallel for private(i) firstprivate(Nr) is_device_ptr(iN,iS)
 #elif defined(MAP_ALL)
-    #pragma omp target data map(from: iN[0:Nr],iS[0:Nr])
-	#pragma omp target teams distribute parallel for private(i) firstprivate(Nr)
+	#pragma omp target teams distribute parallel for private(i) firstprivate(Nr) map(from: iN[0:Nr],iS[0:Nr])
 #endif
     for (i=0; i<Nr; i++) {
         iN[i] = i-1;														// holds index of IMAGE row above
@@ -250,8 +249,7 @@ int main(int argc, char *argv []){
 #ifdef MAP_NO
 	#pragma omp target teams distribute parallel for private(j) firstprivate(Nc) is_device_ptr(jW,jE)
 #elif defined(MAP_ALL)
-    #pragma omp target data map(from: jW[0:Nc],jE[0:Nc])
-	#pragma omp target teams distribute parallel for private(j) firstprivate(Nc)
+	#pragma omp target teams distribute parallel for private(j) firstprivate(Nc) map(from: jW[0:Nc],jE[0:Nc])
 #endif
     for (j=0; j<Nc; j++) {
         jW[j] = j-1;														// holds index of IMAGE column on the left
@@ -284,6 +282,10 @@ int main(int argc, char *argv []){
 	// printf("iterations: ");
 
     // primary loop
+#if defined(MAP_ALL)
+    #pragma omp target data map(tofrom: image[0:Ne]) map(alloc: dN[0:Ne], dS[0:Ne], dW[0:Ne], dE[0:Ne], c[0:Ne]) \
+                            map(to: iN[0:Nr], iS[0:Nr], jW[0:Nc], jE[0:Nc])
+#endif
     for (iter=0; iter<niter; iter++){										// do for the number of iterations input parameter
 
 		// printf("%d ", iter);
@@ -295,12 +297,12 @@ int main(int argc, char *argv []){
 #ifdef MAP_NO
 	    #pragma omp target teams distribute parallel for \
                 private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2) \
-                is_device_ptr(image) reduction(+:sum, sum2)
+                is_device_ptr(image) reduction(+:sum, sum2) \
+                map(tofrom: sum, sum2)
 #elif defined(MAP_ALL)
-        #pragma omp target data map(to: image[0:Ne])
-        #pragma omp target teams distribute parallel for \
+        #pragma omp target teams distribute parallel for collapse(2) \
                 private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2) \
-                reduction(+:sum, sum2) 
+                reduction(+:sum, sum2)
 #else
         #pragma omp parallel for reduction(+:sum, sum2) \
                 private(i, j, tmp) firstprivate(Nr,r1,r2,c1,c2)
@@ -321,13 +323,13 @@ int main(int argc, char *argv []){
 #ifdef MAP_NO
 	    #pragma omp target teams distribute parallel for \
                 private(i, j, k, Jc, G2, L, num, den, qsqr) \
-                is_device_ptr(dN, dS, dW, dE, c, image, iN, iS, jW, jE) firstprivate(Nr, Nc)
+                is_device_ptr(dN, dS, dW, dE, c, image, iN, iS, jW, jE) firstprivate(Nr, Nc, q0sqr)
 #elif defined(MAP_ALL)
-        #pragma omp target data map(from: dN[0:Ne], dS[0:Ne], dW[0:Ne], dE[0:Ne], c[0:Ne]) \
-                                map(to: image[0:Ne], iN[0:Nr], iS[0:Nr], jW[0:Nc], jE[0:Nc])
-	    #pragma omp target teams distribute parallel for \
+	    #pragma omp target teams distribute parallel for collapse(2) \
                 private(i, j, k, Jc, G2, L, num, den, qsqr) \
-                firstprivate(Nr, Nc)
+                firstprivate(Nr, Nc, q0sqr) \
+                //map(from: c[0:Ne])
+                //map(to: iN[0:Nr], iS[0:Nr], jW[0:Nc], jE[0:Nc])
 #else
 		#pragma omp parallel for shared(image, dN, dS, dW, dE, c, Nr, Nc, iN, iS, jW, jE) private(i, j, k, Jc, G2, L, num, den, qsqr)
 #endif
@@ -377,10 +379,11 @@ int main(int argc, char *argv []){
                 private(i, j, k, D, cS, cN, cW, cE) \
                 is_device_ptr(c, image, iS, jE, dN, dS, dW, dE) firstprivate(Nr, Nc, lambda)
 #elif defined(MAP_ALL)
-        #pragma omp target data map(c[0:Ne], image[0:Ne], iS[0:Nr], jE[0:Nc], dN[0:Ne], dS[0:Ne], dW[0:Ne], dE[0:Ne])
-	    #pragma omp target teams distribute parallel for \
+	    #pragma omp target teams distribute parallel for collapse(2) \
                 private(i, j, k, D, cS, cN, cW, cE) \
-                firstprivate(Nr, Nc, lambda)
+                firstprivate(Nr, Nc, lambda) \
+                //map(to: c[0:Ne])
+                //map(to: iS[0:Nr], jE[0:Nc])
 #else
 		#pragma omp parallel for shared(image, c, Nr, Nc, lambda) private(i, j, k, D, cS, cN, cW, cE)
 #endif
@@ -468,9 +471,9 @@ int main(int argc, char *argv []){
 	//		DISPLAY TIMING
 	//================================================================================80
 
-    printf("Total Size - %lu\n", total_size);
+    printf("Total Size: %f\n", (double)total_size / 1024.0 / 1024.0 / 1024.0);
 //#ifdef OMP_GPU_OFFLOAD_UM
-	printf("Compute Time - %lf\n", end_time - start_time);
+	printf("Compute Time: %lf\n", end_time - start_time);
 /*#else
 	printf("Time spent in different stages of the application:\n");
 	printf("%.12fs, %.2f%% : SETUP VARIABLES\n", (float) (time1-time0) / 1000000, (float) (time1-time0) / (float) (time10-time0) * 100);
