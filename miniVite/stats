@@ -1,0 +1,2 @@
+grep Time: summit/alloc_040419_sm.log | awk '{print $2}' | v2m 4 7 3
+grep Time: summit/alloc_040519_la.log | awk '{print $2}' | v2m 11 6 3

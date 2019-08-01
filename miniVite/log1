@@ -1,0 +1,598 @@
+My libomptarget --> Set mode to DEV
+==158920== NVPROF is profiling process 158920, command: ./miniVite -n 5000000
+Average time to generate 10000000 random numbers using LCG (in s): 0.0181787
+**********************************************************************
+Generated Random Geometric Graph with d: 0.000817469
+Number of vertices: 5000000
+Number of edges: 89999910
+Time to generate distributed graph of 5000000 vertices (in s): 8.47192
+Size: 16 : 8
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e0000000, size=40000008
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e2800000, size=16
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200100000000, size=1439998560
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200155e00000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200158600000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x000020015ae00000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e2a00000, size=80000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e7800000, size=80000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x000020015d600000, size=40000000
+My libomptarget --> COMPUTE (0x00000000100166f8)	(#iter: 5000000    device: 0    UM: 0) at 1
+My libomptarget -->   Map 0x000020015d600000 to device (0x00002000d9800000), size=40000000
+My libomptarget -->   Map 0x00002000e7800000 to device (0x00002001a0000000), size=80000000
+My libomptarget -->   Retrieve 0x00002000e7800000 from 0x00002001a0000000, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from device (0x00002001a0000000), size=80000000
+My libomptarget -->   Retrieve 0x000020015d600000 from 0x00002000d9800000, size=40000000
+My libomptarget -->   Unmap 0x000020015d600000 from device (0x00002000d9800000), size=40000000
+My libomptarget --> COMPUTE (0x0000000010016724)	(#iter: 5000000    device: 0    UM: 0) at 2
+My libomptarget -->   Map 0x00002000e0000000 to device (0x00002000d9800000), size=40000008
+My libomptarget -->   Submit 0x00002000e0000000 to 0x00002000d9800000, size=40000008
+My libomptarget -->   Map 0x00002000e2800000 to device (0x000020019dc00000), size=16
+My libomptarget -->   Submit 0x00002000e2800000 to 0x000020019dc00000, size=16
+My libomptarget -->   Map 0x0000200100000000 to device (0x00002001a0000000), size=1439998560
+My libomptarget -->   Submit 0x0000200100000000 to 0x00002001a0000000, size=1439998560
+My libomptarget -->   Map 0x0000200155e00000 to device (0x00002001f5e00000), size=40000000
+My libomptarget -->   Submit 0x0000200155e00000 to 0x00002001f5e00000, size=40000000
+My libomptarget -->   Map 0x000020015ae00000 to device (0x00002001f8600000), size=40000000
+My libomptarget -->   Map 0x0000200158600000 to device (0x00002001fae00000), size=40000000
+My libomptarget -->   Submit 0x0000200158600000 to 0x00002001fae00000, size=40000000
+My libomptarget -->   Map 0x00002000e2a00000 to device (0x0000200200000000), size=80000000
+My libomptarget -->   Submit 0x00002000e2a00000 to 0x0000200200000000, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to device (0x0000200204e00000), size=80000000
+My libomptarget -->   Submit 0x00002000e7800000 to 0x0000200204e00000, size=80000000
+My libomptarget -->   Map 0x000020015d600000 to device (0x0000200209c00000), size=40000000
+My libomptarget -->   Submit 0x000020015d600000 to 0x0000200209c00000, size=40000000
+My libomptarget -->   Retrieve 0x000020015d600000 from 0x0000200209c00000, size=40000000
+My libomptarget -->   Unmap 0x000020015d600000 from device (0x0000200209c00000), size=40000000
+My libomptarget -->   Retrieve 0x00002000e7800000 from 0x0000200204e00000, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from device (0x0000200204e00000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from device (0x0000200200000000), size=80000000
+My libomptarget -->   Unmap 0x0000200158600000 from device (0x00002001fae00000), size=40000000
+My libomptarget -->   Retrieve 0x000020015ae00000 from 0x00002001f8600000, size=40000000
+My libomptarget -->   Unmap 0x000020015ae00000 from device (0x00002001f8600000), size=40000000
+My libomptarget -->   Unmap 0x0000200155e00000 from device (0x00002001f5e00000), size=40000000
+My libomptarget -->   Unmap 0x0000200100000000 from device (0x00002001a0000000), size=1439998560
+My libomptarget -->   Unmap 0x00002000e2800000 from device (0x000020019dc00000), size=16
+My libomptarget -->   Unmap 0x00002000e0000000 from device (0x00002000d9800000), size=40000008
+My libomptarget --> COMPUTE (0x00000000100166d9)	(#iter: 5000000    device: 0    UM: 0) at 3
+My libomptarget -->   Map 0x00002000e2a00000 to device (0x0000200237600000), size=80000000
+My libomptarget -->   Submit 0x00002000e2a00000 to 0x0000200237600000, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to device (0x00002000d9800000), size=80000000
+My libomptarget -->   Submit 0x00002000e7800000 to 0x00002000d9800000, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from device (0x00002000d9800000), size=80000000
+My libomptarget -->   Retrieve 0x00002000e2a00000 from 0x0000200237600000, size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from device (0x0000200237600000), size=80000000
+My libomptarget --> COMPUTE (0x00000000100166d8)	(#iter: 5000000    device: 0    UM: 0) at 4
+My libomptarget -->   Map 0x00007fffedfd3f28 to device (0x0000200237600000), size=8
+My libomptarget -->   Submit 0x00007fffedfd3f28 to 0x0000200237600000, size=8
+My libomptarget -->   Map 0x000020015d600000 to device (0x0000200237800000), size=40000000
+My libomptarget -->   Submit 0x000020015d600000 to 0x0000200237800000, size=40000000
+My libomptarget -->   Map 0x00007fffedfd3f20 to device (0x0000200237600200), size=8
+My libomptarget -->   Submit 0x00007fffedfd3f20 to 0x0000200237600200, size=8
+My libomptarget -->   Map 0x00002000e2a00000 to device (0x000020023a000000), size=80000000
+My libomptarget -->   Submit 0x00002000e2a00000 to 0x000020023a000000, size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from device (0x000020023a000000), size=80000000
+My libomptarget -->   Retrieve 0x00007fffedfd3f20 from 0x0000200237600200, size=8
+My libomptarget -->   Unmap 0x00007fffedfd3f20 from device (0x0000200237600200), size=8
+My libomptarget -->   Unmap 0x000020015d600000 from device (0x0000200237800000), size=40000000
+My libomptarget -->   Retrieve 0x00007fffedfd3f28 from 0x0000200237600000, size=8
+My libomptarget -->   Unmap 0x00007fffedfd3f28 from device (0x0000200237600000), size=8
+My libomptarget --> COMPUTE (0x00000000100166f8)	(#iter: 5000000    device: 0    UM: 0) at 5
+My libomptarget -->   Map 0x000020015d600000 to device (0x0000200237600000), size=40000000
+My libomptarget -->   Map 0x00002000e7800000 to device (0x0000200239e00000), size=80000000
+My libomptarget -->   Retrieve 0x00002000e7800000 from 0x0000200239e00000, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from device (0x0000200239e00000), size=80000000
+My libomptarget -->   Retrieve 0x000020015d600000 from 0x0000200237600000, size=40000000
+My libomptarget -->   Unmap 0x000020015d600000 from device (0x0000200237600000), size=40000000
+My libomptarget --> COMPUTE (0x0000000010016724)	(#iter: 5000000    device: 0    UM: 0) at 6
+My libomptarget -->   Map 0x00002000e0000000 to device (0x0000200237600000), size=40000008
+My libomptarget -->   Submit 0x00002000e0000000 to 0x0000200237600000, size=40000008
+My libomptarget -->   Map 0x00002000e2800000 to device (0x0000200239e00000), size=16
+My libomptarget -->   Submit 0x00002000e2800000 to 0x0000200239e00000, size=16
+My libomptarget -->   Map 0x0000200100000000 to device (0x00002001a0000000), size=1439998560
+My libomptarget -->   Submit 0x0000200100000000 to 0x00002001a0000000, size=1439998560
+My libomptarget -->   Map 0x0000200155e00000 to device (0x00002001f5e00000), size=40000000
+My libomptarget -->   Submit 0x0000200155e00000 to 0x00002001f5e00000, size=40000000
+My libomptarget -->   Map 0x000020015ae00000 to device (0x00002001f8600000), size=40000000
+My libomptarget -->   Map 0x0000200158600000 to device (0x00002001fae00000), size=40000000
+My libomptarget -->   Submit 0x0000200158600000 to 0x00002001fae00000, size=40000000
+My libomptarget -->   Map 0x00002000e2a00000 to device (0x000020023a000000), size=80000000
+My libomptarget -->   Submit 0x00002000e2a00000 to 0x000020023a000000, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to device (0x00002000d9800000), size=80000000
+My libomptarget -->   Submit 0x00002000e7800000 to 0x00002000d9800000, size=80000000
+My libomptarget -->   Map 0x000020015d600000 to device (0x00002001fd600000), size=40000000
+My libomptarget -->   Submit 0x000020015d600000 to 0x00002001fd600000, size=40000000
+My libomptarget -->   Retrieve 0x000020015d600000 from 0x00002001fd600000, size=40000000
+My libomptarget -->   Unmap 0x000020015d600000 from device (0x00002001fd600000), size=40000000
+My libomptarget -->   Retrieve 0x00002000e7800000 from 0x00002000d9800000, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from device (0x00002000d9800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from device (0x000020023a000000), size=80000000
+My libomptarget -->   Unmap 0x0000200158600000 from device (0x00002001fae00000), size=40000000
+My libomptarget -->   Retrieve 0x000020015ae00000 from 0x00002001f8600000, size=40000000
+My libomptarget -->   Unmap 0x000020015ae00000 from device (0x00002001f8600000), size=40000000
+My libomptarget -->   Unmap 0x0000200155e00000 from device (0x00002001f5e00000), size=40000000
+My libomptarget -->   Unmap 0x0000200100000000 from device (0x00002001a0000000), size=1439998560
+My libomptarget -->   Unmap 0x00002000e2800000 from device (0x0000200239e00000), size=16
+My libomptarget -->   Unmap 0x00002000e0000000 from device (0x0000200237600000), size=40000008
+My libomptarget --> COMPUTE (0x00000000100166d9)	(#iter: 5000000    device: 0    UM: 0) at 7
+My libomptarget -->   Map 0x00002000e2a00000 to device (0x0000200237600000), size=80000000
+My libomptarget -->   Submit 0x00002000e2a00000 to 0x0000200237600000, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to device (0x00002000d9800000), size=80000000
+My libomptarget -->   Submit 0x00002000e7800000 to 0x00002000d9800000, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from device (0x00002000d9800000), size=80000000
+My libomptarget -->   Retrieve 0x00002000e2a00000 from 0x0000200237600000, size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from device (0x0000200237600000), size=80000000
+My libomptarget --> COMPUTE (0x00000000100166d8)	(#iter: 5000000    device: 0    UM: 0) at 8
+My libomptarget -->   Map 0x00007fffedfd3f28 to device (0x0000200237600000), size=8
+My libomptarget -->   Submit 0x00007fffedfd3f28 to 0x0000200237600000, size=8
+My libomptarget -->   Map 0x000020015d600000 to device (0x0000200237800000), size=40000000
+My libomptarget -->   Submit 0x000020015d600000 to 0x0000200237800000, size=40000000
+My libomptarget -->   Map 0x00007fffedfd3f20 to device (0x0000200237600200), size=8
+My libomptarget -->   Submit 0x00007fffedfd3f20 to 0x0000200237600200, size=8
+My libomptarget -->   Map 0x00002000e2a00000 to device (0x000020023a000000), size=80000000
+My libomptarget -->   Submit 0x00002000e2a00000 to 0x000020023a000000, size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from device (0x000020023a000000), size=80000000
+My libomptarget -->   Retrieve 0x00007fffedfd3f20 from 0x0000200237600200, size=8
+My libomptarget -->   Unmap 0x00007fffedfd3f20 from device (0x0000200237600200), size=8
+My libomptarget -->   Unmap 0x000020015d600000 from device (0x0000200237800000), size=40000000
+My libomptarget -->   Retrieve 0x00007fffedfd3f28 from 0x0000200237600000, size=8
+My libomptarget -->   Unmap 0x00007fffedfd3f28 from device (0x0000200237600000), size=8
+Total size: 1.67638
+Time: 0.797371
+Modularity: 8.22212e-07, Iterations: 2, Time (in s): 2.47803
+**********************************************************************
+==158920== Profiling application: ./miniVite -n 5000000
+==158920== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   91.38%  486.10ms        36  13.503ms  2.0480us  166.74ms  [CUDA memcpy DtoD]
+                    8.26%  43.918ms         2  21.959ms  21.908ms  22.010ms  __omp_offloading_35_eeedb51__Z17distLouvainMethodiiRK5GraphRmS2_RSt6vectorIlSaIlEES6_S6_S6_ddRi_l1367
+                    0.14%  750.04us         2  375.02us  374.27us  375.77us  __omp_offloading_35_eeedb51__Z21distComputeModularityRK5GraphP4CommPKddi_l395
+                    0.12%  639.87us         2  319.93us  318.62us  321.25us  __omp_offloading_35_eeedb51__Z20distUpdateLocalCinfolP4CommPKS__l435
+                    0.09%  504.73us         2  252.37us  252.00us  252.73us  __omp_offloading_35_eeedb51__Z16distCleanCWandCUlPdP4Comm_l454
+                    0.00%  15.552us         8  1.9440us  1.7600us  2.1760us  [CUDA memcpy DtoH]
+                    0.00%  7.9680us         5  1.5930us  1.3760us  1.7280us  [CUDA memcpy HtoD]
+      API calls:   35.22%  524.24ms         1  524.24ms  524.24ms  524.24ms  cuCtxCreate
+                   29.72%  442.40ms        29  15.255ms  28.595us  167.00ms  cuMemcpyHtoD
+                   19.82%  295.04ms         1  295.04ms  295.04ms  295.04ms  cuCtxDestroy
+                    3.67%  54.573ms        34  1.6051ms  42.012us  8.8931ms  cuMemAlloc
+                    3.52%  52.401ms        20  2.6201ms  90.217us  8.2123ms  cuMemcpyDtoH
+                    3.13%  46.539ms         8  5.8174ms  335.42us  22.099ms  cuCtxSynchronize
+                    1.98%  29.432ms        34  865.65us  34.372us  3.1892ms  cuMemFree
+                    1.41%  21.040ms         9  2.3377ms  63.714us  20.305ms  cuMemAllocManaged
+                    0.78%  11.613ms         1  11.613ms  11.613ms  11.613ms  cuModuleLoadDataEx
+                    0.48%  7.2150ms         1  7.2150ms  7.2150ms  7.2150ms  cuModuleUnload
+                    0.24%  3.5659ms         8  445.74us  30.009us  3.2446ms  cuLaunchKernel
+                    0.01%  186.90us       130  1.4370us     533ns  5.1930us  cuCtxSetCurrent
+                    0.00%  15.519us         8  1.9390us  1.0490us  2.8850us  cuFuncGetAttribute
+                    0.00%  13.594us         5  2.7180us  2.2340us  3.8610us  cuModuleGetGlobal
+                    0.00%  12.258us        21     583ns     272ns  1.0910us  cuDeviceGetAttribute
+                    0.00%  11.703us         6  1.9500us  1.2010us  4.3370us  cuDeviceGetPCIBusId
+                    0.00%  8.8880us         7  1.2690us     623ns  4.5410us  cuDeviceGet
+                    0.00%  7.9890us         4  1.9970us  1.5170us  3.3080us  cuModuleGetFunction
+                    0.00%  1.5340us         3     511ns     361ns     606ns  cuDeviceGetCount
+
+==158920== Unified Memory profiling result:
+Total CPU Page faults: 5172
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@batch5>
+Subject: Job 310716: <km> in cluster <summit> Done
+
+Job <km> was submitted from host <login1> by user <lld> in cluster <summit> at Wed Mar 27 16:47:14 2019
+Job was executed on host(s) <1*batch5>, in queue <batch>, as user <lld> in cluster <summit> at Wed Mar 27 16:47:28 2019
+                            <42*a20n12>
+</ccs/home/lld> was used as the home directory.
+</ccs/home/lld/apps/miniVite> was used as the working directory.
+Started at Wed Mar 27 16:47:28 2019
+Terminated at Wed Mar 27 16:47:49 2019
+Results reported at Wed Mar 27 16:47:49 2019
+
+The output (if any) is above this job summary.
+
+My libomptarget --> Set mode to UM
+==13217== NVPROF is profiling process 13217, command: ./miniVite -n 5000000
+Average time to generate 10000000 random numbers using LCG (in s): 0.0182397
+**********************************************************************
+Generated Random Geometric Graph with d: 0.000817469
+Number of vertices: 5000000
+Number of edges: 89999910
+Time to generate distributed graph of 5000000 vertices (in s): 8.38551
+Size: 16 : 8
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e0000000, size=40000008
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e2800000, size=16
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200100000000, size=1439998560
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200155e00000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200158600000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x000020015ae00000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e2a00000, size=80000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e7800000, size=80000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x000020015d600000, size=40000000
+My libomptarget --> COMPUTE (0x00000000100166f8)	(#iter: 5000000    device: 0    UM: 0) at 1
+My libomptarget -->   Map 0x000020015d600000 to UM, size=40000000
+My libomptarget -->   Map 0x00002000e7800000 to UM, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from UM (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x000020015d600000 from UM (0x000020015d600000), size=40000000
+My libomptarget --> COMPUTE (0x0000000010016724)	(#iter: 5000000    device: 0    UM: 0) at 2
+My libomptarget -->   Map 0x00002000e0000000 to UM, size=40000008
+My libomptarget -->   Map 0x00002000e2800000 to UM, size=16
+My libomptarget -->   Map 0x0000200100000000 to UM, size=1439998560
+My libomptarget -->   Map 0x0000200155e00000 to UM, size=40000000
+My libomptarget -->   Map 0x000020015ae00000 to UM, size=40000000
+My libomptarget -->   Map 0x0000200158600000 to UM, size=40000000
+My libomptarget -->   Map 0x00002000e2a00000 to UM, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to UM, size=80000000
+My libomptarget -->   Map 0x000020015d600000 to UM, size=40000000
+My libomptarget -->   Unmap 0x000020015d600000 from UM (0x000020015d600000), size=40000000
+My libomptarget -->   Unmap 0x00002000e7800000 from UM (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from UM (0x00002000e2a00000), size=80000000
+My libomptarget -->   Unmap 0x0000200158600000 from UM (0x0000200158600000), size=40000000
+My libomptarget -->   Unmap 0x000020015ae00000 from UM (0x000020015ae00000), size=40000000
+My libomptarget -->   Unmap 0x0000200155e00000 from UM (0x0000200155e00000), size=40000000
+My libomptarget -->   Unmap 0x0000200100000000 from UM (0x0000200100000000), size=1439998560
+My libomptarget -->   Unmap 0x00002000e2800000 from UM (0x00002000e2800000), size=16
+My libomptarget -->   Unmap 0x00002000e0000000 from UM (0x00002000e0000000), size=40000008
+My libomptarget --> COMPUTE (0x00000000100166d9)	(#iter: 5000000    device: 0    UM: 0) at 3
+My libomptarget -->   Map 0x00002000e2a00000 to UM, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to UM, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from UM (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from UM (0x00002000e2a00000), size=80000000
+My libomptarget --> COMPUTE (0x00000000100166d8)	(#iter: 5000000    device: 0    UM: 0) at 4
+My libomptarget -->   Map 0x00007fffda6c2478 to device (0x00002001b7600000), size=8
+My libomptarget -->   Submit 0x00007fffda6c2478 to 0x00002001b7600000, size=8
+My libomptarget -->   Map 0x000020015d600000 to UM, size=40000000
+My libomptarget -->   Map 0x00007fffda6c2470 to device (0x00002001b7600200), size=8
+My libomptarget -->   Submit 0x00007fffda6c2470 to 0x00002001b7600200, size=8
+My libomptarget -->   Map 0x00002000e2a00000 to UM, size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from UM (0x00002000e2a00000), size=80000000
+My libomptarget -->   Retrieve 0x00007fffda6c2470 from 0x00002001b7600200, size=8
+My libomptarget -->   Unmap 0x00007fffda6c2470 from device (0x00002001b7600200), size=8
+My libomptarget -->   Unmap 0x000020015d600000 from UM (0x000020015d600000), size=40000000
+My libomptarget -->   Retrieve 0x00007fffda6c2478 from 0x00002001b7600000, size=8
+My libomptarget -->   Unmap 0x00007fffda6c2478 from device (0x00002001b7600000), size=8
+My libomptarget --> COMPUTE (0x00000000100166f8)	(#iter: 5000000    device: 0    UM: 0) at 5
+My libomptarget -->   Map 0x000020015d600000 to UM, size=40000000
+My libomptarget -->   Map 0x00002000e7800000 to UM, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from UM (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x000020015d600000 from UM (0x000020015d600000), size=40000000
+My libomptarget --> COMPUTE (0x0000000010016724)	(#iter: 5000000    device: 0    UM: 0) at 6
+My libomptarget -->   Map 0x00002000e0000000 to UM, size=40000008
+My libomptarget -->   Map 0x00002000e2800000 to UM, size=16
+My libomptarget -->   Map 0x0000200100000000 to UM, size=1439998560
+My libomptarget -->   Map 0x0000200155e00000 to UM, size=40000000
+My libomptarget -->   Map 0x000020015ae00000 to UM, size=40000000
+My libomptarget -->   Map 0x0000200158600000 to UM, size=40000000
+My libomptarget -->   Map 0x00002000e2a00000 to UM, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to UM, size=80000000
+My libomptarget -->   Map 0x000020015d600000 to UM, size=40000000
+My libomptarget -->   Unmap 0x000020015d600000 from UM (0x000020015d600000), size=40000000
+My libomptarget -->   Unmap 0x00002000e7800000 from UM (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from UM (0x00002000e2a00000), size=80000000
+My libomptarget -->   Unmap 0x0000200158600000 from UM (0x0000200158600000), size=40000000
+My libomptarget -->   Unmap 0x000020015ae00000 from UM (0x000020015ae00000), size=40000000
+My libomptarget -->   Unmap 0x0000200155e00000 from UM (0x0000200155e00000), size=40000000
+My libomptarget -->   Unmap 0x0000200100000000 from UM (0x0000200100000000), size=1439998560
+My libomptarget -->   Unmap 0x00002000e2800000 from UM (0x00002000e2800000), size=16
+My libomptarget -->   Unmap 0x00002000e0000000 from UM (0x00002000e0000000), size=40000008
+My libomptarget --> COMPUTE (0x00000000100166d9)	(#iter: 5000000    device: 0    UM: 0) at 7
+My libomptarget -->   Map 0x00002000e2a00000 to UM, size=80000000
+My libomptarget -->   Map 0x00002000e7800000 to UM, size=80000000
+My libomptarget -->   Unmap 0x00002000e7800000 from UM (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from UM (0x00002000e2a00000), size=80000000
+My libomptarget --> COMPUTE (0x00000000100166d8)	(#iter: 5000000    device: 0    UM: 0) at 8
+My libomptarget -->   Map 0x00007fffda6c2478 to device (0x00002001b7600000), size=8
+My libomptarget -->   Submit 0x00007fffda6c2478 to 0x00002001b7600000, size=8
+My libomptarget -->   Map 0x000020015d600000 to UM, size=40000000
+My libomptarget -->   Map 0x00007fffda6c2470 to device (0x00002001b7600200), size=8
+My libomptarget -->   Submit 0x00007fffda6c2470 to 0x00002001b7600200, size=8
+My libomptarget -->   Map 0x00002000e2a00000 to UM, size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from UM (0x00002000e2a00000), size=80000000
+My libomptarget -->   Retrieve 0x00007fffda6c2470 from 0x00002001b7600200, size=8
+My libomptarget -->   Unmap 0x00007fffda6c2470 from device (0x00002001b7600200), size=8
+My libomptarget -->   Unmap 0x000020015d600000 from UM (0x000020015d600000), size=40000000
+My libomptarget -->   Retrieve 0x00007fffda6c2478 from 0x00002001b7600000, size=8
+My libomptarget -->   Unmap 0x00007fffda6c2478 from device (0x00002001b7600000), size=8
+Total size: 1.67638
+Time: 0.732451
+Modularity: 8.22212e-07, Iterations: 2, Time (in s): 2.4223
+**********************************************************************
+==13217== Profiling application: ./miniVite -n 5000000
+==13217== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   93.79%  493.19ms         2  246.59ms  43.538ms  449.65ms  __omp_offloading_35_eeedb51__Z17distLouvainMethodiiRK5GraphRmS2_RSt6vectorIlSaIlEES6_S6_S6_ddRi_l1367
+                    5.96%  31.328ms         2  15.664ms  250.43us  31.078ms  __omp_offloading_35_eeedb51__Z16distCleanCWandCUlPdP4Comm_l454
+                    0.12%  646.84us         2  323.42us  322.85us  324.00us  __omp_offloading_35_eeedb51__Z21distComputeModularityRK5GraphP4CommPKddi_l395
+                    0.12%  640.60us         2  320.30us  317.53us  323.07us  __omp_offloading_35_eeedb51__Z20distUpdateLocalCinfolP4CommPKS__l435
+                    0.00%  14.336us         8  1.7920us  1.6000us  2.0160us  [CUDA memcpy DtoH]
+                    0.00%  7.0400us         5  1.4080us  1.2480us  1.6000us  [CUDA memcpy HtoD]
+      API calls:   38.34%  526.46ms         8  65.807ms  356.21us  449.74ms  cuCtxSynchronize
+                   38.05%  522.45ms         1  522.45ms  522.45ms  522.45ms  cuCtxCreate
+                   19.76%  271.31ms         1  271.31ms  271.31ms  271.31ms  cuCtxDestroy
+                    1.54%  21.175ms         9  2.3528ms  62.599us  20.311ms  cuMemAllocManaged
+                    0.86%  11.793ms         1  11.793ms  11.793ms  11.793ms  cuModuleLoadDataEx
+                    0.54%  7.3927ms         1  7.3927ms  7.3927ms  7.3927ms  cuModuleUnload
+                    0.49%  6.6668ms         8  833.35us  24.849us  6.3629ms  cuLaunchKernel
+                    0.23%  3.1179ms         4  779.48us  20.709us  1.6574ms  cuMemAlloc
+                    0.12%  1.6051ms         4  401.28us  34.284us  770.77us  cuMemFree
+                    0.06%  822.10us         8  102.76us  88.720us  116.52us  cuMemcpyDtoH
+                    0.02%  208.24us         5  41.647us  26.380us  66.923us  cuMemcpyHtoD
+                    0.01%  69.504us        34  2.0440us     543ns  6.6380us  cuCtxSetCurrent
+                    0.00%  17.224us         8  2.1530us  1.3830us  5.5330us  cuFuncGetAttribute
+                    0.00%  13.122us        21     624ns     432ns  1.7660us  cuDeviceGetAttribute
+                    0.00%  13.090us         5  2.6180us  2.0610us  3.8750us  cuModuleGetGlobal
+                    0.00%  10.963us         6  1.8270us  1.1400us  4.0110us  cuDeviceGetPCIBusId
+                    0.00%  8.8770us         7  1.2680us     602ns  4.2380us  cuDeviceGet
+                    0.00%  8.5390us         4  2.1340us  1.4970us  3.8560us  cuModuleGetFunction
+                    0.00%  1.5890us         3     529ns     416ns     599ns  cuDeviceGetCount
+
+==13217== Unified Memory profiling result:
+Device "Tesla V100-SXM2-16GB (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+    9400  166.63KB  64.000KB  1.3750MB  1.493774GB  56.01582ms  Host To Device
+     812  192.95KB  64.000KB  960.00KB  153.0000MB  5.260943ms  Device To Host
+    1694         -         -         -           -  505.7533ms  Gpu page fault groups
+Total CPU Page faults: 5664
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@batch5>
+Subject: Job 310719: <km> in cluster <summit> Done
+
+Job <km> was submitted from host <login1> by user <lld> in cluster <summit> at Wed Mar 27 16:50:55 2019
+Job was executed on host(s) <1*batch5>, in queue <batch>, as user <lld> in cluster <summit> at Wed Mar 27 16:51:02 2019
+                            <42*a29n08>
+</ccs/home/lld> was used as the home directory.
+</ccs/home/lld/apps/miniVite> was used as the working directory.
+Started at Wed Mar 27 16:51:02 2019
+Terminated at Wed Mar 27 16:51:20 2019
+Results reported at Wed Mar 27 16:51:20 2019
+
+The output (if any) is above this job summary.
+
+My libomptarget --> Set mode to SDEV
+==15656== NVPROF is profiling process 15656, command: ./miniVite -n 5000000
+Average time to generate 10000000 random numbers using LCG (in s): 0.0181794
+**********************************************************************
+Generated Random Geometric Graph with d: 0.000817469
+Number of vertices: 5000000
+Number of edges: 89999910
+Time to generate distributed graph of 5000000 vertices (in s): 8.4145
+Size: 16 : 8
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e0000000, size=40000008
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e2800000, size=16
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200120000000, size=1439998560
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200175e00000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x0000200178600000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x000020017ae00000, size=40000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e2a00000, size=80000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x00002000e7800000, size=80000000
+My libomptarget --> omp_target_alloc returns uvm ptr 0x000020017d600000, size=40000000
+My libomptarget --> COMPUTE (0x00000000100166f8)	(#iter: 5000000    device: 0    UM: 0) at 1
+My libomptarget -->   Map 0x000020017d600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017d600000
+My libomptarget -->   Apply opt 1 to 0x000020017d600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e7800000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e7800000
+My libomptarget -->   Apply opt 1 to 0x00002000e7800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x00002000e7800000 from soft device (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x000020017d600000 from soft device (0x000020017d600000), size=40000000
+My libomptarget --> COMPUTE (0x0000000010016724)	(#iter: 5000000    device: 0    UM: 0) at 2
+My libomptarget -->   Map 0x00002000e0000000 to soft device, size=40000008
+My libomptarget -->   Apply opt 4 to 0x00002000e0000000
+My libomptarget -->   Apply opt 1 to 0x00002000e0000000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e2800000 to soft device, size=16
+My libomptarget -->   Apply opt 4 to 0x00002000e2800000
+My libomptarget -->   Apply opt 1 to 0x00002000e2800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x0000200120000000 to soft device, size=1439998560
+My libomptarget -->   Apply opt 4 to 0x0000200120000000
+My libomptarget -->   Apply opt 1 to 0x0000200120000000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x0000200175e00000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x0000200175e00000
+My libomptarget -->   Apply opt 1 to 0x0000200175e00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x000020017ae00000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017ae00000
+My libomptarget -->   Apply opt 1 to 0x000020017ae00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x0000200178600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x0000200178600000
+My libomptarget -->   Apply opt 1 to 0x0000200178600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e2a00000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e2a00000
+My libomptarget -->   Apply opt 1 to 0x00002000e2a00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e7800000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e7800000
+My libomptarget -->   Apply opt 1 to 0x00002000e7800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x000020017d600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017d600000
+My libomptarget -->   Apply opt 1 to 0x000020017d600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x000020017d600000 from soft device (0x000020017d600000), size=40000000
+My libomptarget -->   Unmap 0x00002000e7800000 from soft device (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from soft device (0x00002000e2a00000), size=80000000
+My libomptarget -->   Unmap 0x0000200178600000 from soft device (0x0000200178600000), size=40000000
+My libomptarget -->   Unmap 0x000020017ae00000 from soft device (0x000020017ae00000), size=40000000
+My libomptarget -->   Unmap 0x0000200175e00000 from soft device (0x0000200175e00000), size=40000000
+My libomptarget -->   Unmap 0x0000200120000000 from soft device (0x0000200120000000), size=1439998560
+My libomptarget -->   Unmap 0x00002000e2800000 from soft device (0x00002000e2800000), size=16
+My libomptarget -->   Unmap 0x00002000e0000000 from soft device (0x00002000e0000000), size=40000008
+My libomptarget --> COMPUTE (0x00000000100166d9)	(#iter: 5000000    device: 0    UM: 0) at 3
+My libomptarget -->   Map 0x00002000e2a00000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e2a00000
+My libomptarget -->   Apply opt 1 to 0x00002000e2a00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e7800000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e7800000
+My libomptarget -->   Apply opt 1 to 0x00002000e7800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x00002000e7800000 from soft device (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from soft device (0x00002000e2a00000), size=80000000
+My libomptarget --> COMPUTE (0x00000000100166d8)	(#iter: 5000000    device: 0    UM: 0) at 4
+My libomptarget -->   Map 0x00007fffca5000d8 to device (0x00002001d7600000), size=8
+My libomptarget -->   Submit 0x00007fffca5000d8 to 0x00002001d7600000, size=8
+My libomptarget -->   Map 0x000020017d600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017d600000
+My libomptarget -->   Apply opt 1 to 0x000020017d600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00007fffca5000d0 to device (0x00002001d7600200), size=8
+My libomptarget -->   Submit 0x00007fffca5000d0 to 0x00002001d7600200, size=8
+My libomptarget -->   Map 0x00002000e2a00000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e2a00000
+My libomptarget -->   Apply opt 1 to 0x00002000e2a00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x00002000e2a00000 from soft device (0x00002000e2a00000), size=80000000
+My libomptarget -->   Retrieve 0x00007fffca5000d0 from 0x00002001d7600200, size=8
+My libomptarget -->   Unmap 0x00007fffca5000d0 from device (0x00002001d7600200), size=8
+My libomptarget -->   Unmap 0x000020017d600000 from soft device (0x000020017d600000), size=40000000
+My libomptarget -->   Retrieve 0x00007fffca5000d8 from 0x00002001d7600000, size=8
+My libomptarget -->   Unmap 0x00007fffca5000d8 from device (0x00002001d7600000), size=8
+My libomptarget --> COMPUTE (0x00000000100166f8)	(#iter: 5000000    device: 0    UM: 0) at 5
+My libomptarget -->   Map 0x000020017d600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017d600000
+My libomptarget -->   Apply opt 1 to 0x000020017d600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e7800000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e7800000
+My libomptarget -->   Apply opt 1 to 0x00002000e7800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x00002000e7800000 from soft device (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x000020017d600000 from soft device (0x000020017d600000), size=40000000
+My libomptarget --> COMPUTE (0x0000000010016724)	(#iter: 5000000    device: 0    UM: 0) at 6
+My libomptarget -->   Map 0x00002000e0000000 to soft device, size=40000008
+My libomptarget -->   Apply opt 4 to 0x00002000e0000000
+My libomptarget -->   Apply opt 1 to 0x00002000e0000000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e2800000 to soft device, size=16
+My libomptarget -->   Apply opt 4 to 0x00002000e2800000
+My libomptarget -->   Apply opt 1 to 0x00002000e2800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x0000200120000000 to soft device, size=1439998560
+My libomptarget -->   Apply opt 4 to 0x0000200120000000
+My libomptarget -->   Apply opt 1 to 0x0000200120000000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x0000200175e00000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x0000200175e00000
+My libomptarget -->   Apply opt 1 to 0x0000200175e00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x000020017ae00000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017ae00000
+My libomptarget -->   Apply opt 1 to 0x000020017ae00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x0000200178600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x0000200178600000
+My libomptarget -->   Apply opt 1 to 0x0000200178600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e2a00000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e2a00000
+My libomptarget -->   Apply opt 1 to 0x00002000e2a00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e7800000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e7800000
+My libomptarget -->   Apply opt 1 to 0x00002000e7800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x000020017d600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017d600000
+My libomptarget -->   Apply opt 1 to 0x000020017d600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x000020017d600000 from soft device (0x000020017d600000), size=40000000
+My libomptarget -->   Unmap 0x00002000e7800000 from soft device (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from soft device (0x00002000e2a00000), size=80000000
+My libomptarget -->   Unmap 0x0000200178600000 from soft device (0x0000200178600000), size=40000000
+My libomptarget -->   Unmap 0x000020017ae00000 from soft device (0x000020017ae00000), size=40000000
+My libomptarget -->   Unmap 0x0000200175e00000 from soft device (0x0000200175e00000), size=40000000
+My libomptarget -->   Unmap 0x0000200120000000 from soft device (0x0000200120000000), size=1439998560
+My libomptarget -->   Unmap 0x00002000e2800000 from soft device (0x00002000e2800000), size=16
+My libomptarget -->   Unmap 0x00002000e0000000 from soft device (0x00002000e0000000), size=40000008
+My libomptarget --> COMPUTE (0x00000000100166d9)	(#iter: 5000000    device: 0    UM: 0) at 7
+My libomptarget -->   Map 0x00002000e2a00000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e2a00000
+My libomptarget -->   Apply opt 1 to 0x00002000e2a00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00002000e7800000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e7800000
+My libomptarget -->   Apply opt 1 to 0x00002000e7800000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x00002000e7800000 from soft device (0x00002000e7800000), size=80000000
+My libomptarget -->   Unmap 0x00002000e2a00000 from soft device (0x00002000e2a00000), size=80000000
+My libomptarget --> COMPUTE (0x00000000100166d8)	(#iter: 5000000    device: 0    UM: 0) at 8
+My libomptarget -->   Map 0x00007fffca5000d8 to device (0x00002001d7600000), size=8
+My libomptarget -->   Submit 0x00007fffca5000d8 to 0x00002001d7600000, size=8
+My libomptarget -->   Map 0x000020017d600000 to soft device, size=40000000
+My libomptarget -->   Apply opt 4 to 0x000020017d600000
+My libomptarget -->   Apply opt 1 to 0x000020017d600000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Map 0x00007fffca5000d0 to device (0x00002001d7600200), size=8
+My libomptarget -->   Submit 0x00007fffca5000d0 to 0x00002001d7600200, size=8
+My libomptarget -->   Map 0x00002000e2a00000 to soft device, size=80000000
+My libomptarget -->   Apply opt 4 to 0x00002000e2a00000
+My libomptarget -->   Apply opt 1 to 0x00002000e2a00000
+My libomptarget --> Invalid optimization
+My libomptarget -->   Unmap 0x00002000e2a00000 from soft device (0x00002000e2a00000), size=80000000
+My libomptarget -->   Retrieve 0x00007fffca5000d0 from 0x00002001d7600200, size=8
+My libomptarget -->   Unmap 0x00007fffca5000d0 from device (0x00002001d7600200), size=8
+My libomptarget -->   Unmap 0x000020017d600000 from soft device (0x000020017d600000), size=40000000
+My libomptarget -->   Retrieve 0x00007fffca5000d8 from 0x00002001d7600000, size=8
+My libomptarget -->   Unmap 0x00007fffca5000d8 from device (0x00002001d7600000), size=8
+Total size: 1.67638
+Time: 0.712737
+Modularity: 8.22212e-07, Iterations: 2, Time (in s): 2.37011
+**********************************************************************
+==15656== Profiling application: ./miniVite -n 5000000
+==15656== Profiling result:
+            Type  Time(%)      Time     Calls       Avg       Min       Max  Name
+ GPU activities:   93.47%  443.05ms         2  221.53ms  20.894ms  422.16ms  __omp_offloading_35_eeedb51__Z17distLouvainMethodiiRK5GraphRmS2_RSt6vectorIlSaIlEES6_S6_S6_ddRi_l1367
+                    6.26%  29.668ms         2  14.834ms  252.83us  29.415ms  __omp_offloading_35_eeedb51__Z16distCleanCWandCUlPdP4Comm_l454
+                    0.14%  645.59us         2  322.80us  322.37us  323.23us  __omp_offloading_35_eeedb51__Z21distComputeModularityRK5GraphP4CommPKddi_l395
+                    0.13%  635.20us         2  317.60us  317.05us  318.14us  __omp_offloading_35_eeedb51__Z20distUpdateLocalCinfolP4CommPKS__l435
+                    0.00%  14.368us         8  1.7960us  1.6000us  2.0160us  [CUDA memcpy DtoH]
+                    0.00%  7.0720us         5  1.4140us  1.2480us  1.6000us  [CUDA memcpy HtoD]
+      API calls:   40.70%  520.60ms         1  520.60ms  520.60ms  520.60ms  cuCtxCreate
+                   37.11%  474.66ms         8  59.333ms  348.41us  422.24ms  cuCtxSynchronize
+                   17.93%  229.37ms         1  229.37ms  229.37ms  229.37ms  cuCtxDestroy
+                    1.65%  21.044ms         9  2.3382ms  77.557us  20.303ms  cuMemAllocManaged
+                    0.90%  11.558ms         1  11.558ms  11.558ms  11.558ms  cuModuleLoadDataEx
+                    0.57%  7.2276ms         1  7.2276ms  7.2276ms  7.2276ms  cuModuleUnload
+                    0.52%  6.5948ms         8  824.34us  24.212us  6.3617ms  cuLaunchKernel
+                    0.22%  2.7807ms        30  92.689us  3.1470us  1.9706ms  cuMemAdvise
+                    0.20%  2.5650ms         4  641.26us  20.647us  1.3774ms  cuMemAlloc
+                    0.12%  1.5353ms         4  383.83us  30.558us  741.42us  cuMemFree
+                    0.06%  830.25us         8  103.78us  88.896us  125.59us  cuMemcpyDtoH
+                    0.01%  168.38us         5  33.675us  26.187us  48.213us  cuMemcpyHtoD
+                    0.00%  53.465us        34  1.5720us     641ns  4.6320us  cuCtxSetCurrent
+                    0.00%  13.006us         5  2.6010us  2.0720us  3.2640us  cuModuleGetGlobal
+                    0.00%  12.896us        21     614ns     365ns  1.1060us  cuDeviceGetAttribute
+                    0.00%  12.454us         8  1.5560us     890ns  2.4160us  cuFuncGetAttribute
+                    0.00%  11.742us         6  1.9570us  1.1400us  4.6640us  cuDeviceGetPCIBusId
+                    0.00%  8.6470us         7  1.2350us     597ns  4.3750us  cuDeviceGet
+                    0.00%  7.5310us         4  1.8820us  1.4760us  2.8370us  cuModuleGetFunction
+                    0.00%  1.5450us         3     515ns     329ns     621ns  cuDeviceGetCount
+
+==15656== Unified Memory profiling result:
+Device "Tesla V100-SXM2-16GB (0)"
+   Count  Avg Size  Min Size  Max Size  Total Size  Total Time  Name
+    9041  158.13KB  64.000KB  1.3125MB  1.363464GB  51.94749ms  Host To Device
+    1481         -         -         -           -  448.4253ms  Gpu page fault groups
+      40  1.9094MB  192.00KB  2.0000MB  76.37500MB           -  Remote mapping to device
+Total CPU Page faults: 5212
+Total remote mappings from CPU: 40
+
+------------------------------------------------------------
+Sender: LSF System <lsfadmin@batch5>
+Subject: Job 310728: <km> in cluster <summit> Done
+
+Job <km> was submitted from host <login1> by user <lld> in cluster <summit> at Wed Mar 27 17:01:23 2019
+Job was executed on host(s) <1*batch5>, in queue <batch>, as user <lld> in cluster <summit> at Wed Mar 27 17:01:36 2019
+                            <42*h36n13>
+</ccs/home/lld> was used as the home directory.
+</ccs/home/lld/apps/miniVite> was used as the working directory.
+Started at Wed Mar 27 17:01:36 2019
+Terminated at Wed Mar 27 17:01:53 2019
+Results reported at Wed Mar 27 17:01:53 2019
+
+The output (if any) is above this job summary.
+

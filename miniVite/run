@@ -1,0 +1,15 @@
+LIBOMPTARGET_DEBUG=1 LLD_GPU_MODE=SDEV bsub -nnodes 1 -P GEN010SOLLVE -J km -W 120 -q batch -o log jsrun -n 1 -g 6 nvprof ./miniVite -n 50000000
+LLD_GPU_MODE=UM mpirun -n 1 nvprof ./miniVite -n 50000000
+
+grep Time: summit/alloc_032819_large.log | awk '{print $2}' | v2m 11 3 2
+grep "Host To Device" summit/alloc_032819_sm.log | awk '{print $6}' | awk -F "m" '{print $1}' | v2m 4 2 3
+grep "Device To Host" summit/alloc_032819_sm.log | awk '{print $6}' | awk -F "m" '{print $1}' | v2m 5
+grep "Gpu page fault groups" summit/alloc_032819_sm.log | awk '{print $6}' | awk -F "m|s" '{print $1}'
+grep "cuMemPrefetchAsync" summit/alloc_032819_sm.log | awk '{print $2}' | awk -F "m|s" '{print $1}'
+grep "cuMemPrefetchAsync" summit/alloc_032819_sm.log | awk '{print $4}' | awk -F "m|s" '{print $1}'
+grep "cuMemcpyHtoD" summit/alloc_032819_sm.log | awk '{print $4}' | awk -F "m|s" '{print $1}' | v2m 4 4 3
+
+grep "Host To Device" summit/alloc_032819_large.log | awk '{print $6}' | awk -F "m" '{print $1}' | v2m 11 2 3
+grep "Device To Host" summit/alloc_032819_large.log | awk '{print $6}' | awk -F "m" '{print $1}' | v2m 11 2 3
+grep "Gpu page fault groups" summit/alloc_032819_large.log | awk '{print $6}' | awk -F "m|s" '{print $1}'| v2m 11 3 3
+grep "Host To Device" summit/alloc_032819_large.log | awk '{print $5}' | awk -F "G" '{print $1}' | v2m 11 2 3

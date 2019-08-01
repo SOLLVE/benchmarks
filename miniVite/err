@@ -1,0 +1,8 @@
+mpicxx main.o -O3 -fopenmp -fopenmp-targets=nvptx64-nvidia-cuda -DOMP_GPU -DCHECK_NUM_EDGES -DDEBUG_PRINTF  -o miniVite
+nvlink error   : Undefined reference to '_ZdlPv' in '/tmp/main-f4854c.cubin'
+nvlink error   : Undefined reference to '_ZSt17__throw_bad_allocv' in '/tmp/main-f4854c.cubin'
+nvlink error   : Undefined reference to '_Znwm' in '/tmp/main-f4854c.cubin'
+nvlink error   : Undefined reference to '_ZNKSt8__detail20_Prime_rehash_policy14_M_need_rehashEmmm' in '/tmp/main-f4854c.cubin'
+nvlink error   : Undefined reference to '__assert_fail' in '/tmp/main-f4854c.cubin'
+nvlink error   : Undefined reference to '_ZNKSt8__detail20_Prime_rehash_policy11_M_next_bktEm' in '/tmp/main-f4854c.cubin'
+clang-9: error: nvlink command failed with exit code 255 (use -v to see invocation)
