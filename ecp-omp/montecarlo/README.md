@@ -1,4 +1,5 @@
-# 
+# ECP OpenMP Monte Carlo Benchmark
+
 This is a part of the repository of the ECP OpenMP performance benchmark suite, used for a benchmark-style (smaller than mini-App style) performance experimentation based on applications with the most time consuming computation kernels having the Computational Pattern of Monte Carlo Methods.
 
 The benchmark is primarily representative of Applications of important to the United States Department of Energy's Exascale Computing Project(ECP), in particular Autodock.
