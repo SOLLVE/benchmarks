@@ -10,3 +10,6 @@ The performance experimentation we are focused on is of OpenMP 5.0 features and 
 The short link to this page is:
 
 tinyurl.com/mc-omp-bench
+
+
+We note that this was originally developed at: https://bitbucket.org/tony-curtis/oscar-bench/src/master/. It was developed there originally as it was easiest for us to keep it closed source there, but now we want to make it open-source and github is the best for that for us. 
