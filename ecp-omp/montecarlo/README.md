@@ -9,9 +9,7 @@ The performance experimentation we are focused on is of OpenMP 5.0 features and 
 
 
 ## Short Link
-For easy access, the short link to this page is: 
-
-https://tinyurl.com/mc-omp-bench 
+For easy access, the short link to this page is https://tinyurl.com/mc-omp-bench .
 
 
 ## Development History
