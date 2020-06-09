@@ -9,7 +9,7 @@ The performance experimentation we are focused on is of OpenMP 5.0 features and 
 
 ## Description of Code
 
-The code bench.c is the actively developed version. The code bench_works.c is the stable version. That's version that should be considered by new developers working on this repository or viewers of this repository. 
+The code bench.c is the actively developed version. The code bench_works.c is the stable version. That's version that should be considered by those who are new to or viewers of this repository. 
 
 
 ## Short Link
