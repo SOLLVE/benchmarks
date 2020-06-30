@@ -20,7 +20,7 @@ cluster.o: cluster.c
 
 cluster_um.o: cluster.c 
 	$(CC) $(CC_FLAGS) $(GPU_FLAGS_UM) cluster.c -c -o cluster_um.o
-	
+
 kmeans.o: kmeans.c 
 	$(CC) $(CC_FLAGS) kmeans.c -c
 

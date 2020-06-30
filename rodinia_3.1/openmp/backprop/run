@@ -3,11 +3,11 @@ for (( j=0; j<3; j++ ))
 do
     for (( i=500000; i<= 21000000; i+=500000))
     do
-        bsub -W 240 -n 2 -P GEN010SOLLVE nvprof ./backprop_gpu_um $i
+        bsub -W 240 -n 2 -P CSC372 nvprof ./backprop_gpu_um $i
     done
 
     for (( i=500000; i<= 21000000; i+=500000))
     do
-        bsub -W 240 -n 2 -P GEN010SOLLVE ./backprop $i
+        bsub -W 240 -n 2 -P CSC372 ./backprop $i
     done
 done

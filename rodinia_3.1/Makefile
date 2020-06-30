@@ -33,8 +33,7 @@ CUDA:
 	cd cuda/mummergpu;  		make;	cp bin/mummergpu $(CUDA_BIN_DIR)
 	cd cuda/hybridsort;              make;   cp hybridsort $(CUDA_BIN_DIR)
 	cd cuda/dwt2d;                   make;   cp dwt2d  $(CUDA_BIN_DIR)
-	
-	
+
 OMP:
 	cd openmp/backprop;				make;	cp backprop $(OMP_BIN_DIR)
 	cd openmp/bfs; 					make;	cp bfs $(OMP_BIN_DIR)
@@ -73,13 +72,13 @@ OPENCL:
 	cd opencl/heartwall;		make;	cp heartwall	$(OPENCL_BIN_DIR)
 	cd opencl/hybridsort;              make;   cp hybridsort $(CUDA_BIN_DIR)
 	cd opencl/dwt2d;                   make;   cp dwt2d  $(CUDA_BIN_DIR)
-	
+
 clean: CUDA_clean OMP_clean OCL_clean
 
 CUDA_clean:
 	cd $(CUDA_BIN_DIR); rm -f *
 	for dir in $(CUDA_DIRS) ; do cd cuda/$$dir ; make clean ; cd ../.. ; done
-	
+
 OMP_clean:
 	cd $(OMP_BIN_DIR); rm -f *
 	for dir in $(OMP_DIRS) ; do cd openmp/$$dir ; make clean ; cd ../.. ; done
