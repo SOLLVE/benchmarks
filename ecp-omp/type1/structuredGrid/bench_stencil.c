@@ -56,6 +56,14 @@ int main(int argc, char* argv[])
         if (argc > 4)
           gsz = atoi(argv[4]);
       }
+
+          numTasks = atoi(argv[2]);
+        if (argc > 3)
+          gsz = atoi(argv[3]);
+        if (argc > 4)
+    }
+    printf("bench_stencil [pSize=%d] [numTasks=%d] [gsz=%d] [num_timesteps=%d] [numThreads=%d] \n", probSize, numTasks, gsz, num_timesteps, numThreads);
+
     int arrSize = probSize;
     int numBlocks = numTasks;
     float* a = malloc(sizeof(float)*arrSize);
@@ -121,6 +129,7 @@ while(timestep < num_timesteps)
         for (int i = 0; i < numBlocks; i++) {
           const int dev = (int) ((i/numBlocks)*ndevs); // use for static schedule                                                                         
 	  printf("device chosen for iteration %d : %d\n" , i, dev);
+	    const int dev = i%ndevs;
           lboundary[i] = 0;
           OMPVV_START_TIMER;
 #pragma omp target device(dev) map(alloc: a[0:arrSize], b[0:arrSize], c[0:arrSize], numBlocks, ndevs) map(tofrom: lboundary[i:1], rboundary[i:1], blockWork[i:1]) nowait
@@ -128,8 +137,8 @@ while(timestep < num_timesteps)
               const int NN = blockWork[i];
               const int startInd = (i%(numBlocks/ndevs))*NN; // startInd depends on global task number (global across GPUs on a node)                         
               const int endInd = (i%(numBlocks/ndevs)+1)*NN;
-
               // obtain boundaries for neighboring GPUs (needs to be fixed for multiple blocks for each GPU)
+
               b[startInd] = lboundary[i];
               b[endInd-1] = rboundary[i];
               for (int j = startInd; j<= endInd ; j++)
@@ -140,10 +149,11 @@ while(timestep < num_timesteps)
               a=c;
               lboundary[i] = a[startInd];
               rboundary[i] = a[endInd-1];
-            } // end target                                                                                                                                   
+            } // end target                                                                                                  
             OMPVV_STOP_TIMER;
         } // end for      
     } // end parallel                                                                                                                               
+
     timestep++;
   } // end while                                                                                                                                              
  free(a);
