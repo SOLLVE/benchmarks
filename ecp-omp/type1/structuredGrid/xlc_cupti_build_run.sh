@@ -42,9 +42,6 @@ cat raw.log | grep MEMCPY   | awk '{s+=$3} END {print s}'
 echo -n "OVERHEAD time(us): "
 cat raw.log | grep OVERHEAD | awk '{s+=$3} END {print s}'
 
-#jsrun --smpiargs="-disable_gpu_hooks" --nrs 1 --tasks_per_rs 1 --cpu_per_rs 42 --gpu_per_rs 6 --rs_per_host 1 --latency_priority CPU-CPU --launch_distributi\
-on packed --bind rs ./bench_works_cupti 1000 500 1 1                                                                                                          
-
 
 
 
