@@ -7,9 +7,17 @@
 
 #include "timing/ompvv_timing.h"
 
+
+
+// Input data distribution
+//#define RANDOM_SIZED_TASKS
+#define INCREASING_SIZED_TASKS
+
+// Application problem
 #define EPLB
 #define N 500
 #define MAXWORK 10
+
 
 
 // Scheduling strategies, unset all to use the compact schedue
@@ -20,10 +28,6 @@
 #define MAX_TIMESTEPS 100
 
 //#define CPU_TEST
-
-//#define RANDOM_SIZED_TASKS
-#define INCREASING_SIZED_TASKS
-
 //#define DEBUG 1
 
 inline unsigned
@@ -35,6 +39,7 @@ gpu_scheduler_compact(unsigned *occupancies, int taskID, int ngpus, int numTasks
   return chosen;
 }
 
+
 inline unsigned
 gpu_scheduler_roundrobin(unsigned *occupancies, int taskID, int ngpus)
 {
@@ -44,6 +49,7 @@ gpu_scheduler_roundrobin(unsigned *occupancies, int taskID, int ngpus)
   return chosen;
 }
 
+
 inline unsigned
 gpu_scheduler_random(unsigned *occupancies, int ngpus)
 {
@@ -52,6 +58,7 @@ gpu_scheduler_random(unsigned *occupancies, int ngpus)
   occupancies[chosen]++;
   return chosen;
 }
+
 
 inline unsigned
 gpu_scheduler(unsigned *occupancies, int ngpus)
@@ -76,6 +83,28 @@ gpu_scheduler(unsigned *occupancies, int ngpus)
   return chosen;
 }
 
+inline unsigned 
+gpu_scheduler_dynamic_affinity(unsigned *occupancies, int ngpus)
+{
+  short looking = 1;
+  unsigned chosen;
+  while (looking) {
+    for (unsigned i = 0; i < ngpus; i++) {
+      // But really, this should be a single atomic compare-and-swap
+      unsigned occ_i;
+      #pragma omp atomic read
+      occ_i = occupancies[i];
+      if (occ_i == 0) {
+        chosen = i;
+#pragma omp atomic
+        occupancies[chosen]++;
+        looking = 0;
+        break;
+      }
+    }
+  }
+  return chosen;
+}
 
 inline unsigned
 gpu_scheduler_multQueue(unsigned *occupancies, int omp_tid, int omp_nthrds, int ngpus)
