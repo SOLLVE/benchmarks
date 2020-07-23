@@ -121,9 +121,10 @@ while(timestep < num_timesteps)
     {
 #pragma omp for schedule(static, gsz)
         for (int i = 0; i < numBlocks; i++) {
-          const int dev = (int) ((i/numBlocks)*ndevs); // use for static schedule                                                                         
-	  printf("device chosen for iteration %d : %d\n" , i, dev);
+          //const int dev = (int) ((i/numBlocks)*ndevs); // use for static schedule                                                                         
+	  
 	  const int dev = i%ndevs;   
+	  printf("device chosen for iteration %d : %d\n" , i, dev);
           OMPVV_START_TIMER;
 #pragma omp target device(dev) map(alloc: a[0:arrSize], b[0:arrSize], numBlocks, ndevs) map(tofrom: lboundary[i:1], rboundary[i:1], blockWork[i:1]) nowait
             {
