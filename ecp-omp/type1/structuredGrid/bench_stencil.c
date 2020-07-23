@@ -23,7 +23,6 @@ int main(int argc, char* argv[])
     int *devices = NULL;
     double *time_devices = NULL;
     double start_iterations, end_iterations;
-
     int timestep = 0;
     int probSize = MAXWORK;
     int num_timesteps = 1;
@@ -51,13 +50,12 @@ int main(int argc, char* argv[])
         if (argc > 1)
           probSize = atoi(argv[1]);
         if (argc > 2)
-          numTasks = atoi(argv[2]);
+	  num_timesteps = atoi(argv[2]);
         if (argc > 3)
-          gsz = atoi(argv[3]);
+          numTasks = atoi(argv[3]);
         if (argc > 4)
-    }
-    printf("bench_stencil [pSize=%d] [numTasks=%d] [gsz=%d] [num_timesteps=%d] [numThreads=%d] \n", probSize, numTasks, gsz, num_timesteps, numThreads);
-
+          gsz = atoi(argv[4]);
+      }
     int arrSize = probSize;
     int numBlocks = numTasks;
     float* a = malloc(sizeof(float)*arrSize);
@@ -121,8 +119,8 @@ while(timestep < num_timesteps)
     {
 #pragma omp for schedule(static, gsz)
         for (int i = 0; i < numBlocks; i++) {
-          // const int dev = (int) ((i/ndevs)*numBloicks); // use for static schedule                                                                         
-          const int dev = i%ndevs;
+          const int dev = (int) ((i/numBlocks)*ndevs); // use for static schedule                                                                         
+	  printf("device chosen for iteration %d : %d\n" , i, dev);
           lboundary[i] = 0;
           OMPVV_START_TIMER;
 #pragma omp target device(dev) map(alloc: a[0:arrSize], b[0:arrSize], c[0:arrSize], numBlocks, ndevs) map(tofrom: lboundary[i:1], rboundary[i:1], blockWork[i:1]) nowait
@@ -131,7 +129,7 @@ while(timestep < num_timesteps)
               const int startInd = (i%(numBlocks/ndevs))*NN; // startInd depends on global task number (global across GPUs on a node)                         
               const int endInd = (i%(numBlocks/ndevs)+1)*NN;
 
-              // obtain boundaries for neighboring GPUs (nee              // obtain boundaries for neighboring GPUs (needs to be fixed for multiple blocks for each GPU)                                                  
+              // obtain boundaries for neighboring GPUs (needs to be fixed for multiple blocks for each GPU)
               b[startInd] = lboundary[i];
               b[endInd-1] = rboundary[i];
               for (int j = startInd; j<= endInd ; j++)
@@ -144,9 +142,8 @@ while(timestep < num_timesteps)
               rboundary[i] = a[endInd-1];
             } // end target                                                                                                                                   
             OMPVV_STOP_TIMER;
-        } // end for                                                                                                                                          
-
-    } // end parallel                                                                                                                                         
+        } // end for      
+    } // end parallel                                                                                                                               
     timestep++;
   } // end while                                                                                                                                              
  free(a);

@@ -2,7 +2,6 @@ CC         = xlc
 #CC         = clang++
 LD         = $(CC)
 
-
 DEBUG      = -g4
 
 #DEBUG = -g
