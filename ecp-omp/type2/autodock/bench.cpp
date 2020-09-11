@@ -293,6 +293,8 @@ int main(int argc, char* argv[])
 
   while(timestep < num_timesteps)
     {
+	  
+	  
 #pragma omp parallel
       {
 	// only one thread deals out work to GPUs awith single - other threads could do it too though 
@@ -321,6 +323,8 @@ int main(int argc, char* argv[])
 	      // #pragma omp atomic
 	      // occupancies[dev] = 1
 	    }
+		  
+		  // Integer evulation success counter  - how many evulation have been done for a a given ligand. (genetic algorithm - local vs  global search) . Each ligand moves forward some
 #pragma omp task depend(inout:success[i])
 	    {
 	      OMPVV_START_TIMER;
@@ -334,23 +338,50 @@ int main(int argc, char* argv[])
 
 		// below are different computations. MATMUL is close to Autodock and can provide complex computation
 #ifdef MATMUL 
+		 
+		      // screening of ligands causing load imbalance
+		      
+		     // work of one ligand 
 		int mat_i, mat_j;
-
-		for (mat_i = 0; mat_i < NN; mat_i++)
-		  {
-		    for (mat_j = 0; mat_j < NN; mat_j++)
+		int  N_runs =10; 
+		int N_pop =150; 
+		int N_atoms = 40;
+		int N_torsions = 8;
+		      
+		    // adds latency to eachno 
+		// local search    
+for (int runNum = 0; runNum < N_runs; runNum++) 
+	for (int popu = 0; popu < N_pop; popu++)
+	{
+		
+		for (mat_i = 0; mat_i < N_torsions; mat_i++)
+		    for (mat_j = 0; mat_j < N_atoms; mat_j++) // fraction of atoms 
+		      {
+			   
+                          //  c[mat_i*N_t +mat_j] += sin(a[mat_i*NN + k]*b[k*NN + mat_j]);
+			  //quanternion 
+			   // 3 sin/cos operations 
+			
+		      }
+			    
+		for (mat_i = 0; mat_i < N_atoms; mat_i++)
+		    for (mat_j = 0; mat_j < N_atoms; mat_j++)
 		      {
 			c[mat_i*NN + mat_j] = 0;
-			for (int k = 0; k < NN; k++)
-			  {
-                            c[mat_i*NN +mat_j] +=a[mat_i*NN + k]*b[k*NN + mat_j];
-			  }
+			
+                            // implement 
+			    // mat_i and mat_j - 10 maps , chosing a random map 
+			    // distant calculation - square root - x2 + y2+  z2
+			    // add two numbers from map 
+			
 		      }
-		  }
+	}	
 		if(NN>0)
 		  output[i] = c[NN*(NN-1)];     /* c[i][j] is bounds error */
 		else
 		  output[i] = c[0];
+	
+}
 
 #endif
 
