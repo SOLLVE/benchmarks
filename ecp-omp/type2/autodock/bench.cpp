@@ -357,30 +357,26 @@ for (int runNum = 0; runNum < N_runs; runNum++)
 		for (mat_i = 0; mat_i < N_torsions; mat_i++)
 		    for (mat_j = 0; mat_j < N_atoms; mat_j++) // fraction of atoms 
 		      {
-			   
-                          //  c[mat_i*N_t +mat_j] += sin(a[mat_i*NN + k]*b[k*NN + mat_j]);
-			  //quanternion 
+                          c[mat_i*N_t +mat_j] += sin(a[mat_i*NN + k]*b[k*NN + mat_j]);
+			  // quanternion 
 			   // 3 sin/cos operations 
-			
 		      }
 			    
 		for (mat_i = 0; mat_i < N_atoms; mat_i++)
 		    for (mat_j = 0; mat_j < N_atoms; mat_j++)
 		      {
-			c[mat_i*NN + mat_j] = 0;
-			
+			c[mat_i*NN + mat_j] = 0; 
                             // implement 
 			    // mat_i and mat_j - 10 maps , chosing a random map 
 			    // distant calculation - square root - x2 + y2+  z2
-			    // add two numbers from map 
-			
+			    // add two numbers from map  
+			   c[mat_i*N_t +mat_j] += sqrt(a[mat_i*NN + k]^2 + b[k*NN + mat_j]^2);
 		      }
-	}	
+        	}
 		if(NN>0)
 		  output[i] = c[NN*(NN-1)];     /* c[i][j] is bounds error */
 		else
 		  output[i] = c[0];
-	
 }
 
 #endif
