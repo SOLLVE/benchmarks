@@ -15,7 +15,7 @@ CC=$LLVM_PATH/bin/clang
 
 CFLAGS="-Wall -Wextra -O2 -march=native -g3 -fno-omit-frame-pointer -lm"
 
-$CC $CFLAGS $LLVM_OMP_FLAGS $LLVM_LINK_FLAGS $CUPTI_FLAGS bench_works.c -o bench_works_cupti
+$CC $CFLAGS $LLVM_OMP_FLAGS $LLVM_LINK_FLAGS $CUPTI_FLAGS bench.cpp -o bench_works_cupti
 
 ./bench_works_cupti > raw.log
 cat raw.log | grep KERNEL | sort | awk '{print $3,$4,$5}' > kernel_runtime.log
