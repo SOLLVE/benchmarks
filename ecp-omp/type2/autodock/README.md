@@ -16,4 +16,4 @@ For easy access, the short link to this page is https://tinyurl.com/mc-omp-bench
 We note that this was originally developed at: https://bitbucket.org/tony-curtis/oscar-bench/src/master/. It was developed there originally as it was easiest for us to keep it closed source there, but now we want to make it open-source and github is the best for that for us.
 
 # Contact Information
-If you have questions or comments on this repository, or would like to provide contributions to it, please feel free to email Vivek Kale (vkale@bnl.gov), Wenbin Lu (wenbin.lu@stonybrook.edu), Yan Kang (yan.kang@stonybrook.edu), Eric Raut (eraut@stonybrook.edu), Shilei Tian(shilei.tian@stonybrook.edu), Tony Curtis (anthony.curtis@stonybrook.edu) and Oscar Hernandez (oscar@ornl.gov).
+:f you have questions or comments on this repository, or would like to provide contributions to it, please feel free to email Vivek Kale (vkale@bnl.gov), Wenbin Lu (wenbin.lu@stonybrook.edu), Yan Kang (yan.kang@stonybrook.edu), Eric Raut (eraut@stonybrook.edu), Shilei Tian(shilei.tian@stonybrook.edu), Tony Curtis (anthony.curtis@stonybrook.edu) and Oscar Hernandez (oscar@ornl.gov).

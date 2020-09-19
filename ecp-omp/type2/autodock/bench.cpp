@@ -222,11 +222,11 @@ int main(int argc, char* argv[])
     } 
   printf("bench_works [pSize=%d] [numTasks=%d] [gsz=%d] [num_timesteps=%d] [numThreads=%d] \n", probSize, numTasks, gsz, num_timesteps, numThreads);
   int arrSize = probSize*probSize;
-  float* a = malloc(sizeof(float)*arrSize);
-  float* b = malloc(sizeof(float)*arrSize); 
-  float* c = malloc(sizeof(float)*arrSize);
-  int* taskWork = malloc(sizeof(int)*numTasks);
-  int* taskWorkSquared = malloc(sizeof(int)*numTasks);
+  float* a = (float*)malloc(sizeof(float)*arrSize);
+  float* b = (float*)malloc(sizeof(float)*arrSize); 
+  float* c = (float*)malloc(sizeof(float)*arrSize);
+  int* taskWork = (int*)malloc(sizeof(int)*numTasks);
+  int* taskWorkSquared = (int*)malloc(sizeof(int)*numTasks);
   // initialize 
 
 
