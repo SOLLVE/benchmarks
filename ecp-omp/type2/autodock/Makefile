@@ -1,7 +1,7 @@
 CC         = xlc
 CC         = clang
 CXX        = clang++
-LD         = $(CC)
+LD         = $(CXX)
 DEBUG      = -g4
 
 #DEBUG = -g
