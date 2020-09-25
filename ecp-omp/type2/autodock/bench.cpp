@@ -323,6 +323,8 @@ int main(int argc, char* argv[])
 #endif
 
 	    output[i] = 0;
+		  // each  local search has up to a given number of evaluations - each campaign is followed by a global search. 
+ // don't optimize out - feature for keeping track of number of evaluations done for each indvidual local search of ligand-protein pair
 #pragma omp task depend(out: success[i])
 	    {
 	      success[i] = 0;
@@ -337,7 +339,7 @@ int main(int argc, char* argv[])
 	    {
 	      OMPVV_START_TIMER;
 #pragma omp target device(dev)\
-  map(to: a[0:arrSize], b[0:arrSize], c[0:arrSize]) map(tofrom: success[i:1], devices[dev:1], time_devices[dev:1], output[i:1], boundary[i:1], taskWork[i:1], occupancies[dev:1])
+  map(to: a[0:arrSize], b[0:arrSize], c[0:arrSize]) map(tofrom: success[i:1], devices[dev:1], time_devices[dev:1], output[i:1], boundary[i:1], taskWork[i:1], occupancies[dev:1]) 
 	      {
 		devices[dev]++;
 		if(taskWork[i] > probSize) taskWork[i] = probSize;
