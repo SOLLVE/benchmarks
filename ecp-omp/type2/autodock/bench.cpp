@@ -191,7 +191,12 @@ int main(int argc, char* argv[])
   int numThreads = 1;
   int numTasks = N;
   int gsz = 1;
-
+	
+	
+  // add 10x10 MB file for I/O  - create 8 files (add in github repo) 
+  // latency of opening file is overhead. 
+  // each ligand creates a 10x10 output file 
+  FILE* 
   /* make sure we have some GPUs */
   assert(ndevs > 0);
   printf("There are %d GPUs\n", ndevs);
@@ -323,23 +328,20 @@ int main(int argc, char* argv[])
 #endif
 
 	    output[i] = 0;
-		  // each  local search has up to a given number of evaluations - each campaign is followed by a global search. 
- // don't optimize out - feature for keeping track of number of evaluations done for each indvidual local search of ligand-protein pair
+
+ // note that we are oversubscribing within GPU 
+ // each local search has up to a given number of evaluations - each campaign, i.e., the population number (the ligand chain) specified at command-line, is followed by a global search. The number of runs (how many full searches are done) are independent of each other.  
+ // don't optimize out - feature for keeping track of number of evaluations done for each indvidual local search of ligand-protein pair. 	  
 #pragma omp task depend(out: success[i])
 	    {
 	      success[i] = 0;
-	      // #pragma omp atomic
-	      // occupancies[dev]++; // Moved to the inside of the scheduler functions
-	      // #pragma omp atomic
-	      // occupancies[dev] = 1
 	    }
-		  
-		  // Integer evulation success counter  - how many evulation have been done for a a given ligand. (genetic algorithm - local vs  global search) . Each ligand moves forward some
+ // Integer evulation success counter  - how many evulation have been done for a a given ligand. (genetic algorithm - local vs  global search) . Each ligand moves forward some
 #pragma omp task depend(inout:success[i])
 	    {
 	      OMPVV_START_TIMER;
 #pragma omp target device(dev)\
-  map(to: a[0:arrSize], b[0:arrSize], c[0:arrSize]) map(tofrom: success[i:1], devices[dev:1], time_devices[dev:1], output[i:1], boundary[i:1], taskWork[i:1], occupancies[dev:1]) 
+  map(to: a[0:arrSize], b[0:arrSize], c[0:arrSize]) map(tofrom: success[i:1], devices[dev:1], time_devices[dev:1], output[i:1], boundary[i:1], taskWork[i:1], occupancies[dev:1]) nowait
 	      {
 		devices[dev]++;
 		if(taskWork[i] > probSize) taskWork[i] = probSize;
