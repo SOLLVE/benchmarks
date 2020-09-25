@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <math.h>
 #include <omp.h>
+#include <mpi.h>
 
 #include "timing/ompvv_timing.h"
 
@@ -168,6 +169,7 @@ work_generator(int work)
 
 int main(int argc, char* argv[])
 {
+	
   OMPVV_INIT_TIMERS;
   int success[N];
   float output[N];
@@ -220,6 +222,12 @@ int main(int argc, char* argv[])
       if (argc > 4)
 	num_timesteps = atoi(argv[4]);
     } 
+	
+    int process_Rank, size_Of_Cluster;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size_Of_Cluster);
+    MPI_Comm_rank(MPI_COMM_WORLD, &process_Rank);
+
   printf("bench_works [pSize=%d] [numTasks=%d] [gsz=%d] [num_timesteps=%d] [numThreads=%d] \n", probSize, numTasks, gsz, num_timesteps, numThreads);
   int arrSize = probSize*probSize;
   float* a = (float*)malloc(sizeof(float)*arrSize);
@@ -447,5 +455,7 @@ for (int runNum = 0; runNum < N_runs; runNum++)
 	      free(c);
 	      free(devices);
 	      free(time_devices);
+
+	MPI_Finalize();	
 	      return 0;
 	    } // end main
