@@ -4,7 +4,7 @@ This is a repository for benchmarks for performance experimentation of features 
 The benchmarks are based on SOLLVE's efforts to undertand performance of OpenMP features, particularly OpenMP offload features. These benchmarks have been experimented on various systems as shown in the table below. 
 
 
-| System                           | LLVM 12 - Summit  | LLVM 11 - Cori-GPU | LLVM 11 - Theta   | Spock | 
+| System                           | LLVM 11 - Summit  | LLVM 11 - Cori-GPU | LLVM 11 - Theta   | Spock | 
 |----------------------------------|:-----------------:|-----------------:|----------------------:|:------:|
 | Stencil - 1D                     |   tested, works   |  tested, works   |   tested, works       |        |
 | Stencil - 2D                     |   tested, works   |  tested, works   |   tested, works       |        | 
