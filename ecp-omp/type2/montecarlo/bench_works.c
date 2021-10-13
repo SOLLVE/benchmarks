@@ -26,6 +26,7 @@
 
 //#define DEBUG 1
 
+
 inline unsigned
 gpu_scheduler_compact(unsigned *occupancies, int taskID, int ngpus, int numTasks)
 {
