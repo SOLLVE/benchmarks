@@ -11,7 +11,6 @@ int numOutputsReady;
 double averageError;
 
 #define GSZ 1
-
 #define MAXOUTER 10
 
 //#define DEBUG 
