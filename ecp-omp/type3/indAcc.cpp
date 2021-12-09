@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
             b[startInd] = lboundary[i];
             b[endInd-1] = rboundary[i];
             for (int j = startInd; j <= endInd ; j++)
-              a[j] = (b[j] + b[j-1] + b[j+1])/3.0;
+              a[j] = (a[b[j]]);
             //swap pointers a an b for update                                                                                                                 
             c=b;
             b=a;
