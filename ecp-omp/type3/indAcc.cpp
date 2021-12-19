@@ -133,7 +133,7 @@ while(timestep < num_timesteps)
               const int endInd = (i%(numBlocks/ndevs)+1)*NN; 
               // obtain boundaries for neighboring GPUs (needs to be fixed for multiple blocks for each GPU)
 	      float* temp ; //temp variable
-              for (int j = startInd; j<= endInd ; j++)
+              for (int j = startInd; j<= endInd ; j++) 
                 a[j] = (b[a[j])/3.0; 
             } // end target                                                                                                  
             OMPVV_STOP_TIMER;
