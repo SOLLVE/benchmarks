@@ -28,8 +28,10 @@ int main(int argc, char* argv[])
     int num_timesteps = 1;
     int numThreads = 1;
     int numTasks = N;
+	
     int gsz = 1;
 
+	
     /* make sure we have some GPUs */
     assert(ndevs > 0);
     printf("There are %d GPUs\n", ndevs);
