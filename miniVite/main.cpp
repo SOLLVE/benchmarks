@@ -57,6 +57,7 @@
 //#include "dspl_gpu.hpp"
 #include "dspl_gpu_kernel.hpp"
 
+
 static std::string inputFileName;
 static int me, nprocs;
 static int ranksPerNode = 1;
