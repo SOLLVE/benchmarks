@@ -5,6 +5,8 @@
 #include <math.h>
 #include <omp.h>
 
+
+
 #include "timing/ompvv_timing.h"
 
 #define N 500
