@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
 while(timestep < num_timesteps)
   {
 #pragma omp parallel
-    {
+    { 
 #pragma omp for schedule(static, gsz)
         for (int i = 0; i < numBlocks; i++) {
           //const int dev = (int) ((i/numBlocks)*ndevs); // use for static schedule                                                                         
@@ -127,17 +127,16 @@ while(timestep < num_timesteps)
 	  const int dev = i%ndevs;   
 	  printf("device chosen for iteration %d : %d\n" , i, dev);
           OMPVV_START_TIMER;
-#pragma omp target device(dev) map(alloc: a[0:arrSize], b[0:arrSize], numBlocks, ndevs) map(tofrom: lboundary[i:1], rboundary[i:1], blockWork[i:1]) nowait
+#pragma omp target  device(dev) map(alloc: a[0:arrSize], b[0:arrSize], numBlocks, ndevs) map(tofrom: lboundary[i:1], rboundary[i:1], blockWork[i:1]) nowait
             {
+		    
               const int NN = blockWork[i];
               const int startInd = (i%(numBlocks/ndevs))*NN; // startInd depends on global task number (global across GPUs on a node)                         
               const int endInd = (i%(numBlocks/ndevs)+1)*NN;
               // obtain boundaries for neighboring GPUs (needs to be fixed for multiple blocks for each GPU)
-	      float* temp ; //temp variable
-              b[startInd-1] = lboundary[i];
-              b[endInd+1] = rboundary[i];
+	    
               for (int j = startInd; j<= endInd; j++)
-                sum += b[j]+a[j];
+                sum += b[j]*a[j];
             } // end target                                                                                                  
             OMPVV_STOP_TIMER;
         } // end for      
