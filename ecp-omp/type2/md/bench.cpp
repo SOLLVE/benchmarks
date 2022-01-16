@@ -249,7 +249,7 @@ void compute ( int np, int nd, double pos[], double vel[],
   pe = 0.0; 
   ke = 0.0;
   
-# pragma omp target teams distribute parallel for simd num_teams(num_blocks) map(to: pos[0:(np*nd)]) map(tofrom:f[0:(np*nd)]) \ 
+# pragma omp target teams distribute parallel for simd num_teams(num_blocks) map(to: pos[0:(np*nd)]) map(tofrom:f[0:(np*nd)], pe, ke) \ 
   private ( d, d2, rij, i, j, k ) shared ( f, nd, np, pos, vel ) \ 
   reduction ( + : pe, ke ) 
     
