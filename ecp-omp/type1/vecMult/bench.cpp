@@ -132,17 +132,9 @@ while(timestep < num_timesteps)
               const int startInd = (i%(numBlocks/ndevs))*NN; // startInd depends on global task number (global across GPUs on a node)                         
               const int endInd = (i%(numBlocks/ndevs)+1)*NN;
               // obtain boundaries for neighboring GPUs (needs to be fixed for multiple blocks for each GPU)
-	      float* temp ; //temp variable
-              b[startInd-1] = lboundary[i];
-              b[endInd+1] = rboundary[i];
               for (int j = startInd; j<= endInd ; j++)
-                a[j] = (b[j] + b[j-1] +b[j+1])/3.0;
-              //swap pointers a an b for update                                                                                                               
-              temp=b;
-              b=a;
-              a=temp;
-              lboundary[i] = a[startInd-1];
-              rboundary[i] = a[endInd+1];
+                c[j] = (a[j] + b[j)
+              
             } // end target                                                                                                  
             OMPVV_STOP_TIMER;
         } // end for      
