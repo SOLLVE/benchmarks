@@ -486,7 +486,7 @@ subroutine update ( np, nd, pos, vel, f, acc, mass, dt )
 
   rmass = 1.0D+00 / mass
 
-!$omp parallel do private ( i, j ) shared ( acc, dt, f, nd, np, pos, rmass, vel )
+!$omp target teams distribute parallel do map(tofrom: pos, vel, acc) private (i, j) shared (acc, dt, f, nd, np, pos, rmass, vel) 
   do j = 1, np
     do i = 1, nd
       pos(i,j) = pos(i,j) + vel(i,j) * dt + 0.5D+00 * acc(i,j) * dt * dt
