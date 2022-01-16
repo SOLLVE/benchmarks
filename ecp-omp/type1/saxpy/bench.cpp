@@ -6,9 +6,9 @@ int main ( int argc, char *argv[] )
 {
   int i, n = 1000;
   double x[1000], y[1000], s;
-
-  s = 123.456;
-
+  
+  // s = 123.456;
+  s = 145358.375; // this is a constant that can be adjusted by the user or predetermined statically
   for ( i = 0; i < n; i++ )
   {
     x[i] = ( double ) rand ( ) / ( double ) RAND_MAX;
