@@ -1,498 +1,601 @@
-program main
+# include <cstdlib>
+# include <iostream>
+# include <iomanip>
+# include <ctime>
+# include <cmath>
+# include <omp.h>
 
-!*****************************************************************************80
-!
-!! MAIN is the main program for MD.
-!
-!  Discussion:
-!
-!    MD implements a simple molecular dynamics simulation.
-!
-!    The velocity Verlet time integration scheme is used. 
-!
-!    The particles interact with a central pair potential.
-!
-!  Modified:
-!
-!    15 July 2008
-!
-!  Author:
-!
-!    FORTRAN90 original version by Bill Magro.
-!    Modifications by John Burkardt
-!
-  use omp_lib
+using namespace std;
 
-  integer, parameter :: nd = 3
-  integer, parameter :: np = 500
-  integer, parameter :: step_num = 100
+int main ( int argc, char *argv[] );
+void compute ( int np, int nd, double pos[], double vel[], 
+  double mass, double f[], double *pot, double *kin );
+double cpu_time ( void );
+double dist ( int nd, double r1[], double r2[], double dr[] );
+void initialize ( int np, int nd, double box[], int *seed, double pos[], 
+  double vel[], double acc[] );
+double r8_uniform_01 ( int *seed );
+void timestamp ( void );
+void update ( int np, int nd, double pos[], double vel[], double f[], 
+  double acc[], double mass, double dt );
 
-  double precision acc(nd,np)
-  double precision box(nd)
-  double precision ctime
-  double precision ctime1
-  double precision ctime2
-  double precision, parameter :: dt = 0.0001D+00
-  double precision e0
-  double precision ee(step_num)
-  double precision force(nd,np)
-  integer id
-  double precision ke(step_num)
-  double precision kinetic
-  double precision, parameter :: mass = 1.0D+00
-  double precision pe(step_num)
-  double precision pos(nd,np)
-  double precision potential
-  integer seed
-  integer step
-  double precision vel(nd,np)
-  double precision wtime
+//****************************************************************************80
 
-  call timestamp ( )
+int main ( int argc, char *argv[] )
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'MD'
-  write ( *, '(a)' ) '  FORTRAN90 version'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  A molecular dynamics program.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,i8)' ) '  NP, the number of particles in the simulation is ', np
-  write ( *, '(a,i8)' ) '  STEP_NUM, the number of time steps, is ', step_num
-  write ( *, '(a,g14.6)' ) '  DT, the size of each time step, is ', dt
-!
-!  Set the dimensions of the box.
-!
-  box(1:nd) = 10.0D+00
-!
-!  Set initial positions, velocities, and accelerations.
-!
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Initialize positions, velocities, and accelerations.'
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    MAIN is the main program for MD.
+//
+//  Discussion:
+//
+//    MD implements a simple molecular dynamics simulation.
+//
+//    The velocity Verlet time integration scheme is used. 
+//
+//    The particles interact with a central pair potential.
+//
+//  Modified:
+//
+//    14 July 2008
+//
+//  Author:
+//
+//    FORTRAN90 original version by Bill Magro, Kuck and Associates, Inc.
+//    C++ version by John Burkardt
+//
+//  Parameters:
+//
+//    None
+//
+{
+  double *acc;
+  double *box;
+  double ctime;
+  double ctime1;
+  double ctime2;
+  double dt = 0.0001;
+  double e0;
+  double *ee;
+  double *force;
+  int i;
+  int id;
+  double *ke;
+  double kinetic;
+  double mass = 1.0;
+  int nd = 3;
+  int np = 500;
+  double *pe;
+  double *pos;
+  double potential;
+  int seed = 123456789;
+  int step;
+  int step_num = 100;
+  double *vel;
 
-  seed = 123456789
-  call initialize ( np, nd, box, seed, pos, vel, acc )
-!
-!  Compute the forces and energies.
-!
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Compute initial forces and energies.'
+  timestamp ( );
 
-  call compute ( np, nd, pos, vel, mass, force, potential, kinetic )
-!
-!  Save the initial total energy for use in the accuracy check.
-!
-  e0 = potential + kinetic
+  acc = new double[nd*np];
+  box = new double[nd];
+  ee = new double[step_num];
+  force = new double[nd*np];
+  ke = new double[step_num];
+  pe = new double[step_num];
+  pos = new double[nd*np];
+  vel = new double[nd*np];
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a,g14.6)' ) '  Initial total energy E0 = ', e0
-!
-!  This is the main time stepping loop:
-!    Compute forces and energies,
-!    Update positions, velocities, accelerations.
-!
-  ctime1 = omp_get_wtime ( )
+  cout << "\n";
+  cout << "MD\n";
+  cout << "  C++/OpenMP version\n";
+  cout << "\n";
+  cout << "  A molecular dynamics program.\n";
+  cout << "\n";
+  cout << "  NP, the number of particles in the simulation is " << np << "\n";
+  cout << "  STEP_NUM, the number of time steps, is " << step_num << "\n";
+  cout << "  DT, the size of each time step, is " << dt << "\n";;
+//
+//  Set the dimensions of the box.
+//
+  for ( i = 0; i < nd; i++ )
+  {
+    box[i] = 10.0;
+  }
 
-  do step = 1, step_num
+  cout << "\n";
+  cout << "  Initialize positions, velocities, and accelerations.\n" << flush;
+//
+//  Set initial positions, velocities, and accelerations.
+//
+  initialize ( np, nd, box, &seed, pos, vel, acc );
+//
+//  Compute the forces and energies.
+//
+  cout << "\n";
+  cout << "  Compute initial forces and energies.\n" << flush;
 
-    call compute ( np, nd, pos, vel, mass, force, potential, kinetic )
+  compute ( np, nd, pos, vel, mass, force, &potential, &kinetic );
 
-    pe(step) = potential
-    ke(step) = kinetic
-    ee(step) = ( potential + kinetic - e0 ) / e0
+  e0 = potential + kinetic;
+  cout << "\n";
+  cout << "  Initial Total energy = " << e0 << "\n" << flush;
+//
+//  This is the main time stepping loop:
+//    Compute forces and energies,
+//    Update positions, velocities, accelerations.
+//
+  ctime1 = omp_get_wtime ( );
 
-    call update ( np, nd, pos, vel, force, acc, mass, dt )
+  for ( step = 0; step < step_num; step++ )
+  {
+    compute ( np, nd, pos, vel, mass, force, &potential, &kinetic );
 
-  end do
-  ctime2 = omp_get_wtime ( )
-!
-!  Just for timing accuracy, we have moved the I/O out of the computational loop.
-!
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  At each step, we report the potential and kinetic energies.'
-  write ( *, '(a)' ) '  The sum of these energies should be a constant.'
-  write ( *, '(a)' ) '  As an accuracy check, we also print the relative error'
-  write ( *, '(a)' ) '  in the total energy.'
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '      Step      Potential       Kinetic        (P+K-E0)/E0'
-  write ( *, '(a)' ) '                Energy          Energy         Energy Error'
-  write ( *, '(a)' ) ' '
+    pe[step] = potential;
+    ke[step] = kinetic;
+    ee[step] = ( potential + kinetic - e0 ) / e0;
 
-  do step = 1, step_num
+    update ( np, nd, pos, vel, force, acc, mass, dt );
+  }
 
-    write ( *, '(2x,i8,2x,g14.6,2x,g14.6,2x,g14.6)' ) &
-      step, pe(step), ke(step), ee(step)
+  ctime2 = omp_get_wtime ( );
+//
+//  Just for timing accuracy, we have moved the I/O out of the computational loop.
+//
+  cout << "\n";
+  cout << "  At each step, we report the potential and kinetic energies.\n";
+  cout << "  The sum of these energies should be a constant.\n";
+  cout << "  As an accuracy check, we also print the relative error\n";
+  cout << "  in the total energy.\n";
+  cout << "\n";
+  cout << "      Step      Potential       Kinetic        (P+K-E0)/E0\n";
+  cout << "                Energy          Energy         Energy Error\n";
+  cout << "\n";
 
-  end do
+  for ( step = 0; step < step_num; step++ )
+  {
+    cout << "  " << setw(8) << step + 1
+         << "  " << setw(14) << pe[step]
+         << "  " << setw(14) << ke[step]
+         << "  " << setw(14) << ee[step] << "\n";
+  }
 
-  ctime = ctime2 - ctime1
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) '  Elapsed cpu time for main computation:'
-  write ( *, '(2x,g14.6,a)' ) ctime, ' seconds'
+  ctime = ctime2 - ctime1;
+  cout << "\n";
+  cout << "  Elapsed cpu time for main computation:\n";
+  cout << "  " << ctime << " seconds.\n";
 
-  write ( *, '(a)' ) ' '
-  write ( *, '(a)' ) 'MD'
-  write ( *, '(a)' ) '  Normal end of execution.'
+  delete [] acc;
+  delete [] box;
+  delete [] ee;
+  delete [] force;
+  delete [] ke;
+  delete [] pe;
+  delete [] pos;
+  delete [] vel;
 
-  write ( *, '(a)' ) ' '
-  call timestamp ( )
+  cout << "\n";
+  cout << "MD\n";
+  cout << "  Normal end of execution.\n";
 
-  stop
-end
-subroutine compute ( np, nd, pos, vel, mass, f, pot, kin )
+  cout << "\n";
+  timestamp ( );
 
-!*****************************************************************************80
-!
-!! COMPUTE computes the forces and energies.
-!
-!  Discussion:
-!
-!    The computation of forces and energies is fully parallel.
-!
-!    The potential function V(X) is a harmonic well which smoothly
-!    saturates to a maximum value at PI/2:
-!
-!      v(x) = ( sin ( min ( x, PI2 ) ) )**2
-!
-!    The derivative of the potential is:
-!
-!      dv(x) = 2.0D+00 * sin ( min ( x, PI2 ) ) * cos ( min ( x, PI2 ) )
-!            = sin ( 2.0 * min ( x, PI2 ) )
-!
-!  Modified:
-!
-!    15 July 2008
-!
-!  Author:
-!
-!    FORTRAN90 original version by Bill Magro.
-!    Modifications by John Burkardt
-!
-!  Parameters:
-!
-!    Input, integer NP, the number of particles.
-!
-!    Input, integer ND, the number of spatial dimensions.
-!
-!    Input, double precision POS(ND,NP), the position of each particle.
-!
-!    Input, double precision VEL(ND,NP), the velocity of each particle.
-!
-!    Input, double precision MASS, the mass of each particle.
-!
-!    Output, double precision F(ND,NP), the forces.
-!
-!    Output, double precision POT, the total potential energy.
-!
-!    Output, double precision KIN, the total kinetic energy.
-!
-  implicit none
+  return 0;
+}
+//****************************************************************************80
 
-  integer np
-  integer nd
+void compute ( int np, int nd, double pos[], double vel[], 
+  double mass, double f[], double *pot, double *kin )
 
-  double precision d
-  double precision d2
-  double precision f(nd,np)
-  integer i
-  integer j
-  double precision kin
-  double precision mass
-  double precision, parameter :: PI2 = 3.141592653589793D+00 / 2.0D+00
-  double precision pos(nd,np)
-  double precision pot
-  double precision rij(nd)
-  double precision vel(nd,np)
-
-  pot = 0.0D+00
-  kin = 0.0D+00
-
-!$omp parallel do private ( d, d2, rij, i, j ) shared ( f, nd, np, pos, vel ) &
-!$omp reduction ( + : pot, kin )
-  do i = 1, np
-!
-!  Compute the potential energy and forces.
-!
-    f(1:nd,i) = 0.0D+00
-
-    do j = 1, np
-
-      if ( i /= j ) then
-
-        call dist ( nd, pos(1,i), pos(1,j), rij, d )
-!
-!  Attribute half of the potential energy to particle J.
-!
-        d2 = min ( d, PI2 )
-
-        pot = pot + 0.5D+00 * sin ( d2 ) * sin ( d2 )
-
-        f(1:nd,i) = f(1:nd,i) - rij(1:nd) * sin ( 2.0D+00 * d2 ) / d
-
-      end if
-
-    end do
-!
-!  Compute the kinetic energy.
-!
-    kin = kin + sum ( vel(1:nd,i)**2 )
-
-  end do
-!$omp end parallel do
-
-  kin = kin * 0.5D+00 * mass
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    COMPUTE computes the forces and energies.
+//
+//  Discussion:
+//
+//    The computation of forces and energies is fully parallel.
+//
+//    The potential function V(X) is a harmonic well which smoothly
+//    saturates to a maximum value at PI/2:
+//
+//      v(x) = ( sin ( min ( x, PI2 ) ) )**2
+//
+//    The derivative of the potential is:
+//
+//      dv(x) = 2.0 * sin ( min ( x, PI2 ) ) * cos ( min ( x, PI2 ) )
+//            = sin ( 2.0 * min ( x, PI2 ) )
+//
+//  Modified:
+//
+//    15 July 2008
+//
+//  Author:
+//
+//    FORTRAN90 original version by Bill Magro, Kuck and Associates, Inc.
+//    C++ version by John Burkardt
+//
+//  Parameters:
+//
+//    Input, int NP, the number of particles.
+//
+//    Input, int ND, the number of spatial dimensions.
+//
+//    Input, double POS[ND*NP], the position of each particle.
+//
+//    Input, double VEL[ND*NP], the velocity of each particle.
+//
+//    Input, double MASS, the mass of each particle.
+//
+//    Output, double F[ND*NP], the forces.
+//
+//    Output, double *POT, the total potential energy.
+//
+//    Output, double *KIN, the total kinetic energy.
+//
+{
+  double d;
+  double d2;
+  int i;
+  int j;
+  int k;
+  double ke;
+  double pe;
+  double PI2 = 3.141592653589793 / 2.0;
+  double rij[3];
   
-  return
-end
-subroutine dist ( nd, r1, r2, dr, d )
+  pe = 0.0; 
+  ke = 0.0;
+  
+# pragma omp target teams distribute parallel for simd num_teams(num_blocks) map(to: pos[0:(np*nd)]) map(tofrom:f[0:(np*nd)]) \ 
+  private ( d, d2, rij, i, j, k ) shared ( f, nd, np, pos, vel ) \ 
+  reduction ( + : pe, ke ) 
+    
+  for ( k = 0; k < np; k++ ) 
+  { 
+//  Compute the potential energy and forces 
+    for ( i = 0; i < nd; i++ )
+    {
+      f[i+k*nd] = 0.0;
+    } 
+    
+    for ( j = 0; j < np; j++ )
+    {
+      if ( k != j )
+      {
+        d = dist ( nd, pos+k*nd, pos+j*nd, rij );
+//
+//  Attribute half of the potential energy to particle J.
+//
+        if ( d < PI2 )
+        {
+          d2 = d;
+        }
+        else
+        {
+          d2 = PI2;
+        }
+        
+        pe = pe + 0.5 * pow ( sin ( d2 ), 2 );
+        
+        for ( i = 0; i < nd; i++ )
+        {
+          f[i+k*nd] = f[i+k*nd] - rij[i] * sin ( 2.0 * d2 ) / d;
+        }
+      }
+    }
+    
+//  Compute the kinetic energy.
+    
+    for ( i = 0; i < nd; i++ )
+    {
+      ke = ke + vel[i+k*nd] * vel[i+k*nd];
+    }
+  }
 
-!*****************************************************************************80
-!
-!! DIST computes the displacement and distance between two particles.
-!
-!  Modified:
-!
-!    17 March 2002
-!
-!  Author:
-!
-!    FORTRAN90 original version by Bill Magro.
-!    Modifications by John Burkardt
-!
-!  Parameters:
-!
-!    Input, integer ND, the number of spatial dimensions.
-!
-!    Input, double precision R1(ND), R2(ND), the positions of the particles.
-!
-!    Output, double precision DR(ND), the displacement vector.
-!
-!    Output, double precision D, the Euclidean norm of the displacement,
-!    in other words, the distance between the two particles.
-!
-  implicit none
+  ke = ke * 0.5 * mass; 
+  *pot = pe;
+  *kin = ke;
+  return;
+}
+//****************************************************************************80
 
-  integer nd
+double cpu_time ( void )
 
-  double precision d
-  double precision dr(nd)
-  double precision r1(nd)
-  double precision r2(nd)
+//****************************************************************************80
+//
+//  Purpose:
+// 
+//    CPU_TIME reports the elapsed CPU time.
+//
+//  Modified:
+//
+//    27 September 2005
+//
+//  Author:
+//
+//    John Burkardt
+//
+//  Parameters:
+//
+//    Output, double CPU_TIME, the current total elapsed CPU time in second.
+//
+{
+  double value;
+  value = ( double ) clock ( ) / ( double ) CLOCKS_PER_SEC;
+  return value;
+}
+//****************************************************************************80
 
-  dr(1:nd) = r1(1:nd) - r2(1:nd)
+double dist ( int nd, double r1[], double r2[], double dr[] )
 
-  d = sqrt ( sum ( dr(1:nd)**2 ) )
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    DIST computes the displacement (and its norm) between two particles.
+//
+//  Modified:
+//
+//    21 November 2007
+//
+//  Author:
+//
+//    FORTRAN90 original version by Bill Magro, Kuck and Associates, Inc.
+//    C++ version by John Burkardt
+//
+//  Parameters:
+//
+//    Input, int ND, the number of spatial dimensions.
+//
+//    Input, double R1[ND], R2[ND], the positions of the particles.
+//
+//    Output, double DR[ND], the displacement vector.
+//
+//    Output, double D, the Euclidean norm of the displacement.
+//
+{
+  double d;
+  int i;
 
-  return
-end
-subroutine initialize ( np, nd, box, seed, pos, vel, acc )
+  d = 0.0;
+  for ( i = 0; i < nd; i++ )
+  {
+    dr[i] = r1[i] - r2[i];
+    d = d + dr[i] * dr[i];
+  }
+  d = sqrt ( d );
 
-!*****************************************************************************80
-!
-!! INITIALIZE initializes the positions, velocities, and accelerations.
-!
-!  Modified:
-!
-!    21 November 2007
-!
-!  Author:
-!
-!    FORTRAN90 original version by Bill Magro.
-!    Modifications by John Burkardt
-!
-!  Parameters:
-!
-!    Input, integer NP, the number of particles.
-!
-!    Input, integer ND, the number of spatial dimensions.
-!
-!    Input, double precision BOX(ND), specifies the maximum position
-!    of particles in each dimension.
-!
-!    Input/output, integer SEED, a seed for the random number generator.
-!
-!    Output, double precision POS(ND,NP), the position of each particle.
-!
-!    Output, double precision VEL(ND,NP), the velocity of each particle.
-!
-!    Output, double precision ACC(ND,NP), the acceleration of each particle.
-!
-  implicit none
+  return d;
+}
+//****************************************************************************80
 
-  integer np
-  integer nd
+void initialize ( int np, int nd, double box[], int *seed, double pos[], 
+  double vel[], double acc[] )
 
-  double precision acc(nd,np)
-  double precision box(nd)
-  integer i
-  integer j
-  integer seed
-  double precision pos(nd,np)
-  double precision r8_uniform_01
-  double precision vel(nd,np)
-!
-!  Start by setting the positions to random numbers between 0 and 1.
-!
-  call random_number ( harvest = pos(1:nd,1:np) )
-!
-!  Use these random values as scale factors to pick random locations
-!  inside the box.
-!
-  do i = 1, nd
-    pos(i,1:np) = box(i) * pos(i,1:np)
-  end do
-!
-!  Velocities and accelerations begin at 0.
-!
-  vel(1:nd,1:np) = 0.0D+00
-  acc(1:nd,1:np) = 0.0D+00
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    INITIALIZE initializes the positions, velocities, and accelerations.
+//
+//  Modified:
+//
+//    20 July 2008
+//
+//  Author:
+//
+//    FORTRAN90 original version by Bill Magro, Kuck and Associates, Inc.
+//    C++ version by John Burkardt
+//
+//  Parameters:
+//
+//    Input, int NP, the number of particles.
+//
+//    Input, int ND, the number of spatial dimensions.
+//
+//    Input, double BOX[ND], specifies the maximum position
+//    of particles in each dimension.
+//
+//    Input, int *SEED, a seed for the random number generator.
+//
+//    Output, double POS[ND*NP], the position of each particle.
+//
+//    Output, double VEL[ND*NP], the velocity of each particle.
+//
+//    Output, double ACC[ND*NP], the acceleration of each particle.
+//
+{
+  int i;
+  int j;
+//
+//  Give the particles random positions within the box.
+//
+  for ( j = 0; j < np; j++ )
+  {
+    for ( i = 0; i < nd; i++ )
+    {
+      pos[i+j*nd] = box[i] * r8_uniform_01 ( seed );
+      vel[i+j*nd] = 0.0;
+      acc[i+j*nd] = 0.0;
+    }
+  }
+  return;
+}
+//****************************************************************************80
 
-  return
-end
-subroutine timestamp ( )
+double r8_uniform_01 ( int *seed )
 
-!*****************************************************************************80
-!
-!! TIMESTAMP prints the current YMDHMS date as a time stamp.
-!
-!  Example:
-!
-!    May 31 2001   9:45:54.872 AM
-!
-!  Modified:
-!
-!    31 May 2001
-!
-!  Author:
-!
-!    John Burkardt
-!
-!  Parameters:
-!
-!    None
-!
-  implicit none
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    R8_UNIFORM_01 is a unit pseudorandom R8.
+//
+//  Discussion:
+//
+//    This routine implements the recursion
+//
+//      seed = 16807 * seed mod ( 2**31 - 1 )
+//      unif = seed / ( 2**31 - 1 )
+//
+//    The integer arithmetic never requires more than 32 bits,
+//    including a sign bit.
+//
+//  Modified:
+//
+//    11 August 2004
+//
+//  Reference:
+//
+//    Paul Bratley, Bennett Fox, Linus Schrage,
+//    A Guide to Simulation,
+//    Springer Verlag, pages 201-202, 1983.
+//
+//    Bennett Fox,
+//    Algorithm 647:
+//    Implementation and Relative Efficiency of Quasirandom
+//    Sequence Generators,
+//    ACM Transactions on Mathematical Software,
+//    Volume 12, Number 4, pages 362-376, 1986.
+//
+//  Parameters:
+//
+//    Input/output, int *SEED, a seed for the random number generator.
+//
+//    Output, double R8_UNIFORM_01, a new pseudorandom variate, strictly between
+//    0 and 1.
+//
+{
+  int k;
+  double r;
 
-  character ( len = 8 ) ampm
-  integer d
-  character ( len = 8 ) date
-  integer h
-  integer m
-  integer mm
-  character ( len = 9 ), parameter, dimension(12) :: month = (/ &
-    'January  ', 'February ', 'March    ', 'April    ', &
-    'May      ', 'June     ', 'July     ', 'August   ', &
-    'September', 'October  ', 'November ', 'December ' /)
-  integer n
-  integer s
-  character ( len = 10 )  time
-  integer values(8)
-  integer y
-  character ( len = 5 ) zone
+  k = *seed / 127773;
 
-  call date_and_time ( date, time, zone, values )
+  *seed = 16807 * ( *seed - k * 127773 ) - k * 2836;
 
-  y = values(1)
-  m = values(2)
-  d = values(3)
-  h = values(5)
-  n = values(6)
-  s = values(7)
-  mm = values(8)
+  if ( *seed < 0 )
+  {
+    *seed = *seed + 2147483647;
+  }
 
-  if ( h < 12 ) then
-    ampm = 'AM'
-  else if ( h == 12 ) then
-    if ( n == 0 .and. s == 0 ) then
-      ampm = 'Noon'
-    else
-      ampm = 'PM'
-    end if
-  else
-    h = h - 12
-    if ( h < 12 ) then
-      ampm = 'PM'
-    else if ( h == 12 ) then
-      if ( n == 0 .and. s == 0 ) then
-        ampm = 'Midnight'
-      else
-        ampm = 'AM'
-      end if
-    end if
-  end if
+  r = ( double ) ( *seed ) * 4.656612875E-10;
 
-  write ( *, '(a,1x,i2,1x,i4,2x,i2,a1,i2.2,a1,i2.2,a1,i3.3,1x,a)' ) &
-    trim ( month(m) ), d, y, h, ':', n, ':', s, '.', mm, trim ( ampm )
+  return r;
+}
+//****************************************************************************80
 
-  return
-end
-subroutine update ( np, nd, pos, vel, f, acc, mass, dt )
+void timestamp ( void )
 
-!*****************************************************************************80
-!
-!! UPDATE updates positions, velocities and accelerations.
-!
-!  Discussion:
-!
-!    The time integration is fully parallel.
-!
-!    A velocity Verlet algorithm is used for the updating.
-!
-!    x(t+dt) = x(t) + v(t) * dt + 0.5 * a(t) * dt * dt
-!    v(t+dt) = v(t) + 0.5 * ( a(t) + a(t+dt) ) * dt
-!    a(t+dt) = f(t) / m
-!
-!  Modified:
-!
-!    21 November 2007
-!
-!  Author:
-!
-!    FORTRAN90 original version by Bill Magro.
-!    Modifications by John Burkardt
-!
-!  Parameters:
-!
-!    Input, integer NP, the number of particles.
-!
-!    Input, integer ND, the number of spatial dimensions.
-!
-!    Input/output, double precision POS(ND,NP), the position of each particle.
-!
-!    Input/output, double precision VEL(ND,NP), the velocity of each particle.
-!
-!    Input, double precision F(ND,NP), the force on each particle.
-!
-!    Input/output, double precision ACC(ND,NP), the acceleration of each
-!    particle.
-!
-!    Input, double precision MASS, the mass of each particle.
-!
-!    Input, double precision DT, the time step.
-!
-  integer np
-  integer nd
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    TIMESTAMP prints the current YMDHMS date as a time stamp.
+//
+//  Example:
+//
+//    31 May 2001 09:45:54 AM
+//
+//  Modified:
+//
+//    24 September 2003
+//
+//  Author:
+//
+//    John Burkardt
+//
+//  Parameters:
+//
+//    None
+//
+{
+# define TIME_SIZE 40
 
-  double precision acc(nd,np)
-  double precision dt
-  double precision f(nd,np)
-  integer i
-  integer j
-  double precision mass
-  double precision pos(nd,np)
-  double precision rmass
-  double precision vel(nd,np)
+  static char time_buffer[TIME_SIZE];
+  const struct tm *tm;
+  size_t len;
+  time_t now;
 
-  rmass = 1.0D+00 / mass
+  now = time ( NULL );
+  tm = localtime ( &now );
 
-!$omp parallel do private ( i, j ) shared ( acc, dt, f, nd, np, pos, rmass, vel )
-  do j = 1, np
-    do i = 1, nd
-      pos(i,j) = pos(i,j) + vel(i,j) * dt + 0.5D+00 * acc(i,j) * dt * dt
-      vel(i,j) = vel(i,j) + 0.5D+00 * dt * ( f(i,j) * rmass + acc(i,j) )
-      acc(i,j) = f(i,j) * rmass
-    end do
-  end do
-!$omp end parallel do
+  len = strftime ( time_buffer, TIME_SIZE, "%d %B %Y %I:%M:%S %p", tm );
 
-  return
-end
+  cout << time_buffer << "\n";
+
+  return;
+# undef TIME_SIZE
+}
+//****************************************************************************80
+
+void update ( int np, int nd, double pos[], double vel[], double f[], 
+  double acc[], double mass, double dt )
+
+//****************************************************************************80
+//
+//  Purpose:
+//
+//    UPDATE updates positions, velocities and accelerations.
+//
+//  Discussion:
+//
+//    The time integration is fully parallel.
+//
+//    A velocity Verlet algorithm is used for the updating.
+//
+//    x(t+dt) = x(t) + v(t) * dt + 0.5 * a(t) * dt * dt
+//    v(t+dt) = v(t) + 0.5 * ( a(t) + a(t+dt) ) * dt
+//    a(t+dt) = f(t) / m
+//
+//  Modified:
+//
+//    21 November 2007
+//
+//  Author:
+//
+//    FORTRAN90 original version by Bill Magro, Kuck and Associates, Inc.
+//    C++ version by John Burkardt
+//
+//  Parameters:
+//
+//    Input, int NP, the number of particles.
+//
+//    Input, int ND, the number of spatial dimensions.
+//
+//    Input/output, double POS[ND*NP], the position of each particle.
+//
+//    Input/output, double VEL[ND*NP], the velocity of each particle.
+//
+//    Input, double F[ND*NP], the force on each particle.
+//
+//    Input/output, double ACC[ND*NP], the acceleration of each particle.
+//
+//    Input, double MASS, the mass of each particle.
+//
+//    Input, double DT, the time step.
+//
+{
+  int i;
+  int j;
+  double rmass;
+  rmass = 1.0 / mass; 
+  
+  
+# pragma omp target teams distribute parallel for simd num_teams(num_blocks) map(to:pos[0:np*nd], vel[0:np*nd], acc[0:np*nd], f[0:np*nd]) private ( i, j ) shared ( acc, dt, f, nd, np, pos, rmass, vel )
+  for ( j = 0; j < np; j++ )
+  {
+    for ( i = 0; i < nd; i++ )
+    {
+      pos[i+j*nd] = pos[i+j*nd] + vel[i+j*nd] * dt + 0.5 * acc[i+j*nd] * dt * dt;
+      vel[i+j*nd] = vel[i+j*nd] + 0.5 * dt * ( f[i+j*nd] * rmass + acc[i+j*nd] );
+      acc[i+j*nd] = f[i+j*nd] * rmass;
+    }
+  }
+
+  return;
+}
+
+
