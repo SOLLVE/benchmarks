@@ -98,8 +98,8 @@ program main
 
     call compute ( np, nd, pos, vel, mass, force, potential, kinetic )
 
-    pe(step) = potential
-    ke(step) = kinetic
+    pe(step) = potential 
+    ke(step) = kinetic 
     ee(step) = ( potential + kinetic - e0 ) / e0
 
     call update ( np, nd, pos, vel, force, acc, mass, dt )
@@ -208,7 +208,8 @@ subroutine compute ( np, nd, pos, vel, mass, f, pot, kin )
   pot = 0.0D+00
   kin = 0.0D+00
 
-!$omp parallel do private ( d, d2, rij, i, j ) shared ( f, nd, np, pos, vel ) &
+!$omp target teams distribute parallel for simd num_teams(num_blocks) map(to: pos) map(tofrom:f, pe, ke, pot, kin) \ 
+do private ( d, d2, rij, i, j ) shared ( f, nd, np, pos, vel ) &
 !$omp reduction ( + : pot, kin )
   do i = 1, np
 !
