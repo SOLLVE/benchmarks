@@ -125,7 +125,7 @@ rogram main
         end do
 
       else
-!$omp parallel &
+!$omp teams distribute parallel simd &
 !$omp   shared ( x, z, n ) &
 !$omp   private ( i, z0, z1 )
 !$omp do
@@ -229,12 +229,13 @@ subroutine cfft2 ( n, x, y, w, sgn )
 !
 !  Modified:
 !
-!    27 April 2008
+!    15 April 2021
 !
 !  Author:
 !
 !    Original C version by Wesley Petersen.
 !    FORTRAN90 version by John Burkardt.
+!    OpenMP offload by Vivek Kale
 !
 !  Reference:
 !
@@ -352,7 +353,7 @@ subroutine cffti ( n, w )
   n2 = n / 2
   aw = 2.0D+00 * pi / real ( n, kind = 8 )
 
-!$omp parallel &
+!$omp teams distribute parallel simd &
 !$omp   shared ( aw, n, w ) &
 !$omp   private ( arg, i )
 !$omp do
@@ -462,7 +463,7 @@ subroutine step ( n, mj, a, b, c, d, w, sgn )
   mj2 = 2 * mj
   lj  = n / mj2
 
-!$omp parallel &
+!$omp teams distribute parallel simd  &
 !$omp   shared ( a, b, c, d, lj, mj, mj2, sgn, w ) &
 !$omp   private ( ambr, ambu, j, ja, jb, jc, jd, jw, k, wjw )
 !$omp do
