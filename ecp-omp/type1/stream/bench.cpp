@@ -63,14 +63,14 @@ int main(int argc, char* argv[])
         if (argc > 4)
           gsz = atoi(argv[4]);
       }
-    printf("bench_stencil [pSize=%d] [numTasks=%d] [gsz=%d] [num_timesteps=%d] [numThreads=%d] \n", probSize, numTasks, gsz, num_timesteps, numThreads);
+    printf("bench [pSize=%d] [numTasks=%d] [gsz=%d] [num_timesteps=%d] [numThreads=%d] \n", probSize, numTasks, gsz, num_timesteps, numThreads);
 
     int arrSize = probSize;
     int numBlocks = numTasks;
     float* a = malloc(sizeof(float)*arrSize);
     float* b = malloc(sizeof(float)*arrSize);
     float* c = malloc(sizeof(float)*arrSize);
-    double alpha = 10.453;
+    float alpha = 10.453;
     int* blockWork = malloc(sizeof(int)*numBlocks);
   
   
