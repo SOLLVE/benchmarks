@@ -187,7 +187,7 @@ C     ..
 
           t = mysecond()
           a(1) = a(1) + t
-!$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO
+!$OMP TARGET TEAMS DISTRIBUTE PARALLEL map(alloc: a, c) DO
           DO 30 j = 1,n
               c(j) = a(j)
    30     CONTINUE
@@ -197,7 +197,7 @@ C     ..
 
           t = mysecond()
           c(1) = c(1) + t
-!$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO
+!$OMP TARGET TEAMS DISTRIBUTE PARALLEL MAP(alloc: b, c) DO
           DO 40 j = 1,n
               b(j) = scalar*c(j)
    40     CONTINUE
@@ -207,7 +207,7 @@ C     ..
 
           t = mysecond()
           a(1) = a(1) + t
-!$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO
+!$OMP TARGET TEAMS DISTRIBUTE PARALLEL MAP(alloc: a, b, c) DO
           DO 50 j = 1,n
               c(j) = a(j) + b(j)
    50     CONTINUE
@@ -217,7 +217,7 @@ C     ..
 
           t = mysecond()
           b(1) = b(1) + t
-!$OMP TARGET TEAMS DISTRIBUTE PARALLEL DO
+!$OMP TARGET TEAMS DISTRIBUTE PARALLEL MAP(alloc: a, b, c) DO
           DO 60 j = 1,n
               a(j) = b(j) + scalar*c(j)
    60     CONTINUE
