@@ -1,0 +1,22 @@
+! Taken from https://docs.nvidia.com/hpc-sdk/compilers/cuda-fortran-prog-guide/
+
+! Used for SOLLVE performance benchmark comparison 
+
+! Kernel definition
+
+attributes(global) subroutine ksaxpy( n, a, x, y )
+    real, dimension(*) :: x,y
+    real, value :: a
+    integer, value :: n, i
+    i = (blockidx%x-1) * blockdim%x + threadidx%x
+    if( i <= n ) y(i) = a * x(i) + y(i)
+end subroutine
+
+! Host subroutine
+subroutine solve( n, a, x, y )
+    real, device, dimension(*) :: x, y
+    real :: a
+    integer :: n
+    ! call the kernel
+    call ksaxpy<<<n/64, 64>>>( n, a, x, y )
+end subroutine
