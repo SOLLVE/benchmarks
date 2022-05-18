@@ -38,8 +38,9 @@ int main(int argc, char* argv[])
     srand((unsigned) time(NULL));
     if(argc <= 1)
       {
-        printf("Usage bench_stencil [pSize] [numBlocks] [chunkSize] [numTimesteps]\n" );
-        printf("Using default parameters\n" );
+	    
+        printf("Usage: bench_stencil [pSize] [numBlocks] [chunkSize] [numTimesteps]\n" );
+        printf("Using default parameters.\n" );
         probSize = MAXWORK;
         num_timesteps = 1;
 #pragma omp parallel
